@@ -1,0 +1,126 @@
+import math
+import numpy as np
+
+
+class Point(object):
+    """
+    A geographic point on a map represented by Latitude and Longitude.
+
+    Longitude and Latitude are floating point values in degrees.
+    """
+
+    def __init__(self, longitude=0.0, latitude=0.0):
+        self.longitude = float(longitude)
+        self.latitude = float(latitude)
+
+    def coordinates(self):
+        return self.longitude, self.latitude
+
+    def longitude(self):
+        return self.longitude
+
+    def latitude(self):
+        return self.latitude
+
+    def coordinates_to_string(self):
+        return '(' + str(self.longitude) + ', ' + str(self.latitude) + ')'
+
+
+def distance(point_one, point_two):
+    """
+    Calculate the great circle distance (in meters) between two geographic points (specified in decimal degrees).
+
+    :param point_one: Point
+    :param point_two: Point
+    """
+    if isinstance(point_one, Point):
+        longitude_one, latitude_one = point_one.coordinates
+    else:
+        longitude_one, latitude_one = point_one
+
+    if isinstance(point_two, Point):
+        longitude_two, latitude_two = point_two.coordinates
+    else:
+        longitude_two, latitude_two = point_two
+
+    # Radius of the earth in meters
+    earth_radius = 6371000
+
+    distance_longitude = (longitude_two - longitude_one) * math.pi / 180
+    distance_latitude = (latitude_two - latitude_one) * math.pi / 180
+
+    a = math.sin(distance_latitude / 2) ** 2 \
+        + math.cos(latitude_one * math.pi / 180) \
+        * math.cos(latitude_two * math.pi / 180) \
+        * math.sin(distance_longitude / 2) ** 2
+
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    distance_in_meters = earth_radius * c
+
+    return distance_in_meters
+
+
+def average(points):
+    """
+    Find the average value for the longitude and latitude values in a list of geographic points.
+
+    :param points: [Point]
+    :return: Point
+    """
+    tuples = [point.coordinates() for point in points]
+    avg = [sum(y) / len(y) for y in zip(*tuples)]
+
+    return Point(avg[0], avg[1])
+
+
+def center(points):
+    """
+    Find the center of multiple geographic points.
+
+    :param points: [Point]
+    :return: Point
+    """
+    tuples = [point.coordinates() for point in points]
+    _max = reduce(lambda x, y: (max(x[0], y[0]), max(x[1], y[1])), tuples)
+    _min = reduce(lambda x, y: (min(x[0], y[0]), min(x[1], y[1])), tuples)
+    _longitude = _max[0] - ((_max[0] - _min[0]) / 2)
+    _latitude = _max[1] - ((_max[1] - _min[1]) / 2)
+
+    return Point(longitude=_longitude, latitude=_latitude)
+
+
+def closest_to(point, points):
+    """
+    Finds the closest coordinate to the coordinate coord in a coordinate list.
+
+    :param point: Point
+    :param points: [Point]
+    :return: Point
+    """
+    points_as_array = np.asarray(points)
+    deltas = points_as_array - point
+    dist = np.einsum('ij,ij->i', deltas, deltas)
+
+    return points[np.argmin(dist)]
+
+
+def y2lat(y):
+    """
+    Translates a y-axis coordinate to longitude geographic coordinate, assuming
+    a spherical Mercator projection.
+
+    :param y: float
+    :return: float
+    """
+    return 180.0 / math.pi * (2.0 * math.atan(math.exp(y * math.pi / 180.0)) - math.pi / 2.0)
+
+
+def lat2y(latitude):
+    """
+    Translates a latitude coordinate to a projection on the y-axis, using
+    spherical Mercator projection.
+
+    :param latitude: float
+    :return: float
+    """
+    return 180.0 / math.pi * (math.log(math.tan(math.pi / 4.0 + latitude * (math.pi / 180.0) / 2.0)))
