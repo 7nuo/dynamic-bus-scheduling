@@ -160,7 +160,8 @@ class Parser(object):
         :type node_id: integer
         :type point: Point
         """
-        # name = name.lower()
+        if name is None or name == '' or node_id is None or point is None:
+            return
 
         if name not in self.address_book:
             self.address_book[name] = Address(name, node_id, point)
@@ -310,6 +311,12 @@ class Parser(object):
             print 'Way: ' + str(osm_id) + ', Tags: ' + str(values.get('tags')) + \
                   ', References: ' + str(values.get('references'))
 
+    def print_address_book(self):
+        print '-- Printing Address Book --'
+        for name, values in self.address_book.iteritems():
+            print 'Address: ' + name + ', Nodes:' + values.nodes_to_string()
+            # print 'Address: ' + name + ', Center:' + values.get_center().coordinates_to_string()
+
     def print_totals(self):
         print '-- Printing Totals --'
         print 'Number of Nodes: ', len(self.nodes)
@@ -382,6 +389,11 @@ class Router(object):
         # self.parser.print_nodes()
         # self.parser.print_edges()
         # self.parser.print_bus_stops()
+        # self.parser.print_address_book()
+        # print self.get_closest_bus_stop_from_coordinates(17.5945912, 59.8462059)
+        # print self.get_bus_stops_within_distance(17.5945912, 59.8462059, 100)
+        # print self.get_center_point_from_address_name('Forno Romano').coordinates_to_string()
+        # Center:(17.6433065, 59.8579188)
 
         # points = []
         #
@@ -422,21 +434,83 @@ class Router(object):
 
         return closest_coordinates
 
-    def get_bus_stop_name(self, longitude, latitude):
+    def get_bus_stop_from_coordinates(self, longitude, latitude):
         """
 
         :type longitude: float
         :type latitude: float
         :return: string
         """
-        bus_stop_name = None
+        bus_stop = None
 
         for osm_id, values in self.parser.bus_stops.iteritems():
             if values.get('point').equal_to_coordinates(longitude=longitude, latitude=latitude):
-                bus_stop_name = values.get('name')
+                values['osm_id'] = osm_id
+                bus_stop = values
                 break
 
-        return bus_stop_name
+        return bus_stop
+
+    def get_closest_bus_stop_from_coordinates(self, longitude, latitude):
+        """
+        Finds the closest bus stop to the position of (lon, lat).
+
+        :param lon: longitude
+        :param lat: latitude
+        :return: BusStop object
+        """
+        provided_point = Point(longitude=longitude, latitude=latitude)
+        minimum_distance = pow(10, 12)
+        bus_stop = None
+
+        for osm_id, values in self.parser.bus_stops.iteritems():
+            current_distance = distance(provided_point, values.get('point'))
+
+            if current_distance == 0:
+                values['osm_id'] = osm_id
+                bus_stop = values
+                break
+            elif current_distance < minimum_distance:
+                minimum_distance = current_distance
+                values['osm_id'] = osm_id
+                bus_stop = values
+            else:
+                pass
+
+        return bus_stop
+
+    def get_bus_stops_within_distance(self, longitude, latitude, maximum_distance):
+        provided_point = Point(longitude=longitude, latitude=latitude)
+        bus_stops = []
+
+        for osm_id, values in self.parser.bus_stops.iteritems():
+            current_distance = distance(provided_point, values.get('point'))
+
+            if current_distance <= maximum_distance:
+                values['osm_id'] = osm_id
+                bus_stops.append(values)
+
+        return bus_stops
+
+    def get_bus_stop_from_name(self, name):
+        name = name.lower()
+        bus_stop = None
+
+        for osm_id, values in self.parser.bus_stops.iteritems():
+            if values.get('name').lower() == name:
+                values['osm_id'] = osm_id
+                bus_stop = values
+                break
+
+        return bus_stop
+
+    def get_center_point_from_address_name(self, address_name):
+        retrieved_center = None
+
+        if address_name in self.parser.address_book:
+            retrieved_center = self.parser.address_book[address_name].get_center()
+
+        return retrieved_center
 
 # def printer():
 #     # start_time = time.time()

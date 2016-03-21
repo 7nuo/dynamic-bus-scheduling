@@ -12,7 +12,8 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-import re
+
+from point import center
 
 
 class Address(object):
@@ -43,7 +44,20 @@ class Address(object):
         :type node_id: integer
         :type point: Point
         """
-        self.nodes.append((node_id, point))
+        if (node_id, point) not in self.nodes:
+            self.nodes.append((node_id, point))
+
+    def nodes_to_string(self):
+        result = '['
+        for node_id, point in self.nodes:
+            result += '(node_id:' + str(node_id) + ', point: ' + point.coordinates_to_string() + ')'
+
+        result += ']'
+        return result
+
+    def get_center(self):
+        return center([point for _, point in self.nodes])
+
         # numbers = []
         #
         # if number is not None:
@@ -52,30 +66,29 @@ class Address(object):
         #
         # self.nodes[node_id] = {'type': node_type, 'point': point, 'street': street, 'numbers': numbers}
 
-    # def add_point(self, point):
-    #     """
-    #     Add a point to the list of coordinates which are related to this address.
-    #
-    #     :type point: Point
-    #     """
-    #     self.coordinates.append(point)
-    #
-    # def add_number(self, number, point):
-    #     """
-    #     Add a number and its corresponding coordinates to the numbers dictionary.
-    #
-    #     :type number: string
-    #     :type point: Point
-    #     """
-    #     for num in address_range(number):
-    #         self.numbers[num] = point
-    #
-    # def __str__(self):
-    #     return "%s : %s" % (self.numbers, self.coordinates)
-    #
-    # def __repr__(self):
-    #     return "%s : %s" % (self.numbers, self.coordinates)
-
+        # def add_point(self, point):
+        #     """
+        #     Add a point to the list of coordinates which are related to this address.
+        #
+        #     :type point: Point
+        #     """
+        #     self.coordinates.append(point)
+        #
+        # def add_number(self, number, point):
+        #     """
+        #     Add a number and its corresponding coordinates to the numbers dictionary.
+        #
+        #     :type number: string
+        #     :type point: Point
+        #     """
+        #     for num in address_range(number):
+        #         self.numbers[num] = point
+        #
+        # def __str__(self):
+        #     return "%s : %s" % (self.numbers, self.coordinates)
+        #
+        # def __repr__(self):
+        #     return "%s : %s" % (self.numbers, self.coordinates)
 
 # def make_address(name):
 #     address = Address(name)
