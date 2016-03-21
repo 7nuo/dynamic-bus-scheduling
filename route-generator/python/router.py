@@ -189,13 +189,13 @@ class RouteHandler(handler.ContentHandler):
         key = street.lower()
         if key in self.addresses:
             if number is None:
-                self.addresses[key].addCoordinate(self.nodes[node])
+                self.addresses[key].addPoint(self.nodes[node])
             else:
                 self.addresses[key].addNumber(number, self.nodes[node])
         else:
             if number is None:
                 self.addresses[key] = Address(street)
-                self.addresses[key].addCoordinate(self.nodes[node])
+                self.addresses[key].addPoint(self.nodes[node])
             else:
                 self.addresses[key] = Address(street)
                 self.addresses[key].addNumber(number, self.nodes[node])
