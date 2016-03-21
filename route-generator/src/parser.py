@@ -14,7 +14,8 @@ specific language governing permissions and limitations under the License.
 """
 from imposm.parser import OSMParser
 # from bus_stop import BusStop
-from point import Point
+from point import *
+# import point
 from address import Address
 # from multiprocessing import Process
 import os
@@ -70,11 +71,33 @@ class Parser(object):
 
         return point
 
+    def get_points_of_edges(self):
+        [self.get_point(osm_id=osm_id) for osm_id in self.edges]
+
+    def coordinates_in_edges(self, longitude, latitude):
+        """
+        Check if a pair of coordinates exist in the edges dictionary.
+
+        :type longitude: float
+        :type latitude: float
+        :return: boolean
+        """
+        return_value = False
+
+        for osm_id in self.edges:
+            point = self.get_point(osm_id=osm_id)
+
+            if (point is not None) and (point.equal_to_coordinates(longitude=longitude, latitude=latitude)):
+                return_value = True
+                break
+
+        return return_value
+
     def parse_nodes(self, nodes):
         """
         Parse the list of nodes and populate the corresponding dictionary.
-        Parse the list of bus stops, which are included in the nodes.
-        Parse the list of addresses, where the nodes correspond to.
+        Parse the list of bus stops, which are included in the nodes, and populate the corresponding dictionary.
+        Parse the list of addresses, where the nodes correspond to, and populate the corresponding dictionary.
 
         :type nodes: [()]
         """
@@ -90,7 +113,7 @@ class Parser(object):
 
     def add_node(self, osm_id, tags, point):
         """
-        Add node to the nodes dictionary and node name to the address_book dictionary.
+        Add node to the nodes dictionary, and node name to the address_book dictionary.
 
         :type osm_id: integer
         :type tags: {}
@@ -208,7 +231,9 @@ class Parser(object):
         """
         Add edge to the edges dictionary.
 
+        :param from_node: osm_id
         :type from_node: integer
+        :param to_node: osm_id
         :type to_node: integer
         :type max_speed: integer
         :type way_id: integer
@@ -256,22 +281,34 @@ class Parser(object):
         print 'None:', none
 
     def print_nodes(self):
+        print '-- Printing Nodes --'
         for osm_id, values in self.nodes.iteritems():
             print 'Node: ' + str(osm_id) + ', Tags: ' + str(values.get('tags')) + \
                   ', Point: ' + values.get('point').coordinates_to_string()
 
     def print_bus_stops(self):
+        print '-- Printing Bus Stops --'
         for osm_id, values in self.bus_stops.iteritems():
-            print 'Bus_Stop:', osm_id + ', Name:', values.get('name') + \
-                                                   ', Point:', values.get('point').coordinates_to_string()
+            print 'Bus_Stop: ' + str(osm_id) + ', Name: ' + str(values.get('name').encode('utf-8')) + \
+                  ', Point: ' + values.get('point').coordinates_to_string()
 
     def print_coordinates(self):
+        print '-- Printing Coordinates --'
         for osm_id, values in self.coordinates.iteritems():
-            print 'Coordinates:', osm_id + ', Point:', values.get('point').coordinates_to_string()
+            print 'Coordinates: ' + str(osm_id) + ', Point: ' + values.get('point').coordinates_to_string()
+
+    def print_edges(self):
+        print '-- Printing Edges --'
+        for osm_id, list_of_values in self.edges.iteritems():
+            for values in list_of_values:
+                print 'From_Node: ' + str(osm_id) + ', To_Node: ' + str(values.get('to_node')) + \
+                      ', Max_Speed: ' + str(values.get('max_speed')) + ', Way: ' + str(values.get('way_id'))
 
     def print_ways(self):
+        print '-- Printing Ways --'
         for osm_id, values in self.ways.iteritems():
-            print 'Way:', osm_id + ', Tags:', str(values.get('tags')) + ', References:', values.get('references')
+            print 'Way: ' + str(osm_id) + ', Tags: ' + str(values.get('tags')) + \
+                  ', References: ' + str(values.get('references'))
 
     def print_totals(self):
         print '-- Printing Totals --'
@@ -292,23 +329,6 @@ class Parser(object):
             # relations_tag_filter=self.relations_filter
         )
         parser.parse(self.osm_filename)
-
-        # self.print_nodes()
-        # self.print_bus_stops()
-        # self.print_coordinates()
-        # self.print_ways()
-
-        # self.print_totals()
-
-        # self.validate_references()
-        # self.validate_coordinates()
-
-        # self.parse_edges()
-        # for key, value in self.edges.iteritems():
-        #     print key, value
-
-        # for relation in self.relations:
-        #     print 'Relation: ', relation
 
 
 def address_range(number):
@@ -359,8 +379,64 @@ class Router(object):
     def __init__(self, osm_filename):
         self.parser = Parser(osm_filename=osm_filename)
         self.parser.parse()
-        self.parser.print_nodes()
+        # self.parser.print_nodes()
+        # self.parser.print_edges()
+        # self.parser.print_bus_stops()
 
+        # points = []
+        #
+        # point = Point(longitude=1.0, latitude=1.0)
+        # points.append(point)
+        # point = Point(longitude=2.0, latitude=2.0)
+        # points.append(point)
+        # point = Point(longitude=3.0, latitude=3.0)
+        # points.append(point)
+        # point = Point(longitude=0.5, latitude=0.5)
+        # points.append(point)
+        #
+        # point = Point(longitude=0.0, latitude=0.0)
+        #
+        # print closest_to(point, points)
+
+    def check_coordinates_list(self, coordinates_list):
+        """
+
+        :param coordinates_list: [(longitude, latitude)]
+        :return:
+        """
+        for index, coordinates in enumerate(coordinates_list):
+
+            if not self.parser.coordinates_in_edges(longitude=coordinates[0], latitude=coordinates[1]):
+                coordinates_list[index] = self.closest_coordinates_in_edges(coordinates)
+
+        return coordinates_list
+
+    def closest_coordinates_in_edges(self, coordinates):
+        """
+
+        :param coordinates: (longitude, latitude)
+        :return:
+        """
+        closest_coordinates = closest_point_in_list(Point(longitude=coordinates[0], latitude=coordinates[1]),
+                                                    self.parser.get_points_of_edges())
+
+        return closest_coordinates
+
+    def get_bus_stop_name(self, longitude, latitude):
+        """
+
+        :type longitude: float
+        :type latitude: float
+        :return: string
+        """
+        bus_stop_name = None
+
+        for osm_id, values in self.parser.bus_stops.iteritems():
+            if values.get('point').equal_to_coordinates(longitude=longitude, latitude=latitude):
+                bus_stop_name = values.get('name')
+                break
+
+        return bus_stop_name
 
 # def printer():
 #     # start_time = time.time()

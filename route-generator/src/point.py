@@ -25,6 +25,9 @@ class Point(object):
     def coordinates_to_string(self):
         return '(' + str(self.longitude) + ', ' + str(self.latitude) + ')'
 
+    def equal_to_coordinates(self, longitude, latitude):
+        return self.longitude == longitude and self.latitude == latitude
+
 
 def distance(point_one, point_two):
     """
@@ -34,12 +37,12 @@ def distance(point_one, point_two):
     :param point_two: Point
     """
     if isinstance(point_one, Point):
-        longitude_one, latitude_one = point_one.coordinates
+        longitude_one, latitude_one = point_one.coordinates()
     else:
         longitude_one, latitude_one = point_one
 
     if isinstance(point_two, Point):
-        longitude_two, latitude_two = point_two.coordinates
+        longitude_two, latitude_two = point_two.coordinates()
     else:
         longitude_two, latitude_two = point_two
 
@@ -89,19 +92,15 @@ def center(points):
     return Point(longitude=_longitude, latitude=_latitude)
 
 
-def closest_to(point, points):
+def closest_point_in_list(point, points):
     """
-    Finds the closest coordinate to the coordinate coord in a coordinate list.
+    Retrieve the point, from a list of points, which has the minimum distance from a given point.
 
     :param point: Point
     :param points: [Point]
     :return: Point
     """
-    points_as_array = np.asarray(points)
-    deltas = points_as_array - point
-    dist = np.einsum('ij,ij->i', deltas, deltas)
-
-    return points[np.argmin(dist)]
+    return points[np.argmin([distance(point, pointy) for pointy in points])]
 
 
 def y2lat(y):
