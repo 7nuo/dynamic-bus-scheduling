@@ -1,5 +1,5 @@
 """
-Copyright 2015 Ericsson AB
+Copyright 2016 Ericsson
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
 this file except in compliance with the License. You may obtain a copy of the
@@ -13,8 +13,12 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
 from imposm.parser import OSMParser
+
+from path_finder import standard_speed, bus_road_types
+
 # from bus_stop import BusStop
 from point import *
+
 # import point
 from address import Address
 # from multiprocessing import Process
@@ -23,12 +27,6 @@ import re
 
 # import time
 # import signal
-
-# Maximum amount of speed for roads without a predefined value
-standard_speed = 50
-# Road types that can be accessed by a bus
-bus_road_types = ('motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary',
-                  'secondary_link', 'tertiary', 'tertiary_link', 'unclassified', 'residential', 'bus_road')
 
 
 class Parser(object):
