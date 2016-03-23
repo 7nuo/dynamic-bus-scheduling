@@ -66,7 +66,7 @@ class Parser(object):
 
     def add_bus_stop(self, osm_id, name, point):
         """
-        Add bus_stop to the bus_stops dictionary.
+        Add a bus_stop to the bus_stops dictionary.
 
         :type osm_id: integer
         :type name: string
@@ -76,7 +76,7 @@ class Parser(object):
 
     def add_point(self, osm_id, point):
         """
-        Add geographical point to the points dictionary.
+        Add a point to the points dictionary.
 
         :type osm_id: integer
         :type point: Point
@@ -85,7 +85,7 @@ class Parser(object):
 
     def add_edge(self, from_node, to_node, max_speed, road_type, way_id):
         """
-        Add edge to the edges dictionary.
+        Add an edge to the edges dictionary.
 
         :param from_node: osm_id
         :type from_node: integer
@@ -104,7 +104,7 @@ class Parser(object):
 
     def add_node(self, osm_id, tags, point):
         """
-        Add node to the nodes dictionary, and node name to the address_book dictionary.
+        Add a node to the nodes dictionary.
 
         :type osm_id: integer
         :type tags: {}
@@ -114,7 +114,7 @@ class Parser(object):
 
     def add_way(self, osm_id, tags, references):
         """
-        Add way to the ways dictionary.
+        Add a way to the ways dictionary.
 
         :type osm_id: integer
         :type tags: {}
@@ -122,49 +122,49 @@ class Parser(object):
         """
         self.ways[osm_id] = {'tags': tags, 'references': references}
 
-    def check_coordinates_list(self, coordinates_list):
-        """
-
-        :param coordinates_list: [(longitude, latitude)]
-        :return:
-        """
-        for index, coordinates in enumerate(coordinates_list):
-
-            if not self.coordinates_in_edges(longitude=coordinates[0], latitude=coordinates[1]):
-                coordinates_list[index] = self.closest_coordinates_in_edges(coordinates)
-
-        return coordinates_list
-
-    def closest_coordinates_in_edges(self, coordinates):
-        """
-
-        :param coordinates: (longitude, latitude)
-        :type coordinates: (float, float)
-        :return:
-        """
-        closest_coordinates = closest_point_in_list(Point(longitude=coordinates[0], latitude=coordinates[1]),
-                                                    self.get_points_of_edges())
-
-        return closest_coordinates
-
-    def coordinates_in_edges(self, longitude, latitude):
-        """
-        Check if a pair of points exist in the edges dictionary.
-
-        :type longitude: float
-        :type latitude: float
-        :return: boolean
-        """
-        return_value = False
-
-        for osm_id in self.edges:
-            point = self.get_point(osm_id=osm_id)
-
-            if (point is not None) and (point.equal_to_coordinates(longitude=longitude, latitude=latitude)):
-                return_value = True
-                break
-
-        return return_value
+    # def check_coordinates_list(self, coordinates_list):
+    #     """
+    #
+    #     :param coordinates_list: [(longitude, latitude)]
+    #     :return:
+    #     """
+    #     for index, coordinates in enumerate(coordinates_list):
+    #
+    #         if not self.coordinates_in_edges(longitude=coordinates[0], latitude=coordinates[1]):
+    #             coordinates_list[index] = self.closest_coordinates_in_edges(coordinates)
+    #
+    #     return coordinates_list
+    #
+    # def closest_coordinates_in_edges(self, coordinates):
+    #     """
+    #
+    #     :param coordinates: (longitude, latitude)
+    #     :type coordinates: (float, float)
+    #     :return:
+    #     """
+    #     closest_coordinates = closest_point_in_list(Point(longitude=coordinates[0], latitude=coordinates[1]),
+    #                                                 self.get_points_of_edges())
+    #
+    #     return closest_coordinates
+    #
+    # def coordinates_in_edges(self, longitude, latitude):
+    #     """
+    #     Check if a pair of points exist in the edges dictionary.
+    #
+    #     :type longitude: float
+    #     :type latitude: float
+    #     :return: boolean
+    #     """
+    #     return_value = False
+    #
+    #     for osm_id in self.edges:
+    #         point = self.get_point(osm_id=osm_id)
+    #
+    #         if (point is not None) and (point.equal_to_coordinates(longitude=longitude, latitude=latitude)):
+    #             return_value = True
+    #             break
+    #
+    #     return return_value
 
     def get_bus_stop_closest_to_coordinates(self, longitude, latitude):
         """
@@ -200,7 +200,7 @@ class Parser(object):
 
         :type longitude: float
         :type latitude: float
-        :return: bus_stop: {osm_id, name, point}
+        :return bus_stop: {osm_id, name, point}
         """
         bus_stop = None
 
@@ -217,7 +217,7 @@ class Parser(object):
         Get the bus_stop which corresponds to a name.
 
         :type name: string
-        :return: bus_stop: {osm_id, name, point}
+        :return bus_stop: {osm_id, name, point}
         """
         name = name.lower()
         bus_stop = None
@@ -252,6 +252,12 @@ class Parser(object):
         return bus_stops
 
     def get_center_point_from_address_name(self, address_name):
+        """
+        Retrieve the point which corresponds to the center of a registered address.
+
+        :type address_name: string
+        :return: Point
+        """
         retrieved_center = None
 
         if address_name in self.address_book:
@@ -298,8 +304,8 @@ class Parser(object):
 
     def parse_address(self, osm_id, tags, point):
         """
-        Parse the name, the street, and the house numbers of an address, and add them to the address_book dictionary
-        along with their corresponding osm_id and points.
+        Parse the name, the street, and the house numbers which are related to an address, and add them to the
+        address_book dictionary along with their corresponding osm_id val and points.
 
         :type osm_id: integer
         :param tags: {}
@@ -318,6 +324,15 @@ class Parser(object):
                 self.add_address(name=address, node_id=osm_id, point=point)
 
     def parse_edges(self, osm_id, tags, references):
+        """
+        Parse the edges which connect the nodes, bus_stops, and points of the map.
+
+        :param osm_id: Corresponds to the osm_id of the way.
+        :type osm_id: integer
+        :type tags: {}
+        :param references: [osm_id] The list of osm_id objects which are connected to each other.
+        :type references: [integer]
+        """
         oneway = tags.get('oneway', '') in ('yes', 'true', '1')
         max_speed = tags.get('maxspeed', standard_speed)
         road_type = tags.get('highway')
@@ -377,8 +392,6 @@ class Parser(object):
             if name != '':
                 for reference in references:
                     self.add_address(name=name, node_id=reference, point=self.get_point(osm_id=reference))
-
-
 
     def validate_coordinates(self):
         nodes = 0

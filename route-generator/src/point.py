@@ -92,7 +92,7 @@ def average(points):
 
 def center(points):
     """
-    Find the center of multiple geographic points.
+    Calculate the center of multiple geographic points.
 
     :param points: [Point]
     :return: Point
@@ -119,7 +119,7 @@ def closest_point_in_list(point, points):
 
 def y2lat(y):
     """
-    Translates a y-axis coordinate to longitude geographic coordinate, assuming
+    Translate a y-axis coordinate to longitude geographic coordinate, assuming
     a spherical Mercator projection.
 
     :param y: float
@@ -130,7 +130,7 @@ def y2lat(y):
 
 def lat2y(latitude):
     """
-    Translates a latitude coordinate to a projection on the y-axis, using
+    Translate a latitude coordinate to a projection on the y-axis, using
     spherical Mercator projection.
 
     :param latitude: float
