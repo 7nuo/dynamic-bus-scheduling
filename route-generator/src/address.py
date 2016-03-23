@@ -18,7 +18,7 @@ from point import center
 class Address(object):
     """
     An address object is used to store street address. A address has a street
-    name, coordinates of street, and possibly numbers (usually marking a
+    name, points of street, and possibly numbers (usually marking a
     house or entrance).
 
     A building can be associated to several numbers, e.g 10A, 10B, and 10C. If
@@ -67,15 +67,15 @@ class Address(object):
 
         # def add_point(self, point):
         #     """
-        #     Add a point to the list of coordinates which are related to this address.
+        #     Add a point to the list of points which are related to this address.
         #
         #     :type point: Point
         #     """
-        #     self.coordinates.append(point)
+        #     self.points.append(point)
         #
         # def add_number(self, number, point):
         #     """
-        #     Add a number and its corresponding coordinates to the numbers dictionary.
+        #     Add a number and its corresponding points to the numbers dictionary.
         #
         #     :type number: string
         #     :type point: Point
@@ -84,10 +84,10 @@ class Address(object):
         #         self.numbers[num] = point
         #
         # def __str__(self):
-        #     return "%s : %s" % (self.numbers, self.coordinates)
+        #     return "%s : %s" % (self.numbers, self.points)
         #
         # def __repr__(self):
-        #     return "%s : %s" % (self.numbers, self.coordinates)
+        #     return "%s : %s" % (self.numbers, self.points)
 
 # def make_address(name):
 #     address = Address(name)
