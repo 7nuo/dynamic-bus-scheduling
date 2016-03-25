@@ -74,15 +74,6 @@ class Parser(object):
         """
         self.bus_stops[osm_id] = {'name': name, 'point': point}
 
-    def add_point(self, osm_id, point):
-        """
-        Add a point to the points dictionary.
-
-        :type osm_id: integer
-        :type point: Point
-        """
-        self.points[osm_id] = {'point': point}
-
     def add_edge(self, from_node, to_node, max_speed, road_type, way_id):
         """
         Add an edge to the edges dictionary.
@@ -111,6 +102,15 @@ class Parser(object):
         :type point: Point
         """
         self.nodes[osm_id] = {'tags': tags, 'point': point}
+
+    def add_point(self, osm_id, point):
+        """
+        Add a point to the points dictionary.
+
+        :type osm_id: integer
+        :type point: Point
+        """
+        self.points[osm_id] = {'point': point}
 
     def add_way(self, osm_id, tags, references):
         """
@@ -267,24 +267,12 @@ class Parser(object):
 
     def get_point(self, osm_id):
         """
-        Retrieve the pair of points which correspond to a specific osm_id.
-        The osm_id could represent a node, a bus stop, or a pair of points.
+        Retrieve the point which correspond to a specific osm_id.
 
         :type osm_id: integer
         :return: Point
         """
-        point = None
-
-        if osm_id in self.nodes:
-            point = self.nodes.get(osm_id)['point']
-        elif osm_id in self.bus_stops:
-            point = self.bus_stops.get(osm_id)['point']
-        elif osm_id in self.points:
-            point = self.points.get(osm_id)['point']
-        else:
-            pass
-
-        return point
+        return self.points.get(osm_id, None)
 
     def get_points_of_edges(self):
         [self.get_point(osm_id=osm_id) for osm_id in self.edges]
@@ -351,7 +339,7 @@ class Parser(object):
         Parse the list of bus stops, which are included in the nodes, and populate the corresponding dictionary.
         Parse the list of addresses, where the nodes correspond to, and populate the corresponding dictionary.
 
-        :type nodes: [()]
+        :type nodes: [(osm_id, tags, (longitude, latitude))]
         """
         for node in nodes:
             osm_id, tags, (longitude, latitude) = node
