@@ -14,7 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 from imposm.parser import OSMParser
 
-from path_finder import standard_speed, bus_road_types
+from path_finder import standard_speed, bus_road_types, find_path
 
 # from bus_stop import BusStop
 from point import *
@@ -553,9 +553,57 @@ class Router(object):
 #         time.sleep(1)
 
 
+def addy_edge(edges, from_node, to_node, max_speed, road_type):
+        """
+        Add an edge to the edges dictionary.
+
+        :param from_node: osm_id
+        :type from_node: integer
+        :param to_node: osm_id
+        :type to_node: integer
+        :type max_speed: integer
+        :type road_type: string
+        :type way_id: integer
+        """
+        if from_node in edges:
+            edges[from_node].append({'to_node': to_node, 'max_speed': max_speed, 'road_type': road_type, 'traffic_rate': 0})
+        else:
+            edges[from_node] = [{'to_node': to_node, 'max_speed': max_speed, 'road_type': road_type, 'traffic_rate': 0}]
+
+
+def test():
+    points = {}
+    point = Point(longitude=1.0, latitude=1.0)
+    points[1] = {'point': point}
+    point = Point(longitude=2.0, latitude=2.0)
+    points[2] = {'point': point}
+    point = Point(longitude=2.0, latitude=2.0)
+    points[3] = {'point': point}
+    point = Point(longitude=4.0, latitude=4.0)
+    points[4] = {'point': point}
+    point = Point(longitude=5.0, latitude=5.0)
+    points[5] = {'point': point}
+
+    edges = {}
+    addy_edge(edges=edges, from_node=5, to_node=2, max_speed=50, road_type='motorway')
+    addy_edge(edges=edges, from_node=2, to_node=1, max_speed=50, road_type='motorway')
+    addy_edge(edges=edges, from_node=5, to_node=3, max_speed=50, road_type='motorway')
+    addy_edge(edges=edges, from_node=3, to_node=1, max_speed=40, road_type='motorway')
+    # addy_edge(edges=edges, from_node=, to_node=, max_speed=50, road_type='motorway')
+    # addy_edge(edges=edges, from_node=, to_node=, max_speed=50, road_type='motorway')
+    # addy_edge(edges=edges, from_node=, to_node=, max_speed=50, road_type='motorway')
+    # addy_edge(edges=edges, from_node=, to_node=, max_speed=50, road_type='motorway')
+    # addy_edge(edges=edges, from_node=, to_node=, max_speed=50, road_type='motorway')
+    # addy_edge(edges=edges, from_node=, to_node=, max_speed=50, road_type='motorway')
+
+    path = find_path(starting_node=5, ending_node=1, edges=edges, points=points)
+    print path
+
+
 if __name__ == '__main__':
-    osm_filename = os.path.join(os.path.dirname(__file__), '../resources/map.osm')
-    Router(osm_filename=osm_filename)
+    # osm_filename = os.path.join(os.path.dirname(__file__), '../resources/map.osm')
+    # Router(osm_filename=osm_filename)
+    test()
 
     # p = Process(target=printer, args=())
     # p.start()
