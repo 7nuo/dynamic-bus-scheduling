@@ -30,26 +30,22 @@ class OrderedSet(object):
     def __len__(self):
         return len(self.nodes)
 
-    def insert(self, (new_estimated_distance, new_estimated_time_on_road), new_node):
-        new_index = self.index_of_insertion(new_estimated_time_on_road)
-        self.f_scores.insert(new_index, (new_estimated_distance, new_estimated_time_on_road))
-        self.nodes.insert(new_index, new_node)
+    def exists(self, node):
+        """
+        Check if a node exists in the nodes list.
 
-    def remove(self, index):
-        self.f_scores.pop(index)
-        self.nodes.pop(index)
-
-    def index_of_node(self, node):
-        index = 0
-
-        for _node in self.nodes:
-            if _node == node:
-                return index
-            index += 1
-
-        return -1
+        :param node:
+        :return: boolean
+        """
+        return node in self.nodes
 
     def index_of_insertion(self, _estimated_time_on_road):
+        """
+        Retrieve the index in which a new node should be inserted, according to the corresponding f_score value.
+
+        :param _estimated_time_on_road: f_score comparator value
+        :return index: integer
+        """
         index = 0
 
         for (_, estimated_time_on_road) in self.f_scores:
@@ -59,19 +55,55 @@ class OrderedSet(object):
 
         return index
 
-    def lower_f_score(self, index, new_estimated_time_on_road):
-        returned_value = False
-        estimated_time_on_road = self.f_scores[index][1]
+    def insert(self, (new_estimated_distance, new_estimated_time_on_road), new_node):
+        """
+        Insert a new node and its corresponding f_score values.
 
-        if new_estimated_time_on_road < estimated_time_on_road:
-            returned_value = True
-
-        return returned_value
+        :param (new_estimated_distance, new_estimated_time_on_road)
+        :param new_node
+        """
+        new_index = self.index_of_insertion(new_estimated_time_on_road)
+        self.f_scores.insert(new_index, (new_estimated_distance, new_estimated_time_on_road))
+        self.nodes.insert(new_index, new_node)
 
     def pop(self):
+        """
+        Remove - retrieve the node with the lowest f_score values.
+
+        :return: (estimated_distance, estimated_time_on_road), node
+        """
         f_score = self.f_scores.pop(0)
         node = self.nodes.pop(0)
         return f_score, node
+
+    def remove(self, index):
+        """
+        Remove node at index, and its corresponding f_score values.
+
+        :type index: integer
+        """
+        self.f_scores.pop(index)
+        self.nodes.pop(index)
+
+    # def index_of_node(self, node):
+    #     index = 0
+    #
+    #     for _node in self.nodes:
+    #         if _node == node:
+    #             return index
+    #         index += 1
+    #
+    #     return -1
+    #
+    #
+    # def lower_f_score(self, index, new_estimated_time_on_road):
+    #     returned_value = False
+    #     estimated_time_on_road = self.f_scores[index][1]
+    #
+    #     if new_estimated_time_on_road < estimated_time_on_road:
+    #         returned_value = True
+    #
+    #     return returned_value
 
 
 def find_path(starting_node, ending_node, edges, points):
@@ -138,9 +170,7 @@ def find_path(starting_node, ending_node, edges, points):
                 f_score[next_node] = (g_score.get(next_node)[0] + heuristic_estimate_distance,
                                       g_score.get(next_node)[1] + heuristic_estimated_time_on_road)
 
-                next_node_index = open_set.index_of_node(next_node)
-
-                if next_node_index == -1:
+                if not open_set.exists(next_node):
                     open_set.insert(f_score.get(next_node), next_node)
 
         return None

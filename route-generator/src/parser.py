@@ -588,7 +588,7 @@ def test():
     addy_edge(edges=edges, from_node=5, to_node=2, max_speed=50, road_type='motorway')
     addy_edge(edges=edges, from_node=2, to_node=1, max_speed=50, road_type='motorway')
     addy_edge(edges=edges, from_node=5, to_node=3, max_speed=50, road_type='motorway')
-    addy_edge(edges=edges, from_node=3, to_node=1, max_speed=40, road_type='motorway')
+    addy_edge(edges=edges, from_node=3, to_node=1, max_speed=100, road_type='motorway')
     # addy_edge(edges=edges, from_node=, to_node=, max_speed=50, road_type='motorway')
     # addy_edge(edges=edges, from_node=, to_node=, max_speed=50, road_type='motorway')
     # addy_edge(edges=edges, from_node=, to_node=, max_speed=50, road_type='motorway')
