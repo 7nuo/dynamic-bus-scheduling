@@ -93,6 +93,9 @@ class Parser(object):
             self.edges[from_node] = [{'to_node': to_node, 'max_speed': max_speed, 'road_type': road_type,
                                       'way_id': way_id}]
 
+        if to_node not in self.edges:
+            self.edges[to_node] = []
+
     def add_node(self, osm_id, tags, point):
         """
         Add a node to the nodes dictionary.
@@ -110,7 +113,7 @@ class Parser(object):
         :type osm_id: integer
         :type point: Point
         """
-        self.points[osm_id] = {'point': point}
+        self.points[osm_id] = point
 
     def add_way(self, osm_id, tags, references):
         """
@@ -135,18 +138,6 @@ class Parser(object):
     #
     #     return coordinates_list
     #
-    # def closest_coordinates_in_edges(self, coordinates):
-    #     """
-    #
-    #     :param coordinates: (longitude, latitude)
-    #     :type coordinates: (float, float)
-    #     :return:
-    #     """
-    #     closest_coordinates = closest_point_in_list(Point(longitude=coordinates[0], latitude=coordinates[1]),
-    #                                                 self.get_points_of_edges())
-    #
-    #     return closest_coordinates
-    #
     # def coordinates_in_edges(self, longitude, latitude):
     #     """
     #     Check if a pair of points exist in the edges dictionary.
@@ -158,7 +149,7 @@ class Parser(object):
     #     return_value = False
     #
     #     for osm_id in self.edges:
-    #         point = self.get_point(osm_id=osm_id)
+    #         point = self.get_point_from_osm_id(osm_id=osm_id)
     #
     #         if (point is not None) and (point.equal_to_coordinates(longitude=longitude, latitude=latitude)):
     #             return_value = True
@@ -265,17 +256,65 @@ class Parser(object):
 
         return retrieved_center
 
-    def get_point(self, osm_id):
+    def get_closest_point_in_edges(self, point):
+        """
+        Retrieve the point which is closely to an input point and is contained at the edges.
+
+        :type point: Point
+        :return closest_point: (osm_id, point)
+        """
+        minimum_distance = float('Inf')
+        closest_point = None
+
+        for osm_id, point_in_edge in self.get_points_of_edges().iteritems():
+            distance_of_points = distance(point, point_in_edge)
+
+            if distance_of_points < minimum_distance:
+                minimum_distance = distance_of_points
+                closest_point = (osm_id, point_in_edge)
+
+        return closest_point
+
+    def get_point_from_osm_id(self, osm_id):
         """
         Retrieve the point which correspond to a specific osm_id.
 
         :type osm_id: integer
         :return: Point
         """
-        return self.points.get(osm_id, None)
+        return self.points.get(osm_id)
 
     def get_points_of_edges(self):
-        [self.get_point(osm_id=osm_id) for osm_id in self.edges]
+        """
+        Retrieve a dictionary containing the points of edges.
+
+        :return points_of_edges: {osm_id, point}
+        """
+        points_of_edges = {}
+
+        for osm_id in self.edges:
+            points_of_edges[osm_id] = self.get_point_from_osm_id(osm_id=osm_id)
+
+        return points_of_edges
+
+    def get_route_from_coordinates(self, starting_longitude, starting_latitude, ending_longitude, ending_latitude):
+        """
+        Find a route between two set of coordinates, using the A* algorithm.
+
+        :type starting_longitude: float
+        :type starting_latitude: float
+        :type ending_longitude: float
+        :type ending_latitude: float
+        :return route: [(osm_id, point, (distance_from_starting_node, time_from_starting_node))]
+        """
+        starting_point = Point(longitude=starting_longitude, latitude=starting_latitude)
+        ending_point = Point(longitude=ending_longitude, latitude=ending_latitude)
+        starting_osm_id, starting_point_in_edges = self.get_closest_point_in_edges(point=starting_point)
+        ending_osm_id, ending_point_in_edges = self.get_closest_point_in_edges(point=ending_point)
+
+        route = find_path(starting_node=starting_osm_id, ending_node=ending_osm_id,
+                          edges=self.edges, points=self.points)
+        return route
 
     def parse(self):
         parser = OSMParser(
@@ -379,7 +418,7 @@ class Parser(object):
             name = tags.get('name', '')
             if name != '':
                 for reference in references:
-                    self.add_address(name=name, node_id=reference, point=self.get_point(osm_id=reference))
+                    self.add_address(name=name, node_id=reference, point=self.get_point_from_osm_id(osm_id=reference))
 
     def validate_coordinates(self):
         nodes = 0
@@ -429,8 +468,8 @@ class Parser(object):
 
     def print_coordinates(self):
         print '-- Printing Coordinates --'
-        for osm_id, values in self.points.iteritems():
-            print 'Coordinates: ' + str(osm_id) + ', Point: ' + values.get('point').coordinates_to_string()
+        for osm_id, point in self.points.iteritems():
+            print 'Coordinates: ' + str(osm_id) + ', Point: ' + point.coordinates_to_string()
 
     def print_edges(self):
         print '-- Printing Edges --'
@@ -574,21 +613,21 @@ def addy_edge(edges, from_node, to_node, max_speed, road_type):
 def test():
     points = {}
     point = Point(longitude=1.0, latitude=1.0)
-    points[1] = {'point': point}
+    points[1] = point
     point = Point(longitude=2.0, latitude=2.0)
-    points[2] = {'point': point}
-    point = Point(longitude=2.0, latitude=2.0)
-    points[3] = {'point': point}
+    points[2] = point
+    point = Point(longitude=3.0, latitude=3.0)
+    points[3] = point
     point = Point(longitude=4.0, latitude=4.0)
-    points[4] = {'point': point}
+    points[4] = point
     point = Point(longitude=5.0, latitude=5.0)
-    points[5] = {'point': point}
+    points[5] = point
 
     edges = {}
-    addy_edge(edges=edges, from_node=5, to_node=2, max_speed=50, road_type='motorway')
-    addy_edge(edges=edges, from_node=2, to_node=1, max_speed=50, road_type='motorway')
-    addy_edge(edges=edges, from_node=5, to_node=3, max_speed=50, road_type='motorway')
-    addy_edge(edges=edges, from_node=3, to_node=1, max_speed=100, road_type='motorway')
+    addy_edge(edges=edges, from_node=1, to_node=2, max_speed=50, road_type='motorway')
+    addy_edge(edges=edges, from_node=2, to_node=3, max_speed=50, road_type='motorway')
+    addy_edge(edges=edges, from_node=3, to_node=4, max_speed=50, road_type='motorway')
+    addy_edge(edges=edges, from_node=4, to_node=5, max_speed=50, road_type='motorway')
     # addy_edge(edges=edges, from_node=, to_node=, max_speed=50, road_type='motorway')
     # addy_edge(edges=edges, from_node=, to_node=, max_speed=50, road_type='motorway')
     # addy_edge(edges=edges, from_node=, to_node=, max_speed=50, road_type='motorway')
@@ -596,8 +635,8 @@ def test():
     # addy_edge(edges=edges, from_node=, to_node=, max_speed=50, road_type='motorway')
     # addy_edge(edges=edges, from_node=, to_node=, max_speed=50, road_type='motorway')
 
-    path = find_path(starting_node=5, ending_node=1, edges=edges, points=points)
-    print path
+    print find_path(starting_node=1, ending_node=5, edges=edges, points=points)
+    print find_path(starting_node=2, ending_node=3, edges=edges, points=points)
 
 
 if __name__ == '__main__':

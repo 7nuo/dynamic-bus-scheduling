@@ -116,11 +116,11 @@ def find_path(starting_node, ending_node, edges, points):
         came_from = {}
         # g_score contains the [estimated_time_on_road, estimated_distance] cost of getting from the starting_node
         # to the current_node.
-        g_score = {starting_node: [0, 0]}
+        g_score = {starting_node: (0, 0)}
         # f_score contains the total cost, for each node, of getting from the starting_node to the ending_node by
         # passing by that node. That value is partially known, partially heuristic.
-        f_score = {starting_node: heuristic_cost_estimate(starting_point=points.get(starting_node).get('point'),
-                                                          ending_point=points.get(ending_node).get('point'))}
+        f_score = {starting_node: heuristic_cost_estimate(starting_point=points.get(starting_node),
+                                                          ending_point=points.get(ending_node))}
         # heappush(open_set, (f_score, starting_node))
         open_set.insert(f_score.get(starting_node), starting_node)
 
@@ -130,7 +130,7 @@ def find_path(starting_node, ending_node, edges, points):
             print current_node
 
             if current_node == ending_node:
-                return reconstruct_path(came_from=came_from, current_node=ending_node)
+                return reconstruct_path(current_node=ending_node, came_from=came_from, f_score=g_score, points=points)
 
             closed_set.add(current_node)
 
@@ -149,8 +149,12 @@ def find_path(starting_node, ending_node, edges, points):
                 traffic_rate = edge.get('traffic_rate')
 
                 estimated_distance, estimated_time_on_road = g_score_estimate(
-                    starting_point=points.get(current_node).get('point'), ending_point=points.get(next_node).get('point'), max_speed=max_speed,
-                    road_type=road_type, traffic_rate=traffic_rate)
+                    starting_point=points.get(current_node),
+                    ending_point=points.get(next_node),
+                    max_speed=max_speed,
+                    road_type=road_type,
+                    traffic_rate=traffic_rate
+                )
 
                 tentative_g_score = (g_score.get(current_node)[0] + estimated_distance,
                                      g_score.get(current_node)[1] + estimated_time_on_road)
@@ -166,7 +170,9 @@ def find_path(starting_node, ending_node, edges, points):
                 came_from[next_node] = current_node
                 g_score[next_node] = tentative_g_score
                 heuristic_estimate_distance, heuristic_estimated_time_on_road = heuristic_cost_estimate(
-                    starting_point=points.get(next_node).get('point'), ending_point=points.get(ending_node).get('point'))
+                    starting_point=points.get(next_node),
+                    ending_point=points.get(ending_node)
+                )
                 f_score[next_node] = (g_score.get(next_node)[0] + heuristic_estimate_distance,
                                       g_score.get(next_node)[1] + heuristic_estimated_time_on_road)
 
@@ -176,12 +182,12 @@ def find_path(starting_node, ending_node, edges, points):
         return None
 
 
-def reconstruct_path(came_from, current_node):
-    total_path = [current_node]
+def reconstruct_path(current_node, came_from, f_score, points):
+    total_path = [(current_node, points.get(current_node), f_score.get(current_node))]
 
     while current_node in came_from:
         current_node = came_from.get(current_node)
-        total_path = [current_node] + total_path
+        total_path = [(current_node, points.get(current_node), f_score.get(current_node))] + total_path
 
     return total_path
 
@@ -210,4 +216,3 @@ def heuristic_cost_estimate(starting_point, ending_point):
     estimated_distance = point.distance(point_one=starting_point, point_two=ending_point)
     estimated_time_on_road = estimated_distance / (float(standard_speed) * 1000 / 3600)
     return estimated_distance, estimated_time_on_road
-
