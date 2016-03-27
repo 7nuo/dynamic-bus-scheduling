@@ -1,5 +1,5 @@
 """
-Copyright 2016 Ericsson
+Copyright 2016 Eleftherios Anagnostopoulos for Ericsson AB
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not use
 this file except in compliance with the License. You may obtain a copy of the
@@ -48,6 +48,7 @@ class Address(object):
 
     def nodes_to_string(self):
         result = '['
+
         for node_id, point in self.nodes:
             result += '(node_id:' + str(node_id) + ', point: ' + point.coordinates_to_string() + ')'
 
