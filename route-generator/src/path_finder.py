@@ -105,7 +105,6 @@ def find_path(starting_node, ending_node, edges, points):
 
         while len(open_set) > 0:
             current_node = open_set.pop()[1]
-            print current_node
 
             if current_node == ending_node:
                 return reconstruct_path(ending_node=ending_node, came_from=came_from, g_score=g_score, points=points)
@@ -124,14 +123,14 @@ def find_path(starting_node, ending_node, edges, points):
 
                 max_speed = edge.get('max_speed')
                 road_type = edge.get('road_type')
-                traffic_rate = edge.get('traffic_rate')
+                traffic_density = edge.get('traffic_density')
 
                 estimated_distance, estimated_time_on_road = g_score_estimate(
                     starting_point=points.get(current_node),
                     ending_point=points.get(next_node),
                     max_speed=max_speed,
                     road_type=road_type,
-                    traffic_rate=traffic_rate
+                    traffic_density=traffic_density
                 )
 
                 tentative_g_score = (g_score.get(current_node)[0] + estimated_distance,
@@ -187,15 +186,15 @@ def estimate_road_type_speed_decrease_factor(road_type):
     return road_type_speed_decrease_factor
 
 
-def estimate_traffic_speed_decrease_factor(traffic_rate):
-    traffic_speed_decrease_factor = 1 - float(traffic_rate)
+def estimate_traffic_speed_decrease_factor(traffic_density):
+    traffic_speed_decrease_factor = 1 - float(traffic_density)
     return traffic_speed_decrease_factor
 
 
-def g_score_estimate(starting_point, ending_point, max_speed, road_type, traffic_rate):
+def g_score_estimate(starting_point, ending_point, max_speed, road_type, traffic_density):
     estimated_distance = distance(point_one=starting_point, point_two=ending_point)
     road_type_speed_decrease_factor = estimate_road_type_speed_decrease_factor(road_type=road_type)
-    traffic_speed_decrease_factor = estimate_traffic_speed_decrease_factor(traffic_rate=traffic_rate)
+    traffic_speed_decrease_factor = estimate_traffic_speed_decrease_factor(traffic_density=traffic_density)
     estimated_time_on_road = estimated_distance / (road_type_speed_decrease_factor * traffic_speed_decrease_factor *
                                                    (float(max_speed) * 1000 / 3600))
     return estimated_distance, estimated_time_on_road

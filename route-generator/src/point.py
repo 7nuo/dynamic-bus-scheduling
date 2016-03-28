@@ -27,6 +27,9 @@ class Point(object):
         self.longitude = float(longitude)
         self.latitude = float(latitude)
 
+    def __str__(self):
+        return self.coordinates_to_string()
+
     def coordinates(self):
         return self.longitude, self.latitude
 

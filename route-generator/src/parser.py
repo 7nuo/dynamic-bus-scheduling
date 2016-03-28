@@ -18,6 +18,7 @@ from point import distance, Point
 from address import Address
 import re
 
+
 # from multiprocessing import Process
 # import os
 # import time
@@ -69,24 +70,26 @@ class Parser(object):
         """
         self.bus_stops[osm_id] = {'name': name, 'point': point}
 
-    def add_edge(self, from_node, to_node, max_speed, road_type, way_id):
+    def add_edge(self, from_node, to_node, max_speed, road_type, way_id, traffic_density=None):
         """
         Add an edge to the edges dictionary.
 
-        :param from_node: osm_id
-        :type from_node: integer
-        :param to_node: osm_id
-        :type to_node: integer
-        :type max_speed: integer
+        :param from_node: osm_id: integer
+        :param to_node: osm_id: integer
+        :type max_speed: float or integer
         :type road_type: string
-        :type way_id: integer
+        :param way_id: osm_id: integer
+        :param traffic_density: A value between 0 and 1 indicating the density of traffic: float
         """
+        if traffic_density is None:
+            traffic_density = 0
+
         if from_node in self.edges:
             self.edges[from_node].append({'to_node': to_node, 'max_speed': max_speed, 'road_type': road_type,
-                                          'way_id': way_id})
+                                          'way_id': way_id, 'traffic_density': traffic_density})
         else:
             self.edges[from_node] = [{'to_node': to_node, 'max_speed': max_speed, 'road_type': road_type,
-                                      'way_id': way_id}]
+                                      'way_id': way_id, 'traffic_density': traffic_density}]
 
         if to_node not in self.edges:
             self.edges[to_node] = []
@@ -541,17 +544,16 @@ class Parser(object):
             for values in list_of_values:
                 if values.get('to_node') not in self.points:
                     counter += 1
-                # print 'From_Node: ' + str(osm_id) + ', To_Node: ' + str(values.get('to_node'))
+                    # print 'From_Node: ' + str(osm_id) + ', To_Node: ' + str(values.get('to_node'))
 
         print counter
 
 
 class Router(object):
-
     def __init__(self, osm_filename):
         self.parser = Parser(osm_filename=osm_filename)
         self.parser.parse()
-        self.parser.test_edges()
+        # self.parser.test_edges()
         # self.parser.print_nodes()
         # self.parser.print_edges()
         # self.parser.print_bus_stops()
@@ -576,6 +578,7 @@ class Router(object):
         #
         # print closest_to(point, points)
 
+
 # def printer():
 #     # start_time = time.time()
 #     pattern = ''
@@ -586,58 +589,77 @@ class Router(object):
 #         print pattern,
 #         time.sleep(1)
 
+class Tester(object):
+    """
 
-def addy_edge(edges, from_node, to_node, max_speed, road_type):
+    """
+    def __init__(self):
+        self.edges = {}
+        self.points = {}
+        self.populate_points()
+        self.populate_edges()
+
+    def add_edge(self, from_node, to_node, max_speed, road_type=None, way_id=None, traffic_density=None):
         """
         Add an edge to the edges dictionary.
 
-        :param from_node: osm_id
-        :type from_node: integer
-        :param to_node: osm_id
-        :type to_node: integer
-        :type max_speed: integer
+        :param from_node: osm_id: integer
+        :param to_node: osm_id: integer
+        :type max_speed: float or integer
         :type road_type: string
-        :type way_id: integer
+        :param way_id: osm_id: integer
+        :param traffic_density: A value between 0 and 1 indicating the density of traffic: float
         """
-        if from_node in edges:
-            edges[from_node].append({'to_node': to_node, 'max_speed': max_speed, 'road_type': road_type, 'traffic_rate': 0})
+        if road_type is None:
+            road_type = 'motorway'
+
+        if traffic_density is None:
+            traffic_density = 0
+
+        if from_node in self.edges:
+            self.edges[from_node].append({'to_node': to_node, 'max_speed': max_speed, 'road_type': road_type,
+                                          'way_id': way_id, 'traffic_density': traffic_density})
         else:
-            edges[from_node] = [{'to_node': to_node, 'max_speed': max_speed, 'road_type': road_type, 'traffic_rate': 0}]
+            self.edges[from_node] = [{'to_node': to_node, 'max_speed': max_speed, 'road_type': road_type,
+                                      'way_id': way_id, 'traffic_density': traffic_density}]
 
+        if to_node not in self.edges:
+            self.edges[to_node] = []
 
-def test():
-    points = {}
-    point = Point(longitude=1.0, latitude=1.0)
-    points[1] = point
-    point = Point(longitude=2.0, latitude=2.0)
-    points[2] = point
-    point = Point(longitude=3.0, latitude=3.0)
-    points[3] = point
-    point = Point(longitude=4.0, latitude=4.0)
-    points[4] = point
-    point = Point(longitude=5.0, latitude=5.0)
-    points[5] = point
+    def add_point(self, osm_id, longitude, latitude):
+        """
+        Add a point to the points dictionary.
 
-    edges = {}
-    addy_edge(edges=edges, from_node=1, to_node=2, max_speed=50, road_type='motorway')
-    addy_edge(edges=edges, from_node=2, to_node=3, max_speed=50, road_type='motorway')
-    addy_edge(edges=edges, from_node=3, to_node=4, max_speed=50, road_type='motorway')
-    addy_edge(edges=edges, from_node=4, to_node=5, max_speed=50, road_type='motorway')
-    # addy_edge(edges=edges, from_node=, to_node=, max_speed=50, road_type='motorway')
-    # addy_edge(edges=edges, from_node=, to_node=, max_speed=50, road_type='motorway')
-    # addy_edge(edges=edges, from_node=, to_node=, max_speed=50, road_type='motorway')
-    # addy_edge(edges=edges, from_node=, to_node=, max_speed=50, road_type='motorway')
-    # addy_edge(edges=edges, from_node=, to_node=, max_speed=50, road_type='motorway')
-    # addy_edge(edges=edges, from_node=, to_node=, max_speed=50, road_type='motorway')
+        :type osm_id: integer
+        :type longitude: float
+        :type latitude: float
+        """
+        point = Point(longitude=longitude, latitude=latitude)
+        self.points[osm_id] = point
 
-    print find_path(starting_node=1, ending_node=5, edges=edges, points=points)
-    print find_path(starting_node=2, ending_node=3, edges=edges, points=points)
+    def populate_edges(self):
+        self.add_edge(from_node=1, to_node=2, max_speed=50)
+        self.add_edge(from_node=2, to_node=3, max_speed=50)
+        self.add_edge(from_node=3, to_node=4, max_speed=50)
+        self.add_edge(from_node=4, to_node=5, max_speed=50)
+
+    def populate_points(self):
+        self.add_point(osm_id=1, longitude=1.0, latitude=1.0)
+        self.add_point(osm_id=2, longitude=2.0, latitude=2.0)
+        self.add_point(osm_id=3, longitude=3.0, latitude=3.0)
+        self.add_point(osm_id=4, longitude=4.0, latitude=4.0)
+        self.add_point(osm_id=5, longitude=5.0, latitude=5.0)
+
+    def test(self):
+        print find_path(starting_node=1, ending_node=5, edges=self.edges, points=self.points)
+        print find_path(starting_node=2, ending_node=3, edges=self.edges, points=self.points)
 
 
 if __name__ == '__main__':
     # osm_filename = os.path.join(os.path.dirname(__file__), '../resources/map.osm')
     # Router(osm_filename=osm_filename)
-    test()
+    Tester().test()
+    print Point(longitude=0, latitude=0)
 
     # p = Process(target=printer, args=())
     # p.start()
