@@ -119,7 +119,7 @@ class Parser(object):
 
         :type osm_id: integer
         :type tags: {}
-        :type references: [integer]
+        :param references: [osm_id]
         """
         self.ways[osm_id] = {'tags': tags, 'references': references}
 
@@ -178,25 +178,31 @@ class Parser(object):
     #             coordinates_list[index] = self.closest_coordinates_in_edges(coordinates)
     #
     #     return coordinates_list
-    #
-    # def coordinates_in_edges(self, longitude, latitude):
-    #     """
-    #     Check if a pair of points exist in the edges dictionary.
-    #
-    #     :type longitude: float
-    #     :type latitude: float
-    #     :return: boolean
-    #     """
-    #     return_value = False
-    #
-    #     for osm_id in self.edges:
-    #         point = self.get_point_from_osm_id(osm_id=osm_id)
-    #
-    #         if (point is not None) and (point.equal_to_coordinates(longitude=longitude, latitude=latitude)):
-    #             return_value = True
-    #             break
-    #
-    #     return return_value
+
+    def check_coordinates_in_edges(self, longitude, latitude):
+        """
+        Check if a pair of coordinates exists in the edges dictionary.
+
+        :type longitude: float
+        :type latitude: float
+        :return: boolean
+        """
+        return self.check_point_in_edges(point=Point(longitude=longitude, latitude=latitude))
+
+    def check_point_in_edges(self, point):
+        """
+        Check if a point exists in the edges dictionary.
+
+        :type point: Point
+        :return: boolean
+        """
+        for osm_id in self.edges:
+            point_in_edge = self.edges.get(osm_id)
+
+            if point.equal_to_coordinates(longitude=point_in_edge.longitude, latitude=point_in_edge.latitude):
+                return True
+
+        return False
 
     def get_bus_stop_closest_to_coordinates(self, longitude, latitude):
         """
@@ -659,7 +665,6 @@ if __name__ == '__main__':
     # osm_filename = os.path.join(os.path.dirname(__file__), '../resources/map.osm')
     # Router(osm_filename=osm_filename)
     Tester().test()
-    print Point(longitude=0, latitude=0)
 
     # p = Process(target=printer, args=())
     # p.start()

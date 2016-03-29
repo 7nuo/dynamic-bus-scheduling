@@ -30,6 +30,9 @@ class Point(object):
     def __str__(self):
         return self.coordinates_to_string()
 
+    def __repr__(self):
+        return self.coordinates_to_string()
+
     def coordinates(self):
         return self.longitude, self.latitude
 
