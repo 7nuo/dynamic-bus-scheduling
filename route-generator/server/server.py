@@ -20,6 +20,7 @@ def application(environ, start_response):
     start_response(status, response_headers)
     changer()
     print mutex.val
+    print environ
     return iter([data])
 
 
