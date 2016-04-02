@@ -34,6 +34,9 @@ class Connection(object):
     def find_point(self, osm_id):
         return self.points_collection.find_one({'osm_id': osm_id})
 
+    def get_points(self):
+        return self.points_collection.find()
+
     def delete_point(self, osm_id):
         result = self.points_collection.delete_one({'osm_id': osm_id})
         return result.deleted_count
@@ -60,15 +63,21 @@ class Connection(object):
     def find_bus_stop(self, osm_id):
         return self.bus_stops_collection.find_one({'osm_id': osm_id})
 
+    def find_bus_stop_from_name(self, name):
+        return self.bus_stops_collection.find_one({'name', name})
+
+    def find_bus_stop_from_coordinates(self, longitude, latitude):
+        return self.bus_stops_collection.find_one({'point': {'longitude': longitude, 'latitude': latitude}})
+
     def delete_bus_stop(self, osm_id):
         result = self.bus_stops_collection.delete_one({'osm_id': osm_id})
         return result.deleted_count
 
-    # Functions of edges
-    def insert_edge(self, from_node, to_node, max_speed, road_type, way_id, traffic_density=None):
-        if traffic_density is None:
-            traffic_density = 0
+    def get_bus_stops(self):
+        return self.bus_stops_collection.find()
 
+    # Functions of edges
+    def insert_edge(self, from_node, to_node, max_speed, road_type, way_id, traffic_density):
         document = {'from_node': from_node, 'to_node': to_node, 'max_speed': max_speed, 'road_type': road_type,
                     'way_id': way_id, 'traffic_density': traffic_density}
         result = self.edges_collection.insert_one(document)
@@ -80,6 +89,15 @@ class Connection(object):
     def find_edges(self, from_node):
         return self.edges_collection.find({'from_node': from_node})
 
+    def get_edges(self):
+        return self.edges_collection.find()
+
+    def in_edges(self, node):
+        return self.edges_collection.find_one({"$or": [{'from_node': node}, {'to_node': node}]}) is not None
+
+    def has_edges(self, node):
+        return self.edges_collection.find_one({'from_node': node}) is not None
+
     def delete_edge(self, from_node, to_node):
         result = self.edges_collection.delete_one({'from_node': from_node, 'to_node': to_node})
         return result.deleted_count
@@ -90,9 +108,6 @@ class Connection(object):
 
     # Functions of address_book
     def insert_address(self, name, node_id, point):
-        if name is None or name == '' or node_id is None or point is None:
-            return
-
         document = {'name': name, 'node_id': node_id,
                     'point': {'longitude': point.longitude, 'latitude': point.latitude}}
 
@@ -109,5 +124,7 @@ class Connection(object):
 
 if __name__ == '__main__':
     connection = Connection(host='127.0.0.1', port=27017)
+    if not connection.in_edges(node='foo'):
+        print 'ok'
     # connection.insert_node(osm_id=1, tags='hi', point={'longitude': 1.0, 'latitude': 2.0})
     # print connection.delete_node(osm_id=1)

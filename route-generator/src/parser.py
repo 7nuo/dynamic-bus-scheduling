@@ -16,11 +16,12 @@ from imposm.parser import OSMParser
 from path_finder import bus_road_types, find_path, standard_speed
 from point import distance, Point
 from address import Address
+from mongo_connection import Connection
 import re
 
 
 # from multiprocessing import Process
-# import os
+import os
 # import time
 # import signal
 
@@ -31,12 +32,13 @@ class Parser(object):
     nodes_filter = None
     relations_filter = None
 
-    def __init__(self, osm_filename):
+    def __init__(self, osm_filename, connection):
         """
         :param osm_filename: Directory of the input OSM file
         :type osm_filename: string
         """
         self.osm_filename = osm_filename
+        self.connection = connection
         self.nodes = {}
         self.points = {}
         self.ways = {}
@@ -55,10 +57,12 @@ class Parser(object):
         if name is None or name == '' or node_id is None or point is None:
             return
 
-        if name not in self.address_book:
-            self.address_book[name] = Address(name, node_id, point)
-        else:
-            self.address_book[name].add_node(node_id=node_id, point=point)
+        self.connection.insert_address(name=name, node_id=node_id, point=point)
+
+        # if name not in self.address_book:
+        #     self.address_book[name] = Address(name, node_id, point)
+        # else:
+        #     self.address_book[name].add_node(node_id=node_id, point=point)
 
     def add_bus_stop(self, osm_id, name, point):
         """
@@ -68,7 +72,8 @@ class Parser(object):
         :type name: string
         :type point: Point
         """
-        self.bus_stops[osm_id] = {'name': name, 'point': point}
+        self.connection.insert_bus_stop(osm_id=osm_id, name=name, point=point)
+        # self.bus_stops[osm_id] = {'name': name, 'point': point}
 
     def add_edge(self, from_node, to_node, max_speed, road_type, way_id, traffic_density=None):
         """
@@ -84,15 +89,18 @@ class Parser(object):
         if traffic_density is None:
             traffic_density = 0
 
-        if from_node in self.edges:
-            self.edges[from_node].append({'to_node': to_node, 'max_speed': max_speed, 'road_type': road_type,
-                                          'way_id': way_id, 'traffic_density': traffic_density})
-        else:
-            self.edges[from_node] = [{'to_node': to_node, 'max_speed': max_speed, 'road_type': road_type,
-                                      'way_id': way_id, 'traffic_density': traffic_density}]
+        self.connection.insert_edge(from_node=from_node, to_node=to_node, max_speed=max_speed, road_type=road_type,
+                                    way_id=way_id, traffic_density=traffic_density)
 
-        if to_node not in self.edges:
-            self.edges[to_node] = []
+        # if from_node in self.edges:
+        #     self.edges[from_node].append({'to_node': to_node, 'max_speed': max_speed, 'road_type': road_type,
+        #                                   'way_id': way_id, 'traffic_density': traffic_density})
+        # else:
+        #     self.edges[from_node] = [{'to_node': to_node, 'max_speed': max_speed, 'road_type': road_type,
+        #                               'way_id': way_id, 'traffic_density': traffic_density}]
+        #
+        # if to_node not in self.edges:
+        #     self.edges[to_node] = []
 
     def add_node(self, osm_id, tags, point):
         """
@@ -102,7 +110,8 @@ class Parser(object):
         :type tags: {}
         :type point: Point
         """
-        self.nodes[osm_id] = {'tags': tags, 'point': point}
+        self.connection.insert_node(osm_id=osm_id, tags=tags, point=point)
+        # self.nodes[osm_id] = {'tags': tags, 'point': point}
 
     def add_point(self, osm_id, point):
         """
@@ -111,7 +120,8 @@ class Parser(object):
         :type osm_id: integer
         :type point: Point
         """
-        self.points[osm_id] = point
+        self.connection.insert_point(osm_id=osm_id, point=point)
+        # self.points[osm_id] = point
 
     def add_way(self, osm_id, tags, references):
         """
@@ -121,7 +131,8 @@ class Parser(object):
         :type tags: {}
         :param references: [osm_id]
         """
-        self.ways[osm_id] = {'tags': tags, 'references': references}
+        self.connection.insert_way(osm_id=osm_id, tags=tags, references=references)
+        # self.ways[osm_id] = {'tags': tags, 'references': references}
 
     @staticmethod
     def address_range(number):
@@ -179,30 +190,30 @@ class Parser(object):
     #
     #     return coordinates_list
 
-    def check_coordinates_in_edges(self, longitude, latitude):
-        """
-        Check if a pair of coordinates exists in the edges dictionary.
-
-        :type longitude: float
-        :type latitude: float
-        :return: boolean
-        """
-        return self.check_point_in_edges(point=Point(longitude=longitude, latitude=latitude))
-
-    def check_point_in_edges(self, point):
-        """
-        Check if a point exists in the edges dictionary.
-
-        :type point: Point
-        :return: boolean
-        """
-        for osm_id in self.edges:
-            point_in_edge = self.edges.get(osm_id)
-
-            if point.equal_to_coordinates(longitude=point_in_edge.longitude, latitude=point_in_edge.latitude):
-                return True
-
-        return False
+    # def check_coordinates_in_edges(self, longitude, latitude):
+    #     """
+    #     Check if a pair of coordinates exists in the edges dictionary.
+    #
+    #     :type longitude: float
+    #     :type latitude: float
+    #     :return: boolean
+    #     """
+    #     return self.check_point_in_edges(point=Point(longitude=longitude, latitude=latitude))
+    #
+    # def check_point_in_edges(self, point):
+    #     """
+    #     Check if a point exists in the edges dictionary.
+    #
+    #     :type point: Point
+    #     :return: boolean
+    #     """
+    #     for osm_id in self.edges:
+    #         point_in_edge = self.edges.get(osm_id)
+    #
+    #         if point.equal_to_coordinates(longitude=point_in_edge.longitude, latitude=point_in_edge.latitude):
+    #             return True
+    #
+    #     return False
 
     def get_bus_stop_closest_to_coordinates(self, longitude, latitude):
         """
@@ -213,24 +224,25 @@ class Parser(object):
         :return bus_stop: {osm_id, name, point}
         """
         provided_point = Point(longitude=longitude, latitude=latitude)
-        minimum_distance = pow(10, 12)
-        bus_stop = None
+        minimum_distance = float('Inf')
+        closest_bus_stop = None
 
-        for osm_id, values in self.bus_stops.iteritems():
-            current_distance = distance(provided_point, values.get('point'))
+        bus_stops_cursor = self.connection.get_bus_stops()
+
+        for bus_stop in bus_stops_cursor:
+            current_distance = distance(point_one=provided_point, longitude_two=bus_stop.get('point').get('longitude'),
+                                        latitude_two=bus_stop.get('point').get('latitude'))
 
             if current_distance == 0:
-                values['osm_id'] = osm_id
-                bus_stop = values
+                closest_bus_stop = bus_stop
                 break
             elif current_distance < minimum_distance:
                 minimum_distance = current_distance
-                values['osm_id'] = osm_id
-                bus_stop = values
+                closest_bus_stop = bus_stop
             else:
                 pass
 
-        return bus_stop
+        return closest_bus_stop
 
     def get_bus_stop_from_coordinates(self, longitude, latitude):
         """
@@ -240,15 +252,16 @@ class Parser(object):
         :type latitude: float
         :return bus_stop: {osm_id, name, point}
         """
-        bus_stop = None
-
-        for osm_id, values in self.bus_stops.iteritems():
-            if values.get('point').equal_to_coordinates(longitude=longitude, latitude=latitude):
-                values['osm_id'] = osm_id
-                bus_stop = values
-                break
-
-        return bus_stop
+        return self.connection.find_bus_stop_from_coordinates(longitude=longitude, latitude=latitude)
+        # bus_stop = None
+        #
+        # for osm_id, values in self.bus_stops.iteritems():
+        #     if values.get('point').equal_to_coordinates(longitude=longitude, latitude=latitude):
+        #         values['osm_id'] = osm_id
+        #         bus_stop = values
+        #         break
+        #
+        # return bus_stop
 
     def get_bus_stop_from_name(self, name):
         """
@@ -257,16 +270,17 @@ class Parser(object):
         :type name: string
         :return bus_stop: {osm_id, name, point}
         """
-        name = name.lower()
-        bus_stop = None
-
-        for osm_id, values in self.bus_stops.iteritems():
-            if values.get('name').lower() == name:
-                values['osm_id'] = osm_id
-                bus_stop = values
-                break
-
-        return bus_stop
+        return self.connection.find_bus_stop_from_name(name=name)
+        # name = name.lower()
+        # bus_stop = None
+        #
+        # for osm_id, values in self.bus_stops.iteritems():
+        #     if values.get('name').lower() == name:
+        #         values['osm_id'] = osm_id
+        #         bus_stop = values
+        #         break
+        #
+        # return bus_stop
 
     def get_bus_stops_within_distance(self, longitude, latitude, maximum_distance):
         """
@@ -279,29 +293,30 @@ class Parser(object):
         """
         provided_point = Point(longitude=longitude, latitude=latitude)
         bus_stops = []
+        bus_stops_cursor = self.connection.get_bus_stops()
 
-        for osm_id, values in self.bus_stops.iteritems():
-            current_distance = distance(provided_point, values.get('point'))
+        for bus_stop in bus_stops_cursor:
+            current_distance = distance(point_one=provided_point, longitude_two=bus_stop.get('point').get('longitude'),
+                                        latitude_two=bus_stop.get('point').get('latitude'))
 
             if current_distance <= maximum_distance:
-                values['osm_id'] = osm_id
-                bus_stops.append(values)
+                bus_stops.append(bus_stop)
 
         return bus_stops
 
-    def get_center_point_from_address_name(self, address_name):
-        """
-        Retrieve the point which corresponds to the center of a registered address.
-
-        :type address_name: string
-        :return: Point
-        """
-        retrieved_center = None
-
-        if address_name in self.address_book:
-            retrieved_center = self.address_book[address_name].get_center()
-
-        return retrieved_center
+    # def get_center_point_from_address_name(self, address_name):
+    #     """
+    #     Retrieve the point which corresponds to the center of a registered address.
+    #
+    #     :type address_name: string
+    #     :return: Point
+    #     """
+    #     retrieved_center = None
+    #
+    #     if address_name in self.address_book:
+    #         retrieved_center = self.address_book[address_name].get_center()
+    #
+    #     return retrieved_center
 
     def get_closest_point_in_edges(self, point):
         """
@@ -313,8 +328,10 @@ class Parser(object):
         minimum_distance = float('Inf')
         closest_point = None
 
-        for osm_id, point_in_edge in self.get_points_of_edges().iteritems():
-            distance_of_points = distance(point, point_in_edge)
+        points_of_edges = self.get_points_of_edges()
+
+        for osm_id, point_in_edge in points_of_edges().iteritems():
+            distance_of_points = distance(point_one=point, point_two=point_in_edge)
 
             if distance_of_points < minimum_distance:
                 minimum_distance = distance_of_points
@@ -331,16 +348,38 @@ class Parser(object):
         """
         return self.points.get(osm_id)
 
+    def get_points_dictionary(self):
+        points_dictionary = {}
+        points_cursor = self.connection.get_points()
+
+        for point_document in points_cursor:
+            # {'osm_id': osm_id, 'point': {'longitude': point.longitude, 'latitude': point.latitude}}
+            points_dictionary[point_document.get('osm_id')] = \
+                Point(longitude=point_document.get('point').get('longitude'),
+                      latitude=point_document.get('point').get('latitude'))
+
+        return points_dictionary
+
     def get_points_of_edges(self):
         """
         Retrieve a dictionary containing the points of edges.
 
         :return points_of_edges: {osm_id, point}
         """
+        # edge_document = {'from_node', 'to_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}
         points_of_edges = {}
+        edges_cursor = self.connection.get_edges()
+        points_dictionary = self.get_points_dictionary()
 
-        for osm_id in self.edges:
-            points_of_edges[osm_id] = self.get_point_from_osm_id(osm_id=osm_id)
+        for edge_document in edges_cursor:
+            from_node = edge_document.get('from_node')
+            to_node = edge_document.get('to_node')
+
+            if from_node not in points_of_edges:
+                points_of_edges[from_node] = points_dictionary.get(from_node)
+
+            if to_node not in points_of_edges:
+                points_of_edges[to_node] = points_dictionary.get(to_node)
 
         return points_of_edges
 
@@ -556,8 +595,8 @@ class Parser(object):
 
 
 class Router(object):
-    def __init__(self, osm_filename):
-        self.parser = Parser(osm_filename=osm_filename)
+    def __init__(self, osm_filename, connection):
+        self.parser = Parser(osm_filename=osm_filename, connection=connection)
         self.parser.parse()
         # self.parser.test_edges()
         # self.parser.print_nodes()
@@ -662,9 +701,10 @@ class Tester(object):
 
 
 if __name__ == '__main__':
-    # osm_filename = os.path.join(os.path.dirname(__file__), '../resources/map.osm')
-    # Router(osm_filename=osm_filename)
-    Tester().test()
+    osm_filename = os.path.join(os.path.dirname(__file__), '../resources/map.osm')
+    connection = Connection(host='127.0.0.1', port=27017)
+    Router(osm_filename=osm_filename, connection=connection)
+    # Tester().test()
 
     # p = Process(target=printer, args=())
     # p.start()

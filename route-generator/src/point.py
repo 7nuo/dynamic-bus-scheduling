@@ -49,22 +49,34 @@ class Point(object):
         return self.longitude == longitude and self.latitude == latitude
 
 
-def distance(point_one, point_two):
+def distance(point_one=None, point_two=None, longitude_one=None, latitude_one=None,
+             longitude_two=None, latitude_two=None):
     """
-    Calculate the great circle distance (in meters) between two geographic points (specified in decimal degrees).
+    Calculate the great circle distance (in meters) between two geographic points
+    (specified in decimal degrees).
 
-    :param point_one: Point
-    :param point_two: Point
+    :type point_one: Point
+    :type point_two: Point
+    :type longitude_one: float
+    :type latitude_one: float
+    :type longitude_two: float
+    :type latitude_two: float
     """
-    if isinstance(point_one, Point):
-        longitude_one, latitude_one = point_one.coordinates()
-    else:
-        longitude_one, latitude_one = point_one
+    if (point_one is None and (longitude_one is None or latitude_one in None)) \
+            or (point_two is None and (longitude_two is None or latitude_two in None)):
+        return -1
 
-    if isinstance(point_two, Point):
-        longitude_two, latitude_two = point_two.coordinates()
-    else:
-        longitude_two, latitude_two = point_two
+    if point_one is not None:
+        if isinstance(point_one, Point):
+            longitude_one, latitude_one = point_one.coordinates()
+        else:
+            longitude_one, latitude_one = point_one
+
+    if point_two is not None:
+        if isinstance(point_two, Point):
+            longitude_two, latitude_two = point_two.coordinates()
+        else:
+            longitude_two, latitude_two = point_two
 
     # Radius of the earth in meters
     earth_radius = 6371000
