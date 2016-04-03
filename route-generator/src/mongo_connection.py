@@ -153,7 +153,6 @@ class Connection(object):
 
     # Functions of address_book
     def insert_address(self, name, node_id, point):
-        print point
         document = {'name': name, 'node_id': node_id,
                     'point': {'longitude': point.longitude, 'latitude': point.latitude}}
 
@@ -185,11 +184,11 @@ class Connection(object):
 if __name__ == '__main__':
     connection = Connection(host='127.0.0.1', port=27017)
     connection.clear_all_collections()
-    test_list = [{'node': i} for i in range(0, 10000)]
-    start_time_many = time.time()
-    connection.test_many(test_list=test_list)
-    elapsed_time_many = time.time() - start_time_many
-    print 'Many:', elapsed_time_many
+    # test_list = [{'node': i} for i in range(0, 10000)]
+    # start_time_many = time.time()
+    # connection.test_many(test_list=test_list)
+    # elapsed_time_many = time.time() - start_time_many
+    # print 'Many:', elapsed_time_many
 
     # start_time_one = time.time()
     # connection.test_one(test_list=test_list)
