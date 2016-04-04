@@ -485,6 +485,117 @@ class MongoConnector(object):
         self.populate_edges()
         self.populate_address_book()
 
+    def get_bus_stop_closest_to_coordinates(self, longitude, latitude):
+        """
+        Get the bus stop which is closest to a set of coordinates.
+
+        :type longitude: float
+        :type latitude: float
+        :return bus_stop: {osm_id, name, point}
+        """
+        provided_point = Point(longitude=longitude, latitude=latitude)
+        return self.get_bus_stop_closest_to_point(provided_point=provided_point)
+
+    def get_bus_stop_closest_to_point(self, provided_point):
+        """
+        Get the bus stop which is closest to a geographic point.
+
+        :type provided_point: Point
+        :return bus_stop: {osm_id, name, point}
+        """
+        minimum_distance = float('Inf')
+        closest_bus_stop = None
+
+        bus_stops_cursor = self.connection.get_bus_stops()
+
+        for bus_stop in bus_stops_cursor:
+            bus_stop_point = bus_stop.get('point')
+            current_distance = distance(point_one=provided_point, longitude_two=bus_stop_point.get('longitude'),
+                                        latitude_two=bus_stop_point.get('latitude'))
+
+            if current_distance == 0:
+                closest_bus_stop = bus_stop
+                break
+            elif current_distance < minimum_distance:
+                minimum_distance = current_distance
+                closest_bus_stop = bus_stop
+            else:
+                pass
+
+        return closest_bus_stop
+
+    def get_bus_stop_from_coordinates(self, longitude, latitude):
+        """
+        Get the bus_stop which corresponds to a set of coordinates.
+
+        :type longitude: float
+        :type latitude: float
+        :return bus_stop: {osm_id, name, point}
+        """
+        return self.connection.find_bus_stop_from_coordinates(longitude=longitude, latitude=latitude)
+
+    def get_bus_stop_from_name(self, name):
+        """
+        Get the bus_stop which corresponds to a name.
+
+        :type name: string
+        :return bus_stop: {osm_id, name, point}
+        """
+        return self.connection.find_bus_stop_from_name(name=name)
+
+    def get_bus_stop_from_point(self, point):
+        """
+        Get the bus_stop which corresponds to a name.
+
+        :type point: Point
+        :return bus_stop: {osm_id, name, point}
+        """
+        return self.get_bus_stop_from_coordinates(longitude=point.longitude, latitude=point.latitude)
+
+    def get_bus_stops_within_distance_from_coordinates(self, longitude, latitude, maximum_distance):
+        """
+        Get the bus_stops which are within a distance from a set of coordinates.
+
+        :type longitude: float
+        :type latitude: float
+        :type maximum_distance: float
+        :return bus_stops: [{osm_id, name, point}]
+        """
+        provided_point = Point(longitude=longitude, latitude=latitude)
+        bus_stops = []
+        bus_stops_cursor = self.connection.get_bus_stops()
+
+        for bus_stop in bus_stops_cursor:
+            bus_stop_point = bus_stop.get('point')
+            current_distance = distance(point_one=provided_point, longitude_two=bus_stop_point.get('longitude'),
+                                        latitude_two=bus_stop_point.get('latitude'))
+
+            if current_distance <= maximum_distance:
+                bus_stops.append(bus_stop)
+
+        return bus_stops
+
+    def get_bus_stops_within_distance_from_point(self, provided_point, maximum_distance):
+        """
+        Get the bus_stops which are within a distance from a set of coordinates.
+
+        :type provided_point: Point
+        :type maximum_distance: float
+        :return bus_stops: [{osm_id, name, point}]
+        """
+        bus_stops = []
+        bus_stops_cursor = self.connection.get_bus_stops()
+
+        for bus_stop in bus_stops_cursor:
+            bus_stop_point = bus_stop.get('point')
+            current_distance = distance(point_one=provided_point, longitude_two=bus_stop_point.get('longitude'),
+                                        latitude_two=bus_stop_point.get('latitude'))
+
+            if current_distance <= maximum_distance:
+                bus_stops.append(bus_stop)
+
+        return bus_stops
+
         # self.parser.test_edges()
         # self.parser.print_nodes()
         # self.parser.print_edges()
@@ -644,95 +755,6 @@ if __name__ == '__main__':
     #             return True
     #
     #     return False
-
-    # def get_bus_stop_closest_to_coordinates(self, longitude, latitude):
-    #     """
-    #     Get the bus stop which is closest to a set of coordinates.
-    #
-    #     :type longitude: float
-    #     :type latitude: float
-    #     :return bus_stop: {osm_id, name, point}
-    #     """
-    #     provided_point = Point(longitude=longitude, latitude=latitude)
-    #     minimum_distance = float('Inf')
-    #     closest_bus_stop = None
-    #
-    #     bus_stops_cursor = self.connection.get_bus_stops()
-    #
-    #     for bus_stop in bus_stops_cursor:
-    #         current_distance = distance(point_one=provided_point, longitude_two=bus_stop.get('point').get('longitude'),
-    #                                     latitude_two=bus_stop.get('point').get('latitude'))
-    #
-    #         if current_distance == 0:
-    #             closest_bus_stop = bus_stop
-    #             break
-    #         elif current_distance < minimum_distance:
-    #             minimum_distance = current_distance
-    #             closest_bus_stop = bus_stop
-    #         else:
-    #             pass
-    #
-    #     return closest_bus_stop
-    #
-    # def get_bus_stop_from_coordinates(self, longitude, latitude):
-    #     """
-    #     Get the bus_stop which corresponds to a set of coordinates.
-    #
-    #     :type longitude: float
-    #     :type latitude: float
-    #     :return bus_stop: {osm_id, name, point}
-    #     """
-    #     return self.connection.find_bus_stop_from_coordinates(longitude=longitude, latitude=latitude)
-    #     # bus_stop = None
-    #     #
-    #     # for osm_id, values in self.bus_stops.iteritems():
-    #     #     if values.get('point').equal_to_coordinates(longitude=longitude, latitude=latitude):
-    #     #         values['osm_id'] = osm_id
-    #     #         bus_stop = values
-    #     #         break
-    #     #
-    #     # return bus_stop
-    #
-    # def get_bus_stop_from_name(self, name):
-    #     """
-    #     Get the bus_stop which corresponds to a name.
-    #
-    #     :type name: string
-    #     :return bus_stop: {osm_id, name, point}
-    #     """
-    #     return self.connection.find_bus_stop_from_name(name=name)
-    #     # name = name.lower()
-    #     # bus_stop = None
-    #     #
-    #     # for osm_id, values in self.bus_stops.iteritems():
-    #     #     if values.get('name').lower() == name:
-    #     #         values['osm_id'] = osm_id
-    #     #         bus_stop = values
-    #     #         break
-    #     #
-    #     # return bus_stop
-    #
-    # def get_bus_stops_within_distance(self, longitude, latitude, maximum_distance):
-    #     """
-    #     Get the bus_stops which are within a distance from a set of coordinates.
-    #
-    #     :type longitude:
-    #     :type latitude:
-    #     :type maximum_distance:
-    #     :return bus_stops: [{osm_id, name, point}]
-    #     """
-    #     provided_point = Point(longitude=longitude, latitude=latitude)
-    #     bus_stops = []
-    #     bus_stops_cursor = self.connection.get_bus_stops()
-    #
-    #     for bus_stop in bus_stops_cursor:
-    #         current_distance = distance(point_one=provided_point, longitude_two=bus_stop.get('point').get('longitude'),
-    #                                     latitude_two=bus_stop.get('point').get('latitude'))
-    #
-    #         if current_distance <= maximum_distance:
-    #             bus_stops.append(bus_stop)
-    #
-    #     return bus_stops
 
     # def get_center_point_from_address_name(self, address_name):
     #     """
