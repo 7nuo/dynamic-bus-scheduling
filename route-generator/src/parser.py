@@ -432,15 +432,6 @@ class Parser(object):
     #         print 'Way: ' + str(osm_id) + ', Tags: ' + str(values.get('tags')) + \
     #               ', References: ' + str(values.get('references'))
     #
-    # def test_edges(self):
-    #     counter = 0
-    #     for osm_id, list_of_values in self.edges.iteritems():
-    #         for values in list_of_values:
-    #             if values.get('to_node') not in self.points:
-    #                 counter += 1
-    #                 # print 'From_Node: ' + str(osm_id) + ', To_Node: ' + str(values.get('to_node'))
-    #
-    #     print counter
 
 
 class MongoConnector(object):
@@ -493,9 +484,6 @@ class MongoConnector(object):
         self.populate_bus_stops()
         self.populate_edges()
         self.populate_address_book()
-
-        # self.parser.populate_points()
-        # print 'Points: ok'
 
         # self.parser.test_edges()
         # self.parser.print_nodes()
