@@ -412,7 +412,7 @@ class Parser(object):
         #
         # print closest_to(point, points)
 
-# def check_coordinates_list(self, coordinates_list):
+    # def check_coordinates_list(self, coordinates_list):
     #     """
     #
     #     :param coordinates_list: [(longitude, latitude)]
@@ -463,22 +463,3 @@ class Parser(object):
     #         retrieved_center = self.address_book[address_name].get_center()
     #
     #     return retrieved_center
-
-    # def get_route_from_coordinates(self, starting_longitude, starting_latitude, ending_longitude, ending_latitude):
-    #     """
-    #     Find a route between two set of coordinates, using the A* algorithm.
-    #
-    #     :type starting_longitude: float
-    #     :type starting_latitude: float
-    #     :type ending_longitude: float
-    #     :type ending_latitude: float
-    #     :return route: [(osm_id, point, (distance_from_starting_node, time_from_starting_node))]
-    #     """
-    #     starting_point = Point(longitude=starting_longitude, latitude=starting_latitude)
-    #     ending_point = Point(longitude=ending_longitude, latitude=ending_latitude)
-    #     starting_osm_id, starting_point_in_edges = self.get_closest_point_in_edges(point=starting_point)
-    #     ending_osm_id, ending_point_in_edges = self.get_closest_point_in_edges(point=ending_point)
-    #
-    #     route = find_path(starting_node=starting_osm_id, ending_node=ending_osm_id,
-    #                       edges=self.edges, points=self.points)
-    #     return route

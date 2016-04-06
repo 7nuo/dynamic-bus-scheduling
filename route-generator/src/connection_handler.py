@@ -178,55 +178,142 @@ class MongoConnector(object):
 
         return bus_stops
 
-    # def get_closest_point_in_edges(self, point):
-    #     """
-    #     Retrieve the point which is closely to an input point and is contained at the edges.
-    #
-    #     :type point: Point
-    #     :return closest_point: (osm_id, point)
-    #     """
-    #     minimum_distance = float('Inf')
-    #     closest_point = None
-    #
-    #     points_of_edges = self.get_points_of_edges()
-    #
-    #     for osm_id, point_in_edge in points_of_edges.iteritems():
-    #         distance_of_points = distance(point_one=point, point_two=point_in_edge)
-    #
-    #         if distance_of_points < minimum_distance:
-    #             minimum_distance = distance_of_points
-    #             closest_point = (osm_id, point_in_edge)
-    #
-    #     return closest_point
+    def get_closest_ending_node_in_edges_from_coordinates(self, longitude, latitude):
+        """
+        Retrieve the node which is closest to a set of coordinates and is stored at
+        the Edges collection as an ending node.
 
-    # def get_point_from_osm_id(self, osm_id):
-    #     """
-    #     Retrieve the point which correspond to a specific osm_id.
-    #
-    #     :type osm_id: integer
-    #     :return: Point
-    #     """
-    #     point = None
-    #     # document = {'osm_id': osm_id, 'point': {'longitude': point.longitude, 'latitude': point.latitude}}
-    #     document = self.connection.find_point(osm_id=osm_id)
-    #     point_entry = document.get('point')
-    #
-    #     if point_entry is not None:
-    #         point = Point(longitude=point_entry.get('longitude'), latitude=point_entry.get('latitude'))
-    #
-    #     return point
+        :type longitude: float
+        :type latitude: float
+        :return closest_ending_node: osm_id
+        """
+        provided_point = Point(longitude=longitude, latitude=latitude)
+        return self.get_closest_ending_node_in_edges_from_point(provided_point=provided_point)
 
-    # def get_points_dictionary(self):
-    #     points_dictionary = {}
-    #     points_cursor = self.connection.get_points()
-    #
-    #     for point_document in points_cursor:
-    #         # {'osm_id': osm_id, 'point': {'longitude': point.longitude, 'latitude': point.latitude}}
-    #         points_dictionary[point_document.get('osm_id')] = \
-    #             Point(longitude=point_document.get('point').get('longitude'),
-    #                   latitude=point_document.get('point').get('latitude'))
-    #
-    #     return points_dictionary
+    def get_closest_ending_node_in_edges_from_point(self, provided_point):
+        """
+        Retrieve the node which is closest to the provided point and is stored at
+        the Edges collection as an ending node.
+
+        :type provided_point: Point
+        :return closest_ending_node: osm_id
+        """
+        closest_ending_node = None
+        ending_nodes_set = self.connection.get_ending_nodes_of_edges()
+        points_dictionary = self.get_points_dictionary()
+        minimum_distance = float('Inf')
+
+        for current_ending_node in ending_nodes_set:
+            current_point = points_dictionary[current_ending_node]
+            current_distance = distance(point_one=provided_point, point_two=current_point)
+
+            if current_distance == 0:
+                closest_ending_node = current_ending_node
+                break
+            elif current_distance < minimum_distance:
+                minimum_distance = current_distance
+                closest_ending_node = current_ending_node
+            else:
+                pass
+
+        return closest_ending_node
+
+    def get_closest_starting_node_in_edges_from_coordinates(self, longitude, latitude):
+        """
+        Retrieve the node which is closest to a set of coordinates and is stored at
+        the Edges collection as a starting node.
+
+        :type longitude: float
+        :type latitude: float
+        :return closest_starting_node: osm_id
+        """
+        provided_point = Point(longitude=longitude, latitude=latitude)
+        return self.get_closest_starting_node_in_edges_from_point(provided_point=provided_point)
+
+    def get_closest_starting_node_in_edges_from_point(self, provided_point):
+        """
+        Retrieve the node which is closest to the provided point and is stored at
+        the Edges collection as a starting node.
+
+        :type provided_point: Point
+        :return closest_starting_node: osm_id
+        """
+        closest_starting_node = None
+        starting_nodes_set = self.connection.get_starting_nodes_of_edges()
+        points_dictionary = self.get_points_dictionary()
+        minimum_distance = float('Inf')
+
+        for current_starting_node in starting_nodes_set:
+            current_point = points_dictionary[current_starting_node]
+            current_distance = distance(point_one=provided_point, point_two=current_point)
+
+            if current_distance == 0:
+                closest_starting_node = current_starting_node
+                break
+            elif current_distance < minimum_distance:
+                minimum_distance = current_distance
+                closest_starting_node = current_starting_node
+            else:
+                pass
+
+        return closest_starting_node
+
+    def get_point_from_osm_id(self, osm_id):
+        """
+        Retrieve the point which correspond to a specific osm_id.
+
+        :type osm_id: integer
+        :return: Point
+        """
+        point = None
+        # document = {'osm_id': osm_id, 'point': {'longitude': point.longitude, 'latitude': point.latitude}}
+        document = self.connection.find_point(osm_id=osm_id)
+        point_entry = document.get('point')
+
+        if point_entry is not None:
+            point = Point(longitude=point_entry.get('longitude'), latitude=point_entry.get('latitude'))
+
+        return point
+
+    def get_edges_dictionary(self):
+        edges_dictionary = {}
+        edges_cursor = self.connection.get_edges()
+
+        # Cursor -> {'starting_node', 'ending_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}
+        for edges_document in edges_cursor:
+            starting_node = edges_document.get('starting_node')
+
+            if starting_node in edges_dictionary:
+                edges_dictionary[starting_node].append({'ending_node': edges_document.get('ending_node'),
+                                                        'max_speed': edges_document.get('max_speed'),
+                                                        'road_type': edges_document.get('road_type'),
+                                                        'way_id': edges_document.get('way_id'),
+                                                        'traffic_density': edges_document.get('traffic_density')})
+            else:
+                edges_dictionary[starting_node] = [{'ending_node': edges_document.get('ending_node'),
+                                                    'max_speed': edges_document.get('max_speed'),
+                                                    'road_type': edges_document.get('road_type'),
+                                                    'way_id': edges_document.get('way_id'),
+                                                    'traffic_density': edges_document.get('traffic_density')}]
+        return edges_dictionary
+
+    def get_points_dictionary(self):
+        """
+        Retrieve a dictionary containing the stored points.
+
+        :return points_dictionary: {osm_id, point}
+        """
+        points_dictionary = {}
+        points_cursor = self.connection.get_points()
+
+        for point_document in points_cursor:
+            # {'osm_id': osm_id, 'point': {'longitude': point.longitude, 'latitude': point.latitude}}
+            osm_id = point_document.get('osm_id')
+            point_entry = point_document.get('point')
+            points_dictionary[osm_id] = Point(longitude=point_entry.get('longitude'),
+                                              latitude=point_entry.get('latitude'))
+
+        return points_dictionary
 
     def get_points_of_edges(self):
         """
@@ -250,3 +337,24 @@ class MongoConnector(object):
                 points_of_edges[ending_node] = points_dictionary.get(ending_node)
 
         return points_of_edges
+
+    # def get_route_from_coordinates(self, starting_longitude, starting_latitude, ending_longitude, ending_latitude):
+    #     """
+    #     Find a route between two set of coordinates, using the A* algorithm.
+    #
+    #     :type starting_longitude: float
+    #     :type starting_latitude: float
+    #     :type ending_longitude: float
+    #     :type ending_latitude: float
+    #     :return route: [(osm_id, point, (distance_from_starting_node, time_from_starting_node))]
+    #     """
+    #     starting_point = Point(longitude=starting_longitude, latitude=starting_latitude)
+    #     ending_point = Point(longitude=ending_longitude, latitude=ending_latitude)
+    #     starting_osm_id, starting_point_in_edges = self.get_closest_point_in_edges(point=starting_point)
+    #     ending_osm_id, ending_point_in_edges = self.get_closest_point_in_edges(point=ending_point)
+    #
+    #     route = find_path(starting_node=starting_osm_id, ending_node=ending_osm_id,
+    #                       edges=self.edges, points=self.points)
+    #     return route
+
+    # def get_route_from_points(self, starting_point, ending_point):

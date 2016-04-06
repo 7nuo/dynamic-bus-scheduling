@@ -263,6 +263,21 @@ class Connection(object):
         """
         return self.edges_collection.find()
 
+    def get_ending_nodes_of_edges(self):
+        """
+        Retrieve all the ending nodes which are included in the Edges collection.
+
+        :return: ending_nodes: set([osm_id])
+        """
+        ending_nodes = set()
+        edges_cursor = self.get_edges()
+
+        for edge_document in edges_cursor:
+            # Cursor -> {'starting_node', 'ending_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}
+            ending_nodes.add(edge_document.get('ending_node'))
+
+        return ending_nodes
+
     def get_points(self):
         """
         Retrieve all the documents of the Points collection.
@@ -270,6 +285,21 @@ class Connection(object):
         :return: Cursor -> {'osm_id', 'point': {'longitude', 'latitude'}}
         """
         return self.points_collection.find()
+
+    def get_starting_nodes_of_edges(self):
+        """
+        Retrieve all the starting nodes which are included in the Edges collection.
+
+        :return: starting_nodes: set([osm_id])
+        """
+        starting_nodes = set()
+        edges_cursor = self.get_edges()
+
+        for edge_document in edges_cursor:
+            # Cursor -> {'starting_node', 'ending_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}
+            starting_nodes.add(edge_document.get('starting_node'))
+
+        return starting_nodes
 
     def has_edges(self, node):
         """
@@ -347,8 +377,8 @@ class Connection(object):
         :param traffic_density: A value between 0 and 1 indicating the density of traffic: float
         :return: The Object Id of the inserted document.
         """
-        document = {'starting_node': starting_node, 'ending_node': ending_node, 'max_speed': max_speed, 'road_type': road_type,
-                    'way_id': way_id, 'traffic_density': traffic_density}
+        document = {'starting_node': starting_node, 'ending_node': ending_node, 'max_speed': max_speed,
+                    'road_type': road_type, 'way_id': way_id, 'traffic_density': traffic_density}
         result = self.edges_collection.insert_one(document)
         return result.inserted_id
 
