@@ -13,8 +13,8 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
 from imposm.parser import OSMParser
-from path_finder import bus_road_types, find_path, standard_speed
-from point import distance, Point
+from path_finder import bus_road_types, standard_speed
+from point import Point
 from address import Address
 import re
 
@@ -424,31 +424,6 @@ class Parser(object):
     #             coordinates_list[index] = self.closest_coordinates_in_edges(coordinates)
     #
     #     return coordinates_list
-
-    # def check_coordinates_in_edges(self, longitude, latitude):
-    #     """
-    #     Check if a pair of coordinates exists in the edges dictionary.
-    #
-    #     :type longitude: float
-    #     :type latitude: float
-    #     :return: boolean
-    #     """
-    #     return self.check_point_in_edges(point=Point(longitude=longitude, latitude=latitude))
-    #
-    # def check_point_in_edges(self, point):
-    #     """
-    #     Check if a point exists in the edges dictionary.
-    #
-    #     :type point: Point
-    #     :return: boolean
-    #     """
-    #     for osm_id in self.edges:
-    #         point_in_edge = self.edges.get(osm_id)
-    #
-    #         if point.equal_to_coordinates(longitude=point_in_edge.longitude, latitude=point_in_edge.latitude):
-    #             return True
-    #
-    #     return False
 
     # def get_center_point_from_address_name(self, address_name):
     #     """

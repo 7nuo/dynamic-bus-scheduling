@@ -14,6 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 from mongo_connection import Connection
 from point import distance, Point
+from path_finder import find_path
 
 
 class MongoConnector(object):
@@ -276,6 +277,11 @@ class MongoConnector(object):
         return point
 
     def get_edges_dictionary(self):
+        """
+        Retrieve a dictionary containing all the documents of the Edges collection.
+
+        :return: {starting_node -> {'ending_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}}
+        """
         edges_dictionary = {}
         edges_cursor = self.connection.get_edges()
 
@@ -299,9 +305,9 @@ class MongoConnector(object):
 
     def get_points_dictionary(self):
         """
-        Retrieve a dictionary containing the stored points.
+        Retrieve a dictionary containing all the documents of the Points collection.
 
-        :return points_dictionary: {osm_id, point}
+        :return points_dictionary: {osm_id -> point}
         """
         points_dictionary = {}
         points_cursor = self.connection.get_points()
@@ -319,7 +325,7 @@ class MongoConnector(object):
         """
         Retrieve a dictionary containing the points of edges.
 
-        :return points_of_edges: {osm_id, point}
+        :return points_of_edges: {osm_id -> point}
         """
         # edge_document = {'starting_node', 'ending_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}
         points_of_edges = {}
@@ -338,23 +344,33 @@ class MongoConnector(object):
 
         return points_of_edges
 
-    # def get_route_from_coordinates(self, starting_longitude, starting_latitude, ending_longitude, ending_latitude):
-    #     """
-    #     Find a route between two set of coordinates, using the A* algorithm.
-    #
-    #     :type starting_longitude: float
-    #     :type starting_latitude: float
-    #     :type ending_longitude: float
-    #     :type ending_latitude: float
-    #     :return route: [(osm_id, point, (distance_from_starting_node, time_from_starting_node))]
-    #     """
-    #     starting_point = Point(longitude=starting_longitude, latitude=starting_latitude)
-    #     ending_point = Point(longitude=ending_longitude, latitude=ending_latitude)
-    #     starting_osm_id, starting_point_in_edges = self.get_closest_point_in_edges(point=starting_point)
-    #     ending_osm_id, ending_point_in_edges = self.get_closest_point_in_edges(point=ending_point)
-    #
-    #     route = find_path(starting_node=starting_osm_id, ending_node=ending_osm_id,
-    #                       edges=self.edges, points=self.points)
-    #     return route
+    def get_route_from_coordinates(self, starting_longitude, starting_latitude, ending_longitude, ending_latitude):
+        """
+        Find a route between two pairs of coordinates, using the A* algorithm.
 
-    # def get_route_from_points(self, starting_point, ending_point):
+        :type starting_longitude: float
+        :type starting_latitude: float
+        :type ending_longitude: float
+        :type ending_latitude: float
+        :return route: [(osm_id, point, (distance_from_starting_node, time_from_starting_node))]
+        """
+        starting_point = Point(longitude=starting_longitude, latitude=starting_latitude)
+        ending_point = Point(longitude=ending_longitude, latitude=ending_latitude)
+        return self.get_route_from_points(starting_point=starting_point, ending_point=ending_point)
+
+    def get_route_from_points(self, starting_point, ending_point):
+        """
+        Find a route between two points, using the A* algorithm.
+
+        :type starting_point: Point
+        :type ending_point: Point
+        :return route: [(osm_id, point, (distance_from_starting_node, time_from_starting_node))]
+        """
+        starting_osm_id = self.get_closest_starting_node_in_edges_from_point(provided_point=starting_point)
+        ending_osm_id = self.get_closest_ending_node_in_edges_from_point(provided_point=ending_point)
+        edges_dictionary = self.get_edges_dictionary()
+        points_dictionary = self.get_points_dictionary()
+        route = find_path(starting_node=starting_osm_id, ending_node=ending_osm_id, edges=edges_dictionary,
+                          points=points_dictionary)
+        return route
+
