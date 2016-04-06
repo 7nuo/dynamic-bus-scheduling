@@ -16,14 +16,7 @@ from imposm.parser import OSMParser
 from path_finder import bus_road_types, find_path, standard_speed
 from point import distance, Point
 from address import Address
-from mongo_connection import Connection
 import re
-
-
-# from multiprocessing import Process
-import os
-# import time
-# import signal
 
 
 class Parser(object):
@@ -56,12 +49,6 @@ class Parser(object):
         if name is None or name == '' or node_id is None or point is None:
             return
 
-        # document = {'name': name, 'node_id': node_id,
-        #             'point': {'longitude': point.longitude, 'latitude': point.latitude}}
-
-        # self.address_book.append(document)
-        # self.connection.insert_address(name=name, node_id=node_id, point=point)
-
         if name not in self.address_book:
             self.address_book[name] = Address(name, node_id, point)
         else:
@@ -75,18 +62,14 @@ class Parser(object):
         :type name: string
         :type point: Point
         """
-        # document = {'osm_id': osm_id, 'name': name,
-        #             'point': {'longitude': point.longitude, 'latitude': point.latitude}}
-        # self.bus_stops.append(document)
-        # self.connection.insert_bus_stop(osm_id=osm_id, name=name, point=point)
         self.bus_stops[osm_id] = {'name': name, 'point': point}
 
-    def add_edge(self, from_node, to_node, max_speed, road_type, way_id, traffic_density=None):
+    def add_edge(self, starting_node, ending_node, max_speed, road_type, way_id, traffic_density=None):
         """
         Add an edge to the edges dictionary.
 
-        :param from_node: osm_id: integer
-        :param to_node: osm_id: integer
+        :param starting_node: osm_id: integer
+        :param ending_node: osm_id: integer
         :type max_speed: float or integer
         :type road_type: string
         :param way_id: osm_id: integer
@@ -95,22 +78,13 @@ class Parser(object):
         if traffic_density is None:
             traffic_density = 0
 
-        # document = {'from_node': from_node, 'to_node': to_node, 'max_speed': max_speed, 'road_type': road_type,
-        #             'way_id': way_id, 'traffic_density': traffic_density}
-
-        # self.edges.append(document)
-        # self.connection.insert_edge(from_node=from_node, to_node=to_node, max_speed=max_speed, road_type=road_type,
-        #                             way_id=way_id, traffic_density=traffic_density)
-
-        if from_node in self.edges:
-            self.edges[from_node].append({'to_node': to_node, 'max_speed': max_speed, 'road_type': road_type,
-                                          'way_id': way_id, 'traffic_density': traffic_density})
+        if starting_node in self.edges:
+            self.edges[starting_node].append({'ending_node': ending_node, 'max_speed': max_speed,
+                                              'road_type': road_type, 'way_id': way_id,
+                                              'traffic_density': traffic_density})
         else:
-            self.edges[from_node] = [{'to_node': to_node, 'max_speed': max_speed, 'road_type': road_type,
-                                      'way_id': way_id, 'traffic_density': traffic_density}]
-        #
-        # if to_node not in self.edges:
-        #     self.edges[to_node] = []
+            self.edges[starting_node] = [{'ending_node': ending_node, 'max_speed': max_speed, 'road_type': road_type,
+                                          'way_id': way_id, 'traffic_density': traffic_density}]
 
     def add_node(self, osm_id, tags, point):
         """
@@ -120,10 +94,6 @@ class Parser(object):
         :type tags: {}
         :type point: Point
         """
-        # document = {'osm_id': osm_id, 'tags': tags,
-        #             'point': {'longitude': point.longitude, 'latitude': point.latitude}}
-        # self.nodes.append(document)
-        # self.connection.insert_node(osm_id=osm_id, tags=tags, point=point)
         self.nodes[osm_id] = {'tags': tags, 'point': point}
 
     def add_point(self, osm_id, point):
@@ -133,9 +103,6 @@ class Parser(object):
         :type osm_id: integer
         :type point: Point
         """
-        # document = {'osm_id': osm_id, 'point': {'longitude': point.longitude, 'latitude': point.latitude}}
-        # self.points.append(document)
-        # self.connection.insert_point(osm_id=osm_id, point=point)
         self.points[osm_id] = point
 
     def add_way(self, osm_id, tags, references):
@@ -147,8 +114,6 @@ class Parser(object):
         :param references: [osm_id]
         """
         # document = {'osm_id': osm_id, 'tags': tags, 'references': references}
-        # self.ways.append(document)
-        # self.connection.insert_way(osm_id=osm_id, tags=tags, references=references)
         self.ways[osm_id] = {'tags': tags, 'references': references}
 
     @staticmethod
@@ -222,13 +187,13 @@ class Parser(object):
 
         for osm_id, list_of_values in self.edges.iteritems():
             for values in list_of_values:
-                to_node = values.get('to_node')
+                ending_node = values.get('ending_node')
                 max_speed = values.get('max_speed')
                 road_type = values.get('road_type')
                 way_id = values.get('way_id')
                 traffic_density = values.get('traffic_density')
-                document = {'from_node': osm_id, 'to_node': to_node, 'max_speed': max_speed, 'road_type': road_type,
-                            'way_id': way_id, 'traffic_density': traffic_density}
+                document = {'starting_node': osm_id, 'ending_node': ending_node, 'max_speed': max_speed,
+                            'road_type': road_type, 'way_id': way_id, 'traffic_density': traffic_density}
                 list_of_edges.append(document)
 
         return list_of_edges
@@ -273,16 +238,6 @@ class Parser(object):
         :return: Point
         """
         self.points.get(osm_id)
-        # point = None
-        # document = {'osm_id': osm_id, 'point': {'longitude': point.longitude, 'latitude': point.latitude}}
-        #
-        # for document in self.points:
-        #     if document.get('osm_id') == osm_id:
-        #         point_entry = document.get('point')
-        #         point = Point(longitude=point_entry.get('longitude'), latitude=point_entry.get('latitude'))
-        #         break
-        #
-        # return point
 
     def parse(self):
         parser = OSMParser(
@@ -333,11 +288,11 @@ class Parser(object):
         road_type = tags.get('highway')
 
         for reference_index in range(len(references) - 1):
-            self.add_edge(from_node=references[reference_index], to_node=references[reference_index + 1],
+            self.add_edge(starting_node=references[reference_index], ending_node=references[reference_index + 1],
                           max_speed=max_speed, road_type=road_type, way_id=osm_id)
 
             if not oneway:
-                self.add_edge(from_node=references[reference_index + 1], to_node=references[reference_index],
+                self.add_edge(starting_node=references[reference_index + 1], ending_node=references[reference_index],
                               max_speed=max_speed, road_type=road_type, way_id=osm_id)
 
     def parse_nodes(self, nodes):
@@ -410,7 +365,7 @@ class Parser(object):
     #     print '-- Printing Edges --'
     #     for osm_id, list_of_values in self.edges.iteritems():
     #         for values in list_of_values:
-    #             print 'From_Node: ' + str(osm_id) + ', To_Node: ' + str(values.get('to_node')) + \
+    #             print 'starting_node: ' + str(osm_id) + ', ending_node: ' + str(values.get('ending_node')) + \
     #                   ', Max_Speed: ' + str(values.get('max_speed')) + ', Way: ' + str(values.get('way_id'))
     #
     # def print_nodes(self):
@@ -456,103 +411,6 @@ class Parser(object):
         # point = Point(longitude=0.0, latitude=0.0)
         #
         # print closest_to(point, points)
-
-
-# def printer():
-#     # start_time = time.time()
-#     pattern = ''
-#
-#     while (True):
-#         # elapsed_time = time.time() - start_time
-#         pattern += '='
-#         print pattern,
-#         time.sleep(1)
-
-# class Tester(object):
-#     """
-#
-#     """
-#     def __init__(self):
-#         self.edges = {}
-#         self.points = {}
-#         self.populate_points()
-#         self.populate_edges()
-#
-#     def add_edge(self, from_node, to_node, max_speed, road_type=None, way_id=None, traffic_density=None):
-#         """
-#         Add an edge to the edges dictionary.
-#
-#         :param from_node: osm_id: integer
-#         :param to_node: osm_id: integer
-#         :type max_speed: float or integer
-#         :type road_type: string
-#         :param way_id: osm_id: integer
-#         :param traffic_density: A value between 0 and 1 indicating the density of traffic: float
-#         """
-#         if road_type is None:
-#             road_type = 'motorway'
-#
-#         if traffic_density is None:
-#             traffic_density = 0
-#
-#         if from_node in self.edges:
-#             self.edges[from_node].append({'to_node': to_node, 'max_speed': max_speed, 'road_type': road_type,
-#                                           'way_id': way_id, 'traffic_density': traffic_density})
-#         else:
-#             self.edges[from_node] = [{'to_node': to_node, 'max_speed': max_speed, 'road_type': road_type,
-#                                       'way_id': way_id, 'traffic_density': traffic_density}]
-#
-#         if to_node not in self.edges:
-#             self.edges[to_node] = []
-#
-#     def add_point(self, osm_id, longitude, latitude):
-#         """
-#         Add a point to the points dictionary.
-#
-#         :type osm_id: integer
-#         :type longitude: float
-#         :type latitude: float
-#         """
-#         point = Point(longitude=longitude, latitude=latitude)
-#         self.points[osm_id] = point
-#
-#     def populate_edges(self):
-#         self.add_edge(from_node=1, to_node=2, max_speed=50)
-#         self.add_edge(from_node=2, to_node=3, max_speed=50)
-#         self.add_edge(from_node=3, to_node=4, max_speed=50)
-#         self.add_edge(from_node=4, to_node=5, max_speed=50)
-#
-#     def populate_points(self):
-#         self.add_point(osm_id=1, longitude=1.0, latitude=1.0)
-#         self.add_point(osm_id=2, longitude=2.0, latitude=2.0)
-#         self.add_point(osm_id=3, longitude=3.0, latitude=3.0)
-#         self.add_point(osm_id=4, longitude=4.0, latitude=4.0)
-#         self.add_point(osm_id=5, longitude=5.0, latitude=5.0)
-#
-#     def test(self):
-#         print find_path(starting_node=1, ending_node=5, edges=self.edges, points=self.points)
-#         print find_path(starting_node=2, ending_node=3, edges=self.edges, points=self.points)
-
-
-if __name__ == '__main__':
-    osm_filename = os.path.join(os.path.dirname(__file__), '../resources/map.osm')
-    # connection = Connection(host='127.0.0.1', port=27017)
-    parser = Parser(osm_filename=osm_filename)
-    parser.parse()
-    print 'Parser: ok'
-
-    mongo = MongoConnector(parser=parser, host='127.0.0.1', port=27017)
-    mongo.populate_all_collections()
-
-    # Router(osm_filename=osm_filename)
-    # Tester().test()
-
-    # p = Process(target=printer, args=())
-    # p.start()
-    # time.sleep(10)
-    # p.terminate()
-    # p.join()
-
 
 # def check_coordinates_list(self, coordinates_list):
     #     """
@@ -605,79 +463,6 @@ if __name__ == '__main__':
     #         retrieved_center = self.address_book[address_name].get_center()
     #
     #     return retrieved_center
-
-    # def get_closest_point_in_edges(self, point):
-    #     """
-    #     Retrieve the point which is closely to an input point and is contained at the edges.
-    #
-    #     :type point: Point
-    #     :return closest_point: (osm_id, point)
-    #     """
-    #     minimum_distance = float('Inf')
-    #     closest_point = None
-    #
-    #     points_of_edges = self.get_points_of_edges()
-    #
-    #     for osm_id, point_in_edge in points_of_edges.iteritems():
-    #         distance_of_points = distance(point_one=point, point_two=point_in_edge)
-    #
-    #         if distance_of_points < minimum_distance:
-    #             minimum_distance = distance_of_points
-    #             closest_point = (osm_id, point_in_edge)
-    #
-    #     return closest_point
-
-    # def get_point_from_osm_id(self, osm_id):
-    #     """
-    #     Retrieve the point which correspond to a specific osm_id.
-    #
-    #     :type osm_id: integer
-    #     :return: Point
-    #     """
-    #     point = None
-    #     # document = {'osm_id': osm_id, 'point': {'longitude': point.longitude, 'latitude': point.latitude}}
-    #     document = self.connection.find_point(osm_id=osm_id)
-    #     point_entry = document.get('point')
-    #
-    #     if point_entry is not None:
-    #         point = Point(longitude=point_entry.get('longitude'), latitude=point_entry.get('latitude'))
-    #
-    #     return point
-
-    # def get_points_dictionary(self):
-    #     points_dictionary = {}
-    #     points_cursor = self.connection.get_points()
-    #
-    #     for point_document in points_cursor:
-    #         # {'osm_id': osm_id, 'point': {'longitude': point.longitude, 'latitude': point.latitude}}
-    #         points_dictionary[point_document.get('osm_id')] = \
-    #             Point(longitude=point_document.get('point').get('longitude'),
-    #                   latitude=point_document.get('point').get('latitude'))
-    #
-    #     return points_dictionary
-
-    # def get_points_of_edges(self):
-    #     """
-    #     Retrieve a dictionary containing the points of edges.
-    #
-    #     :return points_of_edges: {osm_id, point}
-    #     """
-    #     # edge_document = {'from_node', 'to_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}
-    #     points_of_edges = {}
-    #     edges_cursor = self.connection.get_edges()
-    #     points_dictionary = self.get_points_dictionary()
-    #
-    #     for edge_document in edges_cursor:
-    #         from_node = edge_document.get('from_node')
-    #         to_node = edge_document.get('to_node')
-    #
-    #         if from_node not in points_of_edges:
-    #             points_of_edges[from_node] = points_dictionary.get(from_node)
-    #
-    #         if to_node not in points_of_edges:
-    #             points_of_edges[to_node] = points_dictionary.get(to_node)
-    #
-    #     return points_of_edges
 
     # def get_route_from_coordinates(self, starting_longitude, starting_latitude, ending_longitude, ending_latitude):
     #     """

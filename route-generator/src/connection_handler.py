@@ -1,3 +1,17 @@
+"""
+Copyright 2016 Eleftherios Anagnostopoulos for Ericsson AB
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
+"""
 from mongo_connection import Connection
 from point import distance, Point
 
@@ -163,3 +177,76 @@ class MongoConnector(object):
                 bus_stops.append(bus_stop)
 
         return bus_stops
+
+    # def get_closest_point_in_edges(self, point):
+    #     """
+    #     Retrieve the point which is closely to an input point and is contained at the edges.
+    #
+    #     :type point: Point
+    #     :return closest_point: (osm_id, point)
+    #     """
+    #     minimum_distance = float('Inf')
+    #     closest_point = None
+    #
+    #     points_of_edges = self.get_points_of_edges()
+    #
+    #     for osm_id, point_in_edge in points_of_edges.iteritems():
+    #         distance_of_points = distance(point_one=point, point_two=point_in_edge)
+    #
+    #         if distance_of_points < minimum_distance:
+    #             minimum_distance = distance_of_points
+    #             closest_point = (osm_id, point_in_edge)
+    #
+    #     return closest_point
+
+    # def get_point_from_osm_id(self, osm_id):
+    #     """
+    #     Retrieve the point which correspond to a specific osm_id.
+    #
+    #     :type osm_id: integer
+    #     :return: Point
+    #     """
+    #     point = None
+    #     # document = {'osm_id': osm_id, 'point': {'longitude': point.longitude, 'latitude': point.latitude}}
+    #     document = self.connection.find_point(osm_id=osm_id)
+    #     point_entry = document.get('point')
+    #
+    #     if point_entry is not None:
+    #         point = Point(longitude=point_entry.get('longitude'), latitude=point_entry.get('latitude'))
+    #
+    #     return point
+
+    # def get_points_dictionary(self):
+    #     points_dictionary = {}
+    #     points_cursor = self.connection.get_points()
+    #
+    #     for point_document in points_cursor:
+    #         # {'osm_id': osm_id, 'point': {'longitude': point.longitude, 'latitude': point.latitude}}
+    #         points_dictionary[point_document.get('osm_id')] = \
+    #             Point(longitude=point_document.get('point').get('longitude'),
+    #                   latitude=point_document.get('point').get('latitude'))
+    #
+    #     return points_dictionary
+
+    def get_points_of_edges(self):
+        """
+        Retrieve a dictionary containing the points of edges.
+
+        :return points_of_edges: {osm_id, point}
+        """
+        # edge_document = {'starting_node', 'ending_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}
+        points_of_edges = {}
+        edges_cursor = self.connection.get_edges()
+        points_dictionary = self.get_points_dictionary()
+
+        for edge_document in edges_cursor:
+            starting_node = edge_document.get('starting_node')
+            ending_node = edge_document.get('ending_node')
+
+            if starting_node not in points_of_edges:
+                points_of_edges[starting_node] = points_dictionary.get(starting_node)
+
+            if ending_node not in points_of_edges:
+                points_of_edges[ending_node] = points_dictionary.get(ending_node)
+
+        return points_of_edges

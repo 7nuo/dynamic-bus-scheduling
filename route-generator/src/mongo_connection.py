@@ -1,3 +1,17 @@
+"""
+Copyright 2016 Eleftherios Anagnostopoulos for Ericsson AB
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied. See the License for the
+specific language governing permissions and limitations under the License.
+"""
 from pymongo import MongoClient
 
 
@@ -94,27 +108,27 @@ class Connection(object):
         result = self.bus_stops_collection.delete_one({'osm_id': osm_id})
         return result.deleted_count
 
-    def delete_edge(self, from_node, to_node):
+    def delete_edge(self, starting_node, ending_node):
         """
         Delete an edge document based on the starting and the ending nodes.
 
-        :param from_node: osm_id
-        :type from_node: integer
-        :param to_node: osm_id
-        :type to_node: integer
+        :param starting_node: osm_id
+        :type starting_node: integer
+        :param ending_node: osm_id
+        :type ending_node: integer
         :return: True if the document exists, otherwise False
         """
-        result = self.edges_collection.delete_one({'from_node': from_node, 'to_node': to_node})
+        result = self.edges_collection.delete_one({'starting_node': starting_node, 'ending_node': ending_node})
         return result.deleted_count
 
-    def delete_edges(self, from_node):
+    def delete_edges(self, starting_node):
         """
         Delete the edge documents based on the starting node.
-        :param from_node: osm_id
-        :type from_node: integer
+        :param starting_node: osm_id
+        :type starting_node: integer
         :return: The number of deleted documents.
         """
-        result = self.edges_collection.delete({'from_node': from_node})
+        result = self.edges_collection.delete({'starting_node': starting_node})
         return result.deleted_count
 
     def delete_node(self, osm_id):
@@ -184,27 +198,27 @@ class Connection(object):
         """
         return self.bus_stops_collection.find_one({'point': {'longitude': longitude, 'latitude': latitude}})
 
-    def find_edge(self, from_node, to_node):
+    def find_edge(self, starting_node, ending_node):
         """
         Retrieve an edge document based on the starting and the ending nodes.
 
-        :param from_node: osm_id
-        :type from_node: integer
-        :param to_node: osm_id
-        :type to_node: integer
-        :return: {'from_node', 'to_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}
+        :param starting_node: osm_id
+        :type starting_node: integer
+        :param ending_node: osm_id
+        :type ending_node: integer
+        :return: {'starting_node', 'ending_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}
         """
-        return self.edges_collection.find_one({'from_node': from_node, 'to_node': to_node})
+        return self.edges_collection.find_one({'starting_node': starting_node, 'ending_node': ending_node})
 
-    def find_edges(self, from_node):
+    def find_edges(self, starting_node):
         """
         Retrieve the edge documents based on the starting node.
 
-        :param from_node: osm_id
-        :type from_node: integer
-        :return: Cursor -> {'from_node', 'to_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}
+        :param starting_node: osm_id
+        :type starting_node: integer
+        :return: Cursor -> {'starting_node', 'ending_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}
         """
-        return self.edges_collection.find({'from_node': from_node})
+        return self.edges_collection.find({'starting_node': starting_node})
 
     def find_node(self, osm_id):
         """
@@ -245,7 +259,7 @@ class Connection(object):
         """
         Retrieve all the documents of the Edges collection.
 
-        :return: Cursor -> {'from_node', 'to_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}
+        :return: Cursor -> {'starting_node', 'ending_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}
         """
         return self.edges_collection.find()
 
@@ -265,7 +279,7 @@ class Connection(object):
         :type node: integer
         :return: True if exists, otherwise False
         """
-        return self.edges_collection.find_one({'from_node': node}) is not None
+        return self.edges_collection.find_one({'starting_node': node}) is not None
 
     def in_edges(self, node):
         """
@@ -275,7 +289,7 @@ class Connection(object):
         :type node: integer
         :return: True if exists, otherwise False
         """
-        return self.edges_collection.find_one({"$or": [{'from_node': node}, {'to_node': node}]}) is not None
+        return self.edges_collection.find_one({"$or": [{'starting_node': node}, {'ending_node': node}]}) is not None
 
     def insert_address(self, name, node_id, point):
         """
@@ -321,19 +335,19 @@ class Connection(object):
         """
         self.bus_stops_collection.insert_many(bus_stops)
 
-    def insert_edge(self, from_node, to_node, max_speed, road_type, way_id, traffic_density):
+    def insert_edge(self, starting_node, ending_node, max_speed, road_type, way_id, traffic_density):
         """
         Insert an edge document to the Edges collection.
 
-        :param from_node: osm_id: integer
-        :param to_node: osm_id: integer
+        :param starting_node: osm_id: integer
+        :param ending_node: osm_id: integer
         :type max_speed: float or integer
         :type road_type: string
         :param way_id: osm_id: integer
         :param traffic_density: A value between 0 and 1 indicating the density of traffic: float
         :return: The Object Id of the inserted document.
         """
-        document = {'from_node': from_node, 'to_node': to_node, 'max_speed': max_speed, 'road_type': road_type,
+        document = {'starting_node': starting_node, 'ending_node': ending_node, 'max_speed': max_speed, 'road_type': road_type,
                     'way_id': way_id, 'traffic_density': traffic_density}
         result = self.edges_collection.insert_one(document)
         return result.inserted_id
@@ -342,7 +356,7 @@ class Connection(object):
         """
         Insert a list of edge documents to the Edges collection.
 
-        :param edges: [{'from_node', 'to_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}]
+        :param edges: [{'starting_node', 'ending_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}]
         """
         self.edges_collection.insert_many(edges)
 

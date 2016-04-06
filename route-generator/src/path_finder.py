@@ -92,7 +92,7 @@ def find_path(starting_node, ending_node, edges, points):
 
     :param starting_node: osm_id: integer
     :param ending_node: osm_id: integer
-    :param edges: {from_node -> [{to_node, max_speed, road_type, way_id, traffic_density}]
+    :param edges: {starting_node -> [{ending_node, max_speed, road_type, way_id, traffic_density}]
     :param points: {osm_id -> point}
     :return: [(node, point, (estimated_distance, estimated_time_on_road))]
     """
@@ -125,7 +125,7 @@ def find_path(starting_node, ending_node, edges, points):
             continue
 
         for edge in edges.get(current_node):
-            next_node = edge.get('to_node')
+            next_node = edge.get('ending_node')
 
             # Ignore nodes which have already been evaluated.
             if next_node in closed_set:
