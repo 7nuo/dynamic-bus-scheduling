@@ -14,8 +14,9 @@ specific language governing permissions and limitations under the License.
 """
 from parser import Parser
 from connection_handler import MongoConnector
+from logger import log
 import os
-# import time
+import time
 # import signal
 # from multiprocessing import Process
 
@@ -100,11 +101,25 @@ if __name__ == '__main__':
     osm_filename = os.path.join(os.path.dirname(__file__), '../resources/map.osm')
     # connection = Connection(host='127.0.0.1', port=27017)
     parser = Parser(osm_filename=osm_filename)
+    # logging.basicConfig(level=logging.DEBUG)
+    # logger = logging.getLogger(name=__name__)
+
+    log(module_name='Parser', log_type='INFO', log_message='parse(): starting')
+    start_time = time.time()
     parser.parse()
-    print 'Parser: ok'
+    elapsed_time = time.time() - start_time
+    log(module_name='Parser', log_type='INFO',
+        log_message='parse(): finished - elapsed time = ' + str(elapsed_time) + ' sec')
 
     mongo = MongoConnector(parser=parser, host='127.0.0.1', port=27017)
+    log(module_name='MongoConnector', log_type='INFO', log_message='populate_all_collections(): starting')
+    start_time = time.time()
     mongo.populate_all_collections()
+    elapsed_time = time.time() - start_time
+    log(module_name='MongoConnector', log_type='INFO',
+        log_message='populate_all_collections(): finished - elapsed time = ' + str(elapsed_time) + ' sec')
+
+    # log(module_name='', log_type='', log_message='')
 
     # Router(osm_filename=osm_filename)
     # Tester().test()

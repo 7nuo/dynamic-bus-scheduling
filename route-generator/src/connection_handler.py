@@ -15,52 +15,61 @@ specific language governing permissions and limitations under the License.
 from mongo_connection import Connection
 from point import distance, Point
 from path_finder import find_path
+from logger import log
 
 
 class MongoConnector(object):
     def __init__(self, parser, host, port):
-        print 'Initializing MongoConnector'
+        # log(module_name='MongoConnector', log_type='DEBUG', log_message='')
+        log(module_name='MongoConnector', log_type='DEBUG', log_message='init()')
+
         self.list_of_points = parser.get_list_of_points()
-        print 'Points ok'
+        log(module_name='MongoConnector', log_type='DEBUG', log_message='list_of_points ok')
+
         self.list_of_nodes = parser.get_list_of_nodes()
-        print 'Nodes ok'
+        log(module_name='MongoConnector', log_type='DEBUG', log_message='list_of_nodes ok')
+
         self.list_of_ways = parser.get_list_of_ways()
-        print 'Ways ok'
+        log(module_name='MongoConnector', log_type='DEBUG', log_message='list_of_ways ok')
+
         self.list_of_bus_stops = parser.get_list_of_bus_stops()
-        print 'BusStops ok'
+        log(module_name='MongoConnector', log_type='DEBUG', log_message='list_of_bus_stops')
+
         self.list_of_edges = parser.get_list_of_edges()
-        print 'Edges ok'
+        log(module_name='MongoConnector', log_type='DEBUG', log_message='list_of_edges ok')
+
         self.list_of_addresses = parser.get_list_of_addresses()
-        print 'Addresses ok'
+        log(module_name='MongoConnector', log_type='DEBUG', log_message='list_of_addresses ok')
+
         self.connection = Connection(host=host, port=port)
-        print 'Connection ok'
+        log(module_name='MongoConnector', log_type='DEBUG', log_message='connection ok')
 
     def populate_address_book(self):
         self.connection.insert_addresses(address_book=self.list_of_addresses)
-        print 'MongoConnector: populate_address_book: ok'
+        log(module_name='MongoConnector', log_type='DEBUG', log_message='address_book collection ok')
 
     def populate_edges(self):
         self.connection.insert_edges(edges=self.list_of_edges)
-        print 'MongoConnector: populate_edges: ok'
+        log(module_name='MongoConnector', log_type='DEBUG', log_message='edges collection ok')
 
     def populate_nodes(self):
         self.connection.insert_nodes(nodes=self.list_of_nodes)
-        print 'MongoConnector: populate_nodes: ok'
+        log(module_name='MongoConnector', log_type='DEBUG', log_message='nodes collection ok')
 
     def populate_points(self):
         self.connection.insert_points(points=self.list_of_points)
-        print 'MongoConnector: populate_points: ok'
+        log(module_name='MongoConnector', log_type='DEBUG', log_message='points collection ok')
 
     def populate_bus_stops(self):
         self.connection.insert_bus_stops(bus_stops=self.list_of_bus_stops)
-        print 'MongoConnector: populate_bus_stops: ok'
+        log(module_name='MongoConnector', log_type='DEBUG', log_message='bus_stops collection ok')
 
     def populate_ways(self):
         self.connection.insert_ways(ways=self.list_of_ways)
-        print 'MongoConnector: populate_ways: ok'
+        log(module_name='MongoConnector', log_type='DEBUG', log_message='ways collection ok')
 
     def populate_all_collections(self):
-        print 'MongoConnector: populate_all_collections'
+        log(module_name='MongoConnector', log_type='DEBUG', log_message='populate_all_collections()')
         self.populate_points()
         self.populate_nodes()
         self.populate_ways()
