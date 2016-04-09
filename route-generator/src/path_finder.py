@@ -94,7 +94,8 @@ def find_path(starting_node, ending_node, edges, points):
     :param ending_node: osm_id: integer
     :param edges: {starting_node -> [{ending_node, max_speed, road_type, way_id, traffic_density}]
     :param points: {osm_id -> point}
-    :return: [(node, point, (estimated_distance, estimated_time_on_road))]
+    :return: {'total_distance', 'total_time', 'nodes', 'points', 'total_distances',
+              'total_times', 'partial_distances', 'partial_times'}
     """
     # The set of nodes already evaluated.
     closed_set = set()
@@ -172,7 +173,8 @@ def reconstruct_path(ending_node, came_from, g_score, points):
     :param came_from: Dictionary containing references to previous nodes: {osm_id -> osm_id}
     :param g_score: {osm_id -> (estimated_distance, estimated_time_on_road)}
     :param points: {osm_id -> point}
-    :return: [(node, point, (estimated_distance, estimated_time_on_road))]
+    :return: {'total_distance', 'total_time', 'nodes', 'points', 'total_distances',
+              'total_times', 'partial_distances', 'partial_times'}
     """
     total_path = [(ending_node, points.get(ending_node), g_score.get(ending_node))]
     current_node = ending_node
@@ -181,7 +183,46 @@ def reconstruct_path(ending_node, came_from, g_score, points):
         current_node = came_from.get(current_node)
         total_path = [(current_node, points.get(current_node), g_score.get(current_node))] + total_path
 
-    return total_path
+    # total_path: [(node, point, (estimated_distance, estimated_time_on_road))]
+
+    nodes = []
+    points = []
+    total_distances = []
+    total_times = []
+    partial_distances = []
+    partial_times = []
+    partial_distance = 0
+    partial_time = 0
+    previous_distance = None
+    previous_time = None
+
+    for node, point, (estimated_distance, estimated_time_on_road) in total_path:
+        nodes.append(node)
+        points.append(point)
+        total_distances.append(estimated_distance)
+        total_times.append(estimated_time_on_road)
+
+        if previous_distance is not None:
+            partial_distance = estimated_distance - previous_distance
+
+        partial_distances.append(partial_distance)
+
+        if previous_time is not None:
+            partial_time = estimated_time_on_road - previous_time
+
+        partial_times.append(partial_time)
+
+        previous_distance = estimated_distance
+        previous_time = estimated_time_on_road
+
+    total_distance = previous_distance
+    total_time = previous_time
+
+    final_path = {'total_distance': total_distance, 'total_time': total_time, 'nodes': nodes, 'points': points,
+                  'total_distances': total_distances, 'total_times': total_times,
+                  'partial_distances': partial_distances, 'partial_times': partial_times}
+
+    return final_path
 
 
 def estimate_road_type_speed_decrease_factor(road_type):

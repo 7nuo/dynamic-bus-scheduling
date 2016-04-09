@@ -69,13 +69,15 @@ class MongoConnector(object):
         log(module_name='MongoConnector', log_type='DEBUG', log_message='ways collection ok')
 
     def populate_all_collections(self):
-        log(module_name='MongoConnector', log_type='DEBUG', log_message='populate_all_collections()')
         self.populate_points()
         self.populate_nodes()
         self.populate_ways()
         self.populate_bus_stops()
         self.populate_edges()
         self.populate_address_book()
+
+    def clear_all_collections(self):
+        self.connection.clear_all_collections()
 
     def get_bus_stop_closest_to_coordinates(self, longitude, latitude):
         """
