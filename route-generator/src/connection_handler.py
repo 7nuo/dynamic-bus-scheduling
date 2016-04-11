@@ -381,7 +381,7 @@ class MongoConnector(object):
         ending_osm_id = self.get_closest_ending_node_in_edges_from_point(provided_point=ending_point)
         edges_dictionary = self.get_edges_dictionary()
         points_dictionary = self.get_points_dictionary()
-        route = find_path(starting_node=starting_osm_id, ending_node=ending_osm_id, edges=edges_dictionary,
+        route = find_path(starting_node_osm_id=starting_osm_id, ending_node_osm_id=ending_osm_id, edges=edges_dictionary,
                           points=points_dictionary)
         return route
 

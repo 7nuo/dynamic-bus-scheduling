@@ -14,7 +14,7 @@ specific language governing permissions and limitations under the License.
 """
 from parser import Parser
 from connection_handler import MongoConnector
-from path_finder import find_path
+from path_finder import find_path, find_multiple_paths
 from point import Point
 from logger import log
 import os
@@ -66,7 +66,7 @@ class Tester(object):
                                               'traffic_density': traffic_density})
         else:
             self.edges[starting_node] = [{'ending_node': ending_node, 'max_speed': max_speed, 'road_type': road_type,
-                                      'way_id': way_id, 'traffic_density': traffic_density}]
+                                          'way_id': way_id, 'traffic_density': traffic_density}]
 
         if ending_node not in self.edges:
             self.edges[ending_node] = []
@@ -85,8 +85,10 @@ class Tester(object):
     def populate_edges(self):
         self.add_edge(starting_node=1, ending_node=2, max_speed=50)
         self.add_edge(starting_node=2, ending_node=3, max_speed=50)
-        self.add_edge(starting_node=3, ending_node=4, max_speed=50)
+        self.add_edge(starting_node=2, ending_node=4, max_speed=50)
+        self.add_edge(starting_node=1, ending_node=4, max_speed=50)
         self.add_edge(starting_node=4, ending_node=5, max_speed=50)
+        self.add_edge(starting_node=5, ending_node=3, max_speed=50)
 
     def populate_points(self):
         self.add_point(osm_id=1, longitude=1.0, latitude=1.0)
@@ -96,36 +98,36 @@ class Tester(object):
         self.add_point(osm_id=5, longitude=5.0, latitude=5.0)
 
     def test(self):
-        print find_path(starting_node=1, ending_node=5, edges=self.edges, points=self.points)
-        # print find_path(starting_node=2, ending_node=3, edges=self.edges, points=self.points)
+        print find_path(starting_node_osm_id=1, ending_node_osm_id=3, edges=self.edges, points=self.points)
+        # print find_multiple_paths(starting_node=1, ending_node=3, edges=self.edges, points=self.points)
 
 
 if __name__ == '__main__':
-    osm_filename = os.path.join(os.path.dirname(__file__), '../resources/map.osm')
-    parser = Parser(osm_filename=osm_filename)
-
-    log(module_name='Parser', log_type='INFO', log_message='parse(): starting')
-    start_time = time.time()
-    parser.parse()
-    elapsed_time = time.time() - start_time
-    log(module_name='Parser', log_type='INFO',
-        log_message='parse(): finished - elapsed time = ' + str(elapsed_time) + ' sec')
-
-    mongo = MongoConnector(parser=parser, host='127.0.0.1', port=27017)
-
-    log(module_name='MongoConnector', log_type='INFO', log_message='clear_all_collections(): starting')
-    start_time = time.time()
-    mongo.clear_all_collections()
-    elapsed_time = time.time() - start_time
-    log(module_name='MongoConnector', log_type='INFO',
-        log_message='clear_all_collections(): finished - elapsed time = ' + str(elapsed_time) + ' sec')
-
-    log(module_name='MongoConnector', log_type='INFO', log_message='populate_all_collections(): starting')
-    start_time = time.time()
-    mongo.populate_all_collections()
-    elapsed_time = time.time() - start_time
-    log(module_name='MongoConnector', log_type='INFO',
-        log_message='populate_all_collections(): finished - elapsed time = ' + str(elapsed_time) + ' sec')
+    # osm_filename = os.path.join(os.path.dirname(__file__), '../resources/map.osm')
+    # parser = Parser(osm_filename=osm_filename)
+    #
+    # log(module_name='Parser', log_type='INFO', log_message='parse(): starting')
+    # start_time = time.time()
+    # parser.parse()
+    # elapsed_time = time.time() - start_time
+    # log(module_name='Parser', log_type='INFO',
+    #     log_message='parse(): finished - elapsed time = ' + str(elapsed_time) + ' sec')
+    #
+    # mongo = MongoConnector(parser=parser, host='127.0.0.1', port=27017)
+    #
+    # log(module_name='MongoConnector', log_type='INFO', log_message='clear_all_collections(): starting')
+    # start_time = time.time()
+    # mongo.clear_all_collections()
+    # elapsed_time = time.time() - start_time
+    # log(module_name='MongoConnector', log_type='INFO',
+    #     log_message='clear_all_collections(): finished - elapsed time = ' + str(elapsed_time) + ' sec')
+    #
+    # log(module_name='MongoConnector', log_type='INFO', log_message='populate_all_collections(): starting')
+    # start_time = time.time()
+    # mongo.populate_all_collections()
+    # elapsed_time = time.time() - start_time
+    # log(module_name='MongoConnector', log_type='INFO',
+    #     log_message='populate_all_collections(): finished - elapsed time = ' + str(elapsed_time) + ' sec')
 
     Tester().test()
 
