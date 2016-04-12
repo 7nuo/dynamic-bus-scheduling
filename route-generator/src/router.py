@@ -85,6 +85,7 @@ class Tester(object):
     def populate_edges(self):
         self.add_edge(starting_node=1, ending_node=2, max_speed=50)
         self.add_edge(starting_node=2, ending_node=3, max_speed=50)
+
         self.add_edge(starting_node=2, ending_node=4, max_speed=50)
         self.add_edge(starting_node=1, ending_node=4, max_speed=50)
         self.add_edge(starting_node=4, ending_node=5, max_speed=50)
@@ -98,8 +99,11 @@ class Tester(object):
         self.add_point(osm_id=5, longitude=5.0, latitude=5.0)
 
     def test(self):
-        print find_path(starting_node_osm_id=1, ending_node_osm_id=3, edges=self.edges, points=self.points)
-        # print find_multiple_paths(starting_node=1, ending_node=3, edges=self.edges, points=self.points)
+        # print find_path(starting_node_osm_id=1, ending_node_osm_id=3, edges=self.edges, points=self.points)
+        paths = find_multiple_paths(starting_node_osm_id=1, ending_node_osm_id=3, edges=self.edges, points=self.points)
+
+        for path in paths:
+            print path.get('node_osm_ids')
 
 
 if __name__ == '__main__':
