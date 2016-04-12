@@ -143,66 +143,60 @@ def find_path(starting_node_osm_id, ending_node_osm_id, edges, points):
     # The set of currently discovered nodes still to be evaluated. Initially, only the starting node is known.
     open_set = OrderedSet()
 
-    # For each node, came_from keeps the node which can most efficiently be reached from.
-    # came_from = {}
-    # g_score contains the [f_score_time_on_road, f_score_distance] cost of getting from the starting_node_osm_id
-    # to the current_node.
-    # g_score = {starting_node_osm_id: (0, 0)}
-    # f_score contains the total cost, for each node, of getting from the starting_node_osm_id to the ending_node_osm_id by
-    # passing by that node. That value is partially known, partially heuristic.
-    # f_score = {starting_node_osm_id: heuristic_cost_estimate(starting_point=points.get(starting_node_osm_id),
-    #                                                          ending_point=points.get(ending_node_osm_id))}
-    # open_set.insert(f_score.get(starting_node_osm_id), starting_node_osm_id)
-
+    # Initialize starting_node.
     starting_node = Node(osm_id=starting_node_osm_id)
 
+    # Distance and time from starting_node equal to zero.
     starting_node.set_g_score(g_score_distance=0.0, g_score_time_on_road=0.0)
 
+    # Distance and time to ending node is estimated heuristically.
     starting_node_f_score_distance, starting_node_f_score_time_on_road = heuristic_cost_estimate(
         starting_point=points.get(starting_node_osm_id), ending_point=points.get(ending_node_osm_id))
 
     starting_node.set_f_score(f_score_distance=starting_node_f_score_distance,
                               f_score_time_on_road=starting_node_f_score_time_on_road)
 
+    # Add the starting_node to the list of previous nodes.
     starting_node.add_previous_node(node=starting_node)
 
-    open_set.insert(new_node=starting_node)
+    # Add the starting_node to the closed_set, since it has already been evaluated.
     closed_set[starting_node_osm_id] = starting_node
 
-    # While there are more nodes to be investigated.
+    # Add the starting_node to the open_set, since its edges should be evaluated.
+    open_set.insert(new_node=starting_node)
+
+    # While there are more nodes, whose edges have not been evaluated.
     while len(open_set) > 0:
+
+        # During the first iteration of this loop, current_node will be equal to starting_node.
         current_node = open_set.pop()
 
-        # if current_node.osm_id == ending_node_osm_id:
-        #     return reconstruct_path(ending_node=ending_node_osm_id, came_from=came_from, g_score=g_score, points=points)
-
-        # closed_set[current_node.osm_id] = current_node
-
+        # ending_node has been discovered.
         if current_node.osm_id == ending_node_osm_id:
             return current_node.get_previous_nodes()
 
+        # current_node does not have any edges.
         if current_node.osm_id not in edges:
             continue
 
         for edge in edges.get(current_node.osm_id):
             next_node_osm_id = edge.get('ending_node')
 
+            # Check whether the next_node has already been evaluated.
             if next_node_osm_id in closed_set:
                 next_node = closed_set.get(next_node_osm_id)
+                # continue
             else:
                 next_node = Node(osm_id=next_node_osm_id)
                 next_node.heuristic_estimated_distance, next_node.heuristic_estimated_time_on_road = \
                     heuristic_cost_estimate(starting_point=points.get(next_node_osm_id),
                                             ending_point=points.get(ending_node_osm_id))
 
-            # Ignore nodes which have already been evaluated.
-            # if next_node_osm_id in closed_set:
-            #     continue
-
             max_speed = edge.get('max_speed')
             road_type = edge.get('road_type')
             traffic_density = edge.get('traffic_density')
 
+            # Calculate the difference in values between current_node and next_node.
             additional_g_score_distance, additional_g_score_time_on_road = g_score_estimate(
                 starting_point=points.get(current_node.osm_id),
                 ending_point=points.get(next_node_osm_id),
@@ -211,39 +205,29 @@ def find_path(starting_node_osm_id, ending_node_osm_id, edges, points):
                 traffic_density=traffic_density
             )
 
+            # Calculate new g_score values
             new_g_score_distance = current_node.g_score_distance + additional_g_score_distance
             new_g_score_time_on_road = current_node.g_score_time_on_road + additional_g_score_time_on_road
 
             if next_node.g_score_time_on_road < new_g_score_time_on_road:
                 continue
 
+            next_node.g_score_distance = new_g_score_distance
+            next_node.g_score_time_on_road = new_g_score_time_on_road
+
+            # Calculate new f_score values
             next_node.f_score_distance = new_g_score_distance + next_node.heuristic_estimated_distance
             next_node.f_score_time_on_road = new_g_score_time_on_road + next_node.heuristic_estimated_time_on_road
 
+            # Add next_node to the list of previous nodes.
             next_node.set_previous_nodes(previous_nodes=current_node.get_previous_nodes() + [next_node_osm_id])
 
+            # next_node has been evaluated.
             closed_set[next_node_osm_id] = next_node
 
+            # Add next_node to the open_set, so as to allow its edges to be evaluated.
             if not open_set.exists(next_node_osm_id):
                 open_set.insert(new_node=next_node)
-
-            # tentative_g_score = (g_score.get(current_node)[0] + additional_g_score_distance,
-            #                      g_score.get(current_node)[1] + additional_g_score_time_on_road)
-
-            # if next_node_osm_id in g_score and tentative_g_score[1] >= g_score.get(next_node_osm_id)[1]:
-            #     continue
-
-            # came_from[next_node_osm_id] = current_node
-            # g_score[next_node_osm_id] = tentative_g_score
-            # heuristic_estimated_distance, heuristic_estimated_time_on_road = heuristic_cost_estimate(
-            #     starting_point=points.get(next_node_osm_id),
-            #     ending_point=points.get(ending_node_osm_id)
-            # )
-            # f_score[next_node_osm_id] = (g_score.get(next_node_osm_id)[0] + heuristic_estimated_distance,
-            #                       g_score.get(next_node_osm_id)[1] + heuristic_estimated_time_on_road)
-
-            # if not open_set.exists(next_node_osm_id):
-            #     open_set.insert(f_score.get(next_node_osm_id), next_node_osm_id)
 
     return None
 
