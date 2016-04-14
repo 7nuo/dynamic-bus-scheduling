@@ -15,7 +15,7 @@ specific language governing permissions and limitations under the License.
 from pymongo import MongoClient
 
 
-class Connection(object):
+class MongoConnection(object):
     def __init__(self, host, port):
         self.mongo_client = MongoClient(host, port)
         self.db = self.mongo_client.monad
@@ -454,5 +454,5 @@ class Connection(object):
 
 
 if __name__ == '__main__':
-    connection = Connection(host='127.0.0.1', port=27017)
+    connection = MongoConnection(host='127.0.0.1', port=27017)
     connection.clear_all_collections()

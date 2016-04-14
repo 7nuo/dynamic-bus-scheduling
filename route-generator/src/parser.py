@@ -16,6 +16,8 @@ from imposm.parser import OSMParser
 from path_finder import bus_road_types, standard_speed
 from point import Point
 from address import Address
+from mongo_connector import MongoConnection
+from logger import log
 import re
 
 
@@ -37,6 +39,7 @@ class Parser(object):
         self.bus_stops = {}
         self.edges = {}
         self.address_book = {}
+        self.connection = None
 
     def add_address(self, name, node_id, point):
         """
@@ -239,6 +242,10 @@ class Parser(object):
         """
         self.points.get(osm_id)
 
+    def initialize_connection(self, host, port):
+        self.connection = MongoConnection(host=host, port=port)
+        log(module_name='Parser', log_type='DEBUG', log_message='connection ok')
+
     def parse(self):
         parser = OSMParser(
             concurrency=2,
@@ -343,6 +350,38 @@ class Parser(object):
                 for reference in references:
                     self.add_address(name=name, node_id=reference,
                                      point=self.get_point_from_osm_id(osm_id=reference))
+
+    def populate_address_book(self):
+        self.connection.insert_addresses(address_book=self.get_list_of_addresses())
+        log(module_name='Parser', log_type='DEBUG', log_message='address_book collection ok')
+
+    def populate_edges(self):
+        self.connection.insert_edges(edges=self.get_list_of_edges())
+        log(module_name='Parser', log_type='DEBUG', log_message='edges collection ok')
+
+    def populate_nodes(self):
+        self.connection.insert_nodes(nodes=self.get_list_of_nodes())
+        log(module_name='Parser', log_type='DEBUG', log_message='nodes collection ok')
+
+    def populate_points(self):
+        self.connection.insert_points(points=self.get_list_of_points())
+        log(module_name='Parser', log_type='DEBUG', log_message='points collection ok')
+
+    def populate_bus_stops(self):
+        self.connection.insert_bus_stops(bus_stops=self.get_list_of_bus_stops())
+        log(module_name='Parser', log_type='DEBUG', log_message='bus_stops collection ok')
+
+    def populate_ways(self):
+        self.connection.insert_ways(ways=self.get_list_of_ways())
+        log(module_name='Parser', log_type='DEBUG', log_message='ways collection ok')
+
+    def populate_all_collections(self):
+        self.populate_points()
+        self.populate_nodes()
+        self.populate_ways()
+        self.populate_bus_stops()
+        self.populate_edges()
+        self.populate_address_book()
 
     # def print_address_book(self):
     #     print '-- Printing Address Book --'

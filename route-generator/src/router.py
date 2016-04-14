@@ -13,24 +13,12 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
 from parser import Parser
-from connection_handler import MongoConnector
+from mongo_connector import MongoConnector
 from path_finder import find_path, find_multiple_paths
 from point import Point
 from logger import log
 import os
 import time
-# import signal
-# from multiprocessing import Process
-
-# def printer():
-#     # start_time = time.time()
-#     pattern = ''
-#
-#     while (True):
-#         # elapsed_time = time.time() - start_time
-#         pattern += '='
-#         print pattern,
-#         time.sleep(1)
 
 
 class Tester(object):
@@ -107,41 +95,32 @@ class Tester(object):
 
 
 if __name__ == '__main__':
-    # osm_filename = os.path.join(os.path.dirname(__file__), '../resources/map.osm')
-    # parser = Parser(osm_filename=osm_filename)
-    #
-    # log(module_name='Parser', log_type='INFO', log_message='parse(): starting')
-    # start_time = time.time()
-    # parser.parse()
-    # elapsed_time = time.time() - start_time
-    # log(module_name='Parser', log_type='INFO',
-    #     log_message='parse(): finished - elapsed time = ' + str(elapsed_time) + ' sec')
-    #
-    # mongo = MongoConnector(parser=parser, host='127.0.0.1', port=27017)
-    #
-    # log(module_name='MongoConnector', log_type='INFO', log_message='clear_all_collections(): starting')
-    # start_time = time.time()
-    # mongo.clear_all_collections()
-    # elapsed_time = time.time() - start_time
-    # log(module_name='MongoConnector', log_type='INFO',
-    #     log_message='clear_all_collections(): finished - elapsed time = ' + str(elapsed_time) + ' sec')
-    #
-    # log(module_name='MongoConnector', log_type='INFO', log_message='populate_all_collections(): starting')
-    # start_time = time.time()
-    # mongo.populate_all_collections()
-    # elapsed_time = time.time() - start_time
-    # log(module_name='MongoConnector', log_type='INFO',
-    #     log_message='populate_all_collections(): finished - elapsed time = ' + str(elapsed_time) + ' sec')
+    mongo = MongoConnector(host='127.0.0.1', port=27017)
 
-    Tester().test()
+    log(module_name='MongoConnector', log_type='INFO', log_message='clear_all_collections(): starting')
+    start_time = time.time()
+    mongo.clear_all_collections()
+    elapsed_time = time.time() - start_time
+    log(module_name='MongoConnector', log_type='INFO',
+        log_message='clear_all_collections(): finished - elapsed time = ' + str(elapsed_time) + ' sec')
 
-    # log(module_name='', log_type='', log_message='')
+    osm_filename = os.path.join(os.path.dirname(__file__), '../resources/map.osm')
+    parser = Parser(osm_filename=osm_filename)
 
-    # Router(osm_filename=osm_filename)
+    log(module_name='Parser', log_type='INFO', log_message='parse(): starting')
+    start_time = time.time()
+    parser.parse()
+    elapsed_time = time.time() - start_time
+    log(module_name='Parser', log_type='INFO',
+        log_message='parse(): finished - elapsed time = ' + str(elapsed_time) + ' sec')
+
+    parser.initialize_connection(host='127.0.0.1', port=27017)
+
+    log(module_name='Parser', log_type='INFO', log_message='populate_all_collections(): starting')
+    start_time = time.time()
+    parser.populate_all_collections()
+    elapsed_time = time.time() - start_time
+    log(module_name='Parser', log_type='INFO',
+        log_message='populate_all_collections(): finished - elapsed time = ' + str(elapsed_time) + ' sec')
+
     # Tester().test()
-
-    # p = Process(target=printer, args=())
-    # p.start()
-    # time.sleep(10)
-    # p.terminate()
-    # p.join()
