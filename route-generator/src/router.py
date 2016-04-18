@@ -97,30 +97,35 @@ class Tester(object):
 if __name__ == '__main__':
     mongo = MongoConnector(host='127.0.0.1', port=27017)
 
-    log(module_name='MongoConnector', log_type='INFO', log_message='clear_all_collections(): starting')
-    start_time = time.time()
-    mongo.clear_all_collections()
-    elapsed_time = time.time() - start_time
-    log(module_name='MongoConnector', log_type='INFO',
-        log_message='clear_all_collections(): finished - elapsed time = ' + str(elapsed_time) + ' sec')
+    # log(module_name='MongoConnector', log_type='INFO', log_message='clear_all_collections(): starting')
+    # start_time = time.time()
+    # mongo.clear_all_collections()
+    # elapsed_time = time.time() - start_time
+    # log(module_name='MongoConnector', log_type='INFO',
+    #     log_message='clear_all_collections(): finished - elapsed time = ' + str(elapsed_time) + ' sec')
+    #
+    # osm_filename = os.path.join(os.path.dirname(__file__), '../resources/map.osm')
+    # parser = Parser(osm_filename=osm_filename)
+    #
+    # log(module_name='Parser', log_type='INFO', log_message='parse(): starting')
+    # start_time = time.time()
+    # parser.parse()
+    # elapsed_time = time.time() - start_time
+    # log(module_name='Parser', log_type='INFO',
+    #     log_message='parse(): finished - elapsed time = ' + str(elapsed_time) + ' sec')
+    #
+    # parser.initialize_connection(host='127.0.0.1', port=27017)
+    #
+    # log(module_name='Parser', log_type='INFO', log_message='populate_all_collections(): starting')
+    # start_time = time.time()
+    # parser.populate_all_collections()
+    # elapsed_time = time.time() - start_time
+    # log(module_name='Parser', log_type='INFO',
+    #     log_message='populate_all_collections(): finished - elapsed time = ' + str(elapsed_time) + ' sec')
 
-    osm_filename = os.path.join(os.path.dirname(__file__), '../resources/map.osm')
-    parser = Parser(osm_filename=osm_filename)
+    # for bus_stop in mongo.get_bus_stops():
+    #     print bus_stop
 
-    log(module_name='Parser', log_type='INFO', log_message='parse(): starting')
-    start_time = time.time()
-    parser.parse()
-    elapsed_time = time.time() - start_time
-    log(module_name='Parser', log_type='INFO',
-        log_message='parse(): finished - elapsed time = ' + str(elapsed_time) + ' sec')
-
-    parser.initialize_connection(host='127.0.0.1', port=27017)
-
-    log(module_name='Parser', log_type='INFO', log_message='populate_all_collections(): starting')
-    start_time = time.time()
-    parser.populate_all_collections()
-    elapsed_time = time.time() - start_time
-    log(module_name='Parser', log_type='INFO',
-        log_message='populate_all_collections(): finished - elapsed time = ' + str(elapsed_time) + ' sec')
+    print mongo.get_bus_stop_from_name(name='Centralstationen')
 
     # Tester().test()

@@ -93,6 +93,15 @@ class MongoConnector(object):
         """
         return self.get_bus_stop_from_coordinates(longitude=point.longitude, latitude=point.latitude)
 
+    def get_bus_stops(self):
+        bus_stops = []
+        bus_stops_cursor = self.connection.get_bus_stops()
+
+        for bus_stop in bus_stops_cursor:
+            bus_stops.append(bus_stop)
+
+        return bus_stops
+
     def get_bus_stops_within_distance_from_coordinates(self, longitude, latitude, maximum_distance):
         """
         Get the bus_stops which are within a distance from a set of coordinates.

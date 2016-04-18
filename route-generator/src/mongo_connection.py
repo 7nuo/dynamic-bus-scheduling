@@ -168,7 +168,7 @@ class MongoConnection(object):
         :type name: string
         :return: {'name', 'node_id', 'point': {'longitude', 'latitude'}}
         """
-        return self.address_book_collection.find({'name': name})
+        return self.address_book_collection.find({'name': name}, {"_id": 0})
 
     def find_bus_stop(self, osm_id):
         """
@@ -177,7 +177,7 @@ class MongoConnection(object):
         :type osm_id: integer
         :return: {'osm_id', 'name', 'point': {'longitude', 'latitude'}}
         """
-        return self.bus_stops_collection.find_one({'osm_id': osm_id})
+        return self.bus_stops_collection.find_one({'osm_id': osm_id}, {"_id": 0})
 
     def find_bus_stop_from_name(self, name):
         """
@@ -186,7 +186,7 @@ class MongoConnection(object):
         :type name: string
         :return: {'osm_id', 'name', 'point': {'longitude', 'latitude'}}
         """
-        return self.bus_stops_collection.find_one({'name', name})
+        return self.bus_stops_collection.find_one({'name': name}, {"_id": 0})
 
     def find_bus_stop_from_coordinates(self, longitude, latitude):
         """
@@ -196,7 +196,7 @@ class MongoConnection(object):
         :type latitude: float
         :return: {'osm_id', 'name', 'point': {'longitude', 'latitude'}}
         """
-        return self.bus_stops_collection.find_one({'point': {'longitude': longitude, 'latitude': latitude}})
+        return self.bus_stops_collection.find_one({'point': {'longitude': longitude, 'latitude': latitude}}, {"_id": 0})
 
     def find_edge(self, starting_node, ending_node):
         """
@@ -208,7 +208,7 @@ class MongoConnection(object):
         :type ending_node: integer
         :return: {'starting_node', 'ending_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}
         """
-        return self.edges_collection.find_one({'starting_node': starting_node, 'ending_node': ending_node})
+        return self.edges_collection.find_one({'starting_node': starting_node, 'ending_node': ending_node}, {"_id": 0})
 
     def find_edges(self, starting_node):
         """
@@ -218,7 +218,7 @@ class MongoConnection(object):
         :type starting_node: integer
         :return: Cursor -> {'starting_node', 'ending_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}
         """
-        return self.edges_collection.find({'starting_node': starting_node})
+        return self.edges_collection.find({'starting_node': starting_node}, {"_id": 0})
 
     def find_node(self, osm_id):
         """
@@ -227,7 +227,7 @@ class MongoConnection(object):
         :type osm_id: integer
         :return: {'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
         """
-        return self.nodes_collection.find_one({'osm_id': osm_id})
+        return self.nodes_collection.find_one({'osm_id': osm_id}, {"_id": 0})
 
     def find_point(self, osm_id):
         """
@@ -236,7 +236,7 @@ class MongoConnection(object):
         :type osm_id: integer
         :return: {'osm_id', 'point': {'longitude', 'latitude'}}
         """
-        return self.points_collection.find_one({'osm_id': osm_id})
+        return self.points_collection.find_one({'osm_id': osm_id}, {"_id": 0})
 
     def find_way(self, osm_id):
         """
@@ -245,7 +245,7 @@ class MongoConnection(object):
         :type osm_id: integer
         :return: {'osm_id', 'tags', 'references'}
         """
-        return self.ways_collection.find_one({'osm_id': osm_id})
+        return self.ways_collection.find_one({'osm_id': osm_id}, {"_id": 0})
 
     def get_bus_stops(self):
         """
@@ -253,7 +253,7 @@ class MongoConnection(object):
 
         :return: Cursor -> {'osm_id', 'name', 'point': {'longitude', 'latitude'}}
         """
-        return self.bus_stops_collection.find()
+        return self.bus_stops_collection.find({}, {"_id": 0})
 
     def get_edges(self):
         """
@@ -261,7 +261,7 @@ class MongoConnection(object):
 
         :return: Cursor -> {'starting_node', 'ending_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}
         """
-        return self.edges_collection.find()
+        return self.edges_collection.find({}, {"_id": 0})
 
     def get_ending_nodes_of_edges(self):
         """
@@ -284,7 +284,7 @@ class MongoConnection(object):
 
         :return: Cursor -> {'osm_id', 'point': {'longitude', 'latitude'}}
         """
-        return self.points_collection.find()
+        return self.points_collection.find({}, {"_id": 0})
 
     def get_starting_nodes_of_edges(self):
         """
