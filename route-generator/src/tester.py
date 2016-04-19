@@ -19,22 +19,19 @@ def post_request():
     print request.text
 
 
-def find_path_between_bus_stops(starting_bus_stop_name, ending_bus_stop_name):
-    url = host + ':' + port + '/find_path_between_bus_stops'
-    # data = {'starting_point': (1.0, 1.0), 'ending_point': (2.0, 2.0)}
+def get_route_between_bus_stops(starting_bus_stop_name, ending_bus_stop_name):
+    url = host + ':' + port + '/get_route_between_bus_stops'
     data = {'starting_bus_stop_name': starting_bus_stop_name,
             'ending_bus_stop_name': ending_bus_stop_name}
     headers = {'content-type': 'application/x-www-form-urlencoded'}
     # headers = {'content-type': 'application/json'}
-    # data = {}
     request = requests.post(url, data=data, headers=headers)
 
-    # request = requests.post(url=url, headers=headers)
     print request.text
 
 
 if __name__ == '__main__':
-    find_path_between_bus_stops(starting_bus_stop_name='Centralstationen', ending_bus_stop_name='Stadshuset')
+    get_route_between_bus_stops(starting_bus_stop_name='Centralstationen', ending_bus_stop_name='Stadshuset')
     # post_request()
 
     # p = Pool(5)

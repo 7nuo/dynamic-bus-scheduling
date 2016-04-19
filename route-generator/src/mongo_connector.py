@@ -313,13 +313,14 @@ class MongoConnector(object):
 
     def get_route_from_coordinates(self, starting_longitude, starting_latitude, ending_longitude, ending_latitude):
         """
-        Find a route between two pairs of coordinates, using the A* algorithm.
+        Find a route between two pairs of coordinates.
 
         :type starting_longitude: float
         :type starting_latitude: float
         :type ending_longitude: float
         :type ending_latitude: float
-        :return route: [(osm_id, point, (distance_from_starting_node, time_from_starting_node))]
+        :return route: {'total_distance', 'total_time', 'nodes', 'points', 'total_distances',
+                        'total_times', 'partial_distances', 'partial_times'}
         """
         starting_point = Point(longitude=starting_longitude, latitude=starting_latitude)
         ending_point = Point(longitude=ending_longitude, latitude=ending_latitude)
@@ -327,17 +328,40 @@ class MongoConnector(object):
 
     def get_route_from_points(self, starting_point, ending_point):
         """
-        Find a route between two points, using the A* algorithm.
+        Find a route between two points.
 
         :type starting_point: Point
         :type ending_point: Point
-        :return route: [(osm_id, point, (distance_from_starting_node, time_from_starting_node))]
+        :return route: {'total_distance', 'total_time', 'nodes', 'points', 'total_distances',
+                        'total_times', 'partial_distances', 'partial_times'}
         """
         starting_osm_id = self.get_closest_starting_node_in_edges_from_point(provided_point=starting_point)
         ending_osm_id = self.get_closest_ending_node_in_edges_from_point(provided_point=ending_point)
         edges_dictionary = self.get_edges_dictionary()
         points_dictionary = self.get_points_dictionary()
-        route = find_path(starting_node_osm_id=starting_osm_id, ending_node_osm_id=ending_osm_id, edges=edges_dictionary,
+        route = find_path(starting_node_osm_id=starting_osm_id,
+                          ending_node_osm_id=ending_osm_id,
+                          edges=edges_dictionary,
+                          points=points_dictionary)
+        return route
+
+    def get_route_from_bus_stop_names(self, starting_bus_stop_name, ending_bus_stop_name):
+        """
+        Find a route between two bus_stops, based on their names.
+
+        :param starting_bus_stop_name: string
+        :param ending_bus_stop_name: string
+        :return route: {'total_distance', 'total_time', 'nodes', 'points', 'total_distances',
+                        'total_times', 'partial_distances', 'partial_times'}
+        """
+        starting_bus_stop = self.get_bus_stop_from_name(name=starting_bus_stop_name)
+        ending_bus_stop = self.get_bus_stop_from_name(name=ending_bus_stop_name)
+        edges_dictionary = self.get_edges_dictionary()
+        points_dictionary = self.get_points_dictionary()
+
+        route = find_path(starting_node_osm_id=starting_bus_stop.get('osm_id'),
+                          ending_node_osm_id=ending_bus_stop.get('osm_id'),
+                          edges=edges_dictionary,
                           points=points_dictionary)
         return route
 
