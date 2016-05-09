@@ -28,10 +28,13 @@ class Point(object):
         self.latitude = float(latitude)
 
     def __str__(self):
-        return self.coordinates_to_string()
+        return str(self.__dict__)
+        # return self.coordinates_to_string()
 
     def __repr__(self):
-        return self.coordinates_to_string()
+        return str(self.__dict__)
+    #     return 'Point(x=%s, y=%s)' % (self.longitude, self.latitude)
+    #     # return self.coordinates_to_string()
 
     def coordinates(self):
         return self.longitude, self.latitude
@@ -43,6 +46,10 @@ class Point(object):
         return self.latitude
 
     def coordinates_to_string(self):
+        # return "Hello"
+        # return str([self.longitude, self.latitude])
+        # return str({'longitude': str(self.longitude)})
+        # return str((self.longitude, self.latitude))
         return '(' + str(self.longitude) + ', ' + str(self.latitude) + ')'
 
     def equal_to_coordinates(self, longitude, latitude):

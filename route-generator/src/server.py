@@ -13,6 +13,11 @@ PORT = 27017
 mongo = MongoConnector(host=HOST, port=PORT)
 
 
+class MyEncoder(json.JSONEncoder):
+    def default(self, o):
+        return o.__dict__
+
+
 def application(env, start_response):
     data_env = env.copy()
     method = data_env.get('REQUEST_METHOD')
@@ -34,11 +39,22 @@ def application(env, start_response):
             starting_bus_stop_name = form.getvalue('starting_bus_stop_name')
             ending_bus_stop_name = form.getvalue('ending_bus_stop_name')
 
-            route = mongo.get_route_from_bus_stop_names(starting_bus_stop_name=starting_bus_stop_name,
-                                                        ending_bus_stop_name=ending_bus_stop_name)
+            route = mongo.get_route_between_bus_stops(starting_bus_stop_name=starting_bus_stop_name,
+                                                      ending_bus_stop_name=ending_bus_stop_name)
             response_status = '200 OK'
-            response_type = 'text/plain'
-            response = str(route)
+            response_type = 'application/json'
+            response = json.dumps(route, cls=MyEncoder)
+
+        elif path_info == '/get_multiple_routes_between_bus_stops':
+            form = cgi.FieldStorage(fp=env['wsgi.input'], environ=data_env)
+            starting_bus_stop_name = form.getvalue('starting_bus_stop_name')
+            ending_bus_stop_name = form.getvalue('ending_bus_stop_name')
+
+            route = mongo.get_multiple_routes_between_bus_stops(starting_bus_stop_name=starting_bus_stop_name,
+                                                                ending_bus_stop_name=ending_bus_stop_name)
+            response_status = '200 OK'
+            response_type = 'application/json'
+            response = json.dumps(route, cls=MyEncoder)
 
     response_headers = [
         ('Content-Type', response_type),

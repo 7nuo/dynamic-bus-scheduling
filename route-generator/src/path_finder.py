@@ -81,7 +81,7 @@ class OrderedSet(object):
                 returned_value = True
                 break
 
-        returned_value
+        return returned_value
 
     def index_of_insertion(self, new_node):
         """
@@ -135,8 +135,8 @@ def find_path(starting_node_osm_id, ending_node_osm_id, edges, points):
     :param ending_node_osm_id: osm_id: integer
     :param edges: {starting_node_osm_id -> [{ending_node_osm_id, max_speed, road_type, way_id, traffic_density}]
     :param points: {osm_id -> point}
-    :return: {'total_distance', 'total_time', 'nodes', 'points', 'total_distances',
-              'total_times', 'partial_distances', 'partial_times'}
+    :return: {'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
+              'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}
     """
     # A dictionary with the nodes that have already been evaluated: {node_osm_id -> node}
     closed_set = {}
@@ -240,8 +240,8 @@ def find_multiple_paths(starting_node_osm_id, ending_node_osm_id, edges, points)
     :param ending_node_osm_id: osm_id: integer
     :param edges: {starting_node_osm_id -> [{ending_node_osm_id, max_speed, road_type, way_id, traffic_density}]
     :param points: {osm_id -> point}
-    :return: {'total_distance', 'total_time', 'nodes', 'points', 'total_distances',
-              'total_times', 'partial_distances', 'partial_times'}
+    :return: {'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
+              'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}
     """
     paths = []
 
@@ -276,12 +276,15 @@ def find_multiple_paths(starting_node_osm_id, ending_node_osm_id, edges, points)
     # While there are more nodes, whose edges have not been evaluated.
     while len(open_set) > 0:
 
+        print 'ok'
+
         # During the first iteration of this loop, current_node will be equal to starting_node.
         current_node = open_set.pop()
 
         # ending_node has been discovered.
         if current_node.osm_id == ending_node_osm_id:
             paths.append(reconstruct_path(list_of_nodes=current_node.get_previous_nodes()))
+            break
 
         # current_node does not have any edges.
         if current_node.osm_id not in edges:

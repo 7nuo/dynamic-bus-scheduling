@@ -126,6 +126,6 @@ if __name__ == '__main__':
     # for bus_stop in mongo.get_bus_stops():
     #     print bus_stop
 
-    print mongo.get_bus_stop_from_name(name='Centralstationen')
+    # print mongo.get_bus_stop_from_name(name='Centralstationen')
 
-    # Tester().test()
+    Tester().test()
