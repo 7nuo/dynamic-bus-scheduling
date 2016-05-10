@@ -66,11 +66,12 @@ def get_multiple_routes_between_bus_stops(starting_bus_stop_name, ending_bus_sto
     data = {'starting_bus_stop_name': starting_bus_stop_name,
             'ending_bus_stop_name': ending_bus_stop_name}
 
-    sess = requests.Session()
-    adapter = requests.adapters.HTTPAdapter(max_retries=10)
-    sess.mount('http://', adapter)
+    # sess = requests.Session()
+    # adapter = requests.adapters.HTTPAdapter(max_retries=10)
+    # sess.mount('http://', adapter)
+    # request = sess.post(url, data=data, headers=headers, timeout=60)
 
-    request = sess.post(url, data=data, headers=headers, timeout=60)
+    request = requests.post(url, data=data, headers=headers, timeout=60)
     json_response = json.loads(request.text)
 
     print json_response

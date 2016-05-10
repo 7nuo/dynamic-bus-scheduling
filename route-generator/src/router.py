@@ -19,7 +19,7 @@ from point import Point
 from logger import log
 import os
 import time
-
+import json
 
 class Tester(object):
     """
@@ -96,6 +96,11 @@ class Tester(object):
 
 if __name__ == '__main__':
     mongo = MongoConnector(host='127.0.0.1', port=27017)
+    # print mongo.get_route_between_bus_stops(starting_bus_stop_name='Centralstationen', ending_bus_stop_name='Stadshuset')
+    # response = mongo.get_route_between_bus_stops(starting_bus_stop_name='Centralstationen', ending_bus_stop_name='Stadshuset')
+    # json_response = json.loads(response)
+    # print json_response
+    print mongo.get_multiple_routes_between_bus_stops(starting_bus_stop_name='Centralstationen', ending_bus_stop_name='Stadshuset')
 
     # log(module_name='MongoConnector', log_type='INFO', log_message='clear_all_collections(): starting')
     # start_time = time.time()
@@ -128,4 +133,4 @@ if __name__ == '__main__':
 
     # print mongo.get_bus_stop_from_name(name='Centralstationen')
 
-    Tester().test()
+    # Tester().test()

@@ -276,15 +276,17 @@ def find_multiple_paths(starting_node_osm_id, ending_node_osm_id, edges, points)
     # While there are more nodes, whose edges have not been evaluated.
     while len(open_set) > 0:
 
-        print 'ok'
-
         # During the first iteration of this loop, current_node will be equal to starting_node.
         current_node = open_set.pop()
 
         # ending_node has been discovered.
         if current_node.osm_id == ending_node_osm_id:
             paths.append(reconstruct_path(list_of_nodes=current_node.get_previous_nodes()))
-            break
+
+            if len(paths) > 1:
+                return paths
+            else:
+                continue
 
         # current_node does not have any edges.
         if current_node.osm_id not in edges:
@@ -292,6 +294,16 @@ def find_multiple_paths(starting_node_osm_id, ending_node_osm_id, edges, points)
 
         for edge in edges.get(current_node.osm_id):
             next_node_osm_id = edge.get('ending_node')
+
+            # Check whether the next_node has already been evaluated.
+            # if next_node_osm_id in closed_set:
+            #     next_node = closed_set.get(next_node_osm_id)
+            #     # continue
+            # else:
+            #     next_node = Node(osm_id=next_node_osm_id, point=points.get(next_node_osm_id))
+            #     next_node.heuristic_estimated_distance, next_node.heuristic_estimated_time_on_road = \
+            #         heuristic_cost_estimate(starting_point=next_node.point,
+            #                                 ending_point=points.get(ending_node_osm_id))
 
             next_node = Node(osm_id=next_node_osm_id, point=points.get(next_node_osm_id))
             next_node.heuristic_estimated_distance, next_node.heuristic_estimated_time_on_road = \
@@ -328,7 +340,11 @@ def find_multiple_paths(starting_node_osm_id, ending_node_osm_id, edges, points)
             # next_node has been evaluated.
             closed_set[next_node_osm_id] = next_node
 
-            open_set.insert(new_node=next_node)
+            # Add next_node to the open_set, so as to allow its edges to be evaluated.
+            if not open_set.exists(next_node_osm_id):
+                open_set.insert(new_node=next_node)
+
+            # open_set.insert(new_node=next_node)
 
     return paths
 
