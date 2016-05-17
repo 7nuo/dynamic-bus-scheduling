@@ -188,6 +188,16 @@ class MongoConnection(object):
         """
         return self.bus_stops_collection.find_one({'name': name}, {"_id": 0})
 
+    def find_multiple_bus_stops_from_names(self, names):
+        """
+        Retrieve a bus_stop based on the name.
+
+        :type names: [string]
+        :return: [{'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        """
+        # collection1.find({'albums': {'$in': [3, 7, 8]}})
+        return self.bus_stops_collection.find({'name': {'$in': names}}, {"_id": 0})
+
     def find_bus_stop_from_coordinates(self, longitude, latitude):
         """
         Retrieve a bus_stop based on coordinates.

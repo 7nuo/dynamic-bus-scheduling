@@ -22,6 +22,16 @@ class MongoConnector(object):
     def __init__(self, host, port):
         self.connection = MongoConnection(host=host, port=port)
         log(module_name='MongoConnector', log_type='DEBUG', log_message='connection ok')
+        self.bus_stops_dictionary = {}
+        self.edges_dictionary = {}
+        self.points_dictionary = {}
+        self.initialize_dictionaries()
+        log(module_name='MongoConnector', log_type='DEBUG', log_message='initialize_dictionaries ok')
+
+    def initialize_dictionaries(self):
+        self.bus_stops_dictionary = self.get_bus_stops_dictionary()
+        self.edges_dictionary = self.get_edges_dictionary()
+        self.points_dictionary = self.get_points_dictionary()
 
     def clear_all_collections(self):
         self.connection.clear_all_collections()
@@ -47,10 +57,11 @@ class MongoConnector(object):
         minimum_distance = float('Inf')
         closest_bus_stop = None
 
-        bus_stops_cursor = self.connection.get_bus_stops()
+        for bus_stop_name, bus_stop_values in self.bus_stops_dictionary:
+            bus_stop_osm_id = bus_stop_values.get('osm_id')
+            bus_stop_point = bus_stop_values.get('point')
+            bus_stop = {'osm_id': bus_stop_osm_id, 'name': bus_stop_name, 'point': bus_stop_point}
 
-        for bus_stop in bus_stops_cursor:
-            bus_stop_point = bus_stop.get('point')
             current_distance = distance(point_one=provided_point, longitude_two=bus_stop_point.get('longitude'),
                                         latitude_two=bus_stop_point.get('latitude'))
 
@@ -73,7 +84,18 @@ class MongoConnector(object):
         :type latitude: float
         :return bus_stop: {osm_id, name, point}
         """
-        return self.connection.find_bus_stop_from_coordinates(longitude=longitude, latitude=latitude)
+        bus_stop = None
+
+        for bus_stop_name, bus_stop_values in self.bus_stops_dictionary:
+            bus_stop_osm_id = bus_stop_values.get('osm_id')
+            bus_stop_point = bus_stop_values.get('point')
+            current_bus_stop = {'osm_id': bus_stop_osm_id, 'name': bus_stop_name, 'point': bus_stop_point}
+
+            if (bus_stop_point.get('longitude') == longitude) and (bus_stop_point.get('latitude') == latitude):
+                bus_stop = current_bus_stop
+                break
+
+        return bus_stop
 
     def get_bus_stop_from_name(self, name):
         """
@@ -82,7 +104,11 @@ class MongoConnector(object):
         :type name: string
         :return bus_stop: {osm_id, name, point}
         """
-        return self.connection.find_bus_stop_from_name(name=name)
+        name = name.decode('utf-8')
+        # return self.connection.find_bus_stop_from_name(name=name)
+        bus_stop = self.bus_stops_dictionary[name]
+        bus_stop['name'] = name
+        return bus_stop
 
     def get_bus_stop_from_point(self, point):
         """
@@ -93,11 +119,37 @@ class MongoConnector(object):
         """
         return self.get_bus_stop_from_coordinates(longitude=point.longitude, latitude=point.latitude)
 
-    def get_bus_stops(self):
-        bus_stops = []
+    def get_bus_stops_dictionary(self):
+        """
+        Retrieve a dictionary containing all the documents of the BusStops collection.
+
+        :return: {name -> {'osm_id', 'point': {'longitude', 'latitude'}}}
+        """
+        bus_stops_dictionary = {}
         bus_stops_cursor = self.connection.get_bus_stops()
 
-        for bus_stop in bus_stops_cursor:
+        # Cursor -> {'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+        for bus_stop_document in bus_stops_cursor:
+            name = bus_stop_document.get('name')
+
+            if name not in bus_stops_dictionary:
+                bus_stops_dictionary[name] = {'osm_id': bus_stop_document.get('osm_id'),
+                                              'point': bus_stop_document.get('point')}
+
+        return bus_stops_dictionary
+
+    def get_bus_stops_dictionary_to_list(self):
+        """
+        Retrieve a list containing all the documents of the BusStops collection.
+
+        :return: [{'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        """
+        bus_stops = []
+
+        for bus_stop_name, bus_stop_values in self.bus_stops_dictionary.iteritems():
+            bus_stop_osm_id = bus_stop_values.get('osm_id')
+            bus_stop_point = bus_stop_values.get('point')
+            bus_stop = {'osm_id': bus_stop_osm_id, 'name': bus_stop_name, 'point': bus_stop_point}
             bus_stops.append(bus_stop)
 
         return bus_stops
@@ -112,18 +164,8 @@ class MongoConnector(object):
         :return bus_stops: [{osm_id, name, point}]
         """
         provided_point = Point(longitude=longitude, latitude=latitude)
-        bus_stops = []
-        bus_stops_cursor = self.connection.get_bus_stops()
-
-        for bus_stop in bus_stops_cursor:
-            bus_stop_point = bus_stop.get('point')
-            current_distance = distance(point_one=provided_point, longitude_two=bus_stop_point.get('longitude'),
-                                        latitude_two=bus_stop_point.get('latitude'))
-
-            if current_distance <= maximum_distance:
-                bus_stops.append(bus_stop)
-
-        return bus_stops
+        return self.get_bus_stops_within_distance_from_point(provided_point=provided_point,
+                                                             maximum_distance=maximum_distance)
 
     def get_bus_stops_within_distance_from_point(self, provided_point, maximum_distance):
         """
@@ -134,15 +176,16 @@ class MongoConnector(object):
         :return bus_stops: [{osm_id, name, point}]
         """
         bus_stops = []
-        bus_stops_cursor = self.connection.get_bus_stops()
 
-        for bus_stop in bus_stops_cursor:
-            bus_stop_point = bus_stop.get('point')
+        for bus_stop_name, bus_stop_values in self.bus_stops_dictionary:
+            bus_stop_point = bus_stop_values.get('point')
             current_distance = distance(point_one=provided_point, longitude_two=bus_stop_point.get('longitude'),
                                         latitude_two=bus_stop_point.get('latitude'))
 
             if current_distance <= maximum_distance:
-                bus_stops.append(bus_stop)
+                bus_stop_osm_id = bus_stop_values.get('osm_id')
+                current_bus_stop = {'osm_id': bus_stop_osm_id, 'name': bus_stop_name, 'point': bus_stop_point}
+                bus_stops.append(current_bus_stop)
 
         return bus_stops
 
@@ -167,12 +210,11 @@ class MongoConnector(object):
         :return closest_ending_node: osm_id
         """
         closest_ending_node = None
-        ending_nodes_set = self.connection.get_ending_nodes_of_edges()
-        points_dictionary = self.get_points_dictionary()
+        ending_nodes_set = self.get_ending_nodes_of_edges()
         minimum_distance = float('Inf')
 
         for current_ending_node in ending_nodes_set:
-            current_point = points_dictionary[current_ending_node]
+            current_point = self.points_dictionary[current_ending_node]
             current_distance = distance(point_one=provided_point, point_two=current_point)
 
             if current_distance == 0:
@@ -207,12 +249,11 @@ class MongoConnector(object):
         :return closest_starting_node: osm_id
         """
         closest_starting_node = None
-        starting_nodes_set = self.connection.get_starting_nodes_of_edges()
-        points_dictionary = self.get_points_dictionary()
+        starting_nodes_set = self.get_starting_nodes_of_edges()
         minimum_distance = float('Inf')
 
         for current_starting_node in starting_nodes_set:
-            current_point = points_dictionary[current_starting_node]
+            current_point = self.points_dictionary[current_starting_node]
             current_distance = distance(point_one=provided_point, point_two=current_point)
 
             if current_distance == 0:
@@ -225,23 +266,6 @@ class MongoConnector(object):
                 pass
 
         return closest_starting_node
-
-    def get_point_from_osm_id(self, osm_id):
-        """
-        Retrieve the point which correspond to a specific osm_id.
-
-        :type osm_id: integer
-        :return: Point
-        """
-        point = None
-        # document = {'osm_id': osm_id, 'point': {'longitude': point.longitude, 'latitude': point.latitude}}
-        document = self.connection.find_point(osm_id=osm_id)
-        point_entry = document.get('point')
-
-        if point_entry is not None:
-            point = Point(longitude=point_entry.get('longitude'), latitude=point_entry.get('latitude'))
-
-        return point
 
     def get_edges_dictionary(self):
         """
@@ -270,6 +294,39 @@ class MongoConnector(object):
                                                     'traffic_density': edges_document.get('traffic_density')}]
         return edges_dictionary
 
+    def get_ending_nodes_of_edges(self):
+        """
+        Retrieve all the ending nodes which are included in the Edges collection.
+
+        :return: ending_nodes: set([osm_id])
+        """
+        ending_nodes = set()
+
+        for starting_node, values in self.edges_dictionary.iteritems():
+            ending_node = values.get('ending_node')
+            ending_nodes.add(ending_node)
+
+        return ending_nodes
+
+    def get_point_from_osm_id(self, osm_id):
+        """
+        Retrieve the point which correspond to a specific osm_id.
+
+        :type osm_id: integer
+        :return: Point
+        """
+        point = None
+        # document = {'osm_id': osm_id, 'point': {'longitude': point.longitude, 'latitude': point.latitude}}
+        # document = self.connection.find_point(osm_id=osm_id)
+        # point_entry = document.get('point')
+
+        point_entry = self.points_dictionary.get(osm_id, None)
+
+        if point_entry is not None:
+            point = Point(longitude=point_entry.get('longitude'), latitude=point_entry.get('latitude'))
+
+        return point
+
     def get_points_dictionary(self):
         """
         Retrieve a dictionary containing all the documents of the Points collection.
@@ -296,20 +353,30 @@ class MongoConnector(object):
         """
         # edge_document = {'starting_node', 'ending_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}
         points_of_edges = {}
-        edges_cursor = self.connection.get_edges()
-        points_dictionary = self.get_points_dictionary()
 
-        for edge_document in edges_cursor:
-            starting_node = edge_document.get('starting_node')
-            ending_node = edge_document.get('ending_node')
+        for starting_node, values in self.edges_dictionary.iteritems():
+            ending_node = values.get('ending_node')
 
             if starting_node not in points_of_edges:
-                points_of_edges[starting_node] = points_dictionary.get(starting_node)
+                points_of_edges[starting_node] = self.points_dictionary.get(starting_node)
 
             if ending_node not in points_of_edges:
-                points_of_edges[ending_node] = points_dictionary.get(ending_node)
+                points_of_edges[ending_node] = self.points_dictionary.get(ending_node)
 
         return points_of_edges
+
+    def get_starting_nodes_of_edges(self):
+        """
+        Retrieve all the starting nodes which are included in the Edges collection.
+
+        :return: starting_nodes: set([osm_id])
+        """
+        starting_nodes = set()
+
+        for starting_node in self.edges_dictionary:
+            starting_nodes.add(starting_node)
+
+        return starting_nodes
 
     def get_route_from_coordinates(self, starting_longitude, starting_latitude, ending_longitude, ending_latitude):
         """
@@ -337,12 +404,10 @@ class MongoConnector(object):
         """
         starting_osm_id = self.get_closest_starting_node_in_edges_from_point(provided_point=starting_point)
         ending_osm_id = self.get_closest_ending_node_in_edges_from_point(provided_point=ending_point)
-        edges_dictionary = self.get_edges_dictionary()
-        points_dictionary = self.get_points_dictionary()
         route = find_path(starting_node_osm_id=starting_osm_id,
                           ending_node_osm_id=ending_osm_id,
-                          edges=edges_dictionary,
-                          points=points_dictionary)
+                          edges=self.edges_dictionary,
+                          points=self.points_dictionary)
         return route
 
     def get_route_between_bus_stops(self, starting_bus_stop_name, ending_bus_stop_name):
@@ -356,13 +421,11 @@ class MongoConnector(object):
         """
         starting_bus_stop = self.get_bus_stop_from_name(name=starting_bus_stop_name)
         ending_bus_stop = self.get_bus_stop_from_name(name=ending_bus_stop_name)
-        edges_dictionary = self.get_edges_dictionary()
-        points_dictionary = self.get_points_dictionary()
 
         route = find_path(starting_node_osm_id=starting_bus_stop.get('osm_id'),
                           ending_node_osm_id=ending_bus_stop.get('osm_id'),
-                          edges=edges_dictionary,
-                          points=points_dictionary)
+                          edges=self.edges_dictionary,
+                          points=self.points_dictionary)
         return route
 
     def get_multiple_routes_between_bus_stops(self, starting_bus_stop_name, ending_bus_stop_name):
@@ -376,12 +439,40 @@ class MongoConnector(object):
         """
         starting_bus_stop = self.get_bus_stop_from_name(name=starting_bus_stop_name)
         ending_bus_stop = self.get_bus_stop_from_name(name=ending_bus_stop_name)
-        edges_dictionary = self.get_edges_dictionary()
-        points_dictionary = self.get_points_dictionary()
 
         routes = find_multiple_paths(starting_node_osm_id=starting_bus_stop.get('osm_id'),
                                      ending_node_osm_id=ending_bus_stop.get('osm_id'),
-                                     edges=edges_dictionary,
-                                     points=points_dictionary)
+                                     edges=self.edges_dictionary,
+                                     points=self.points_dictionary)
         return routes
+
+    def get_route_between_multiple_bus_stops(self, bus_stop_names):
+        """
+        Find a route between multiple bus_stops, based on their names.
+
+        :param bus_stop_names: [string]
+        :return: [{'starting_bus_stop_name', 'ending_bus_stop_name', 'total_distance', 'total_time', 'node_osm_ids',
+                   'points', 'distances_from_starting_node', 'times_from_starting_node',
+                   'distances_from_previous_node', 'times_from_previous_node'}]
+        """
+        intermediate_routes = []
+
+        for i in range(0, len(bus_stop_names) - 1):
+            starting_bus_stop_name = bus_stop_names[i]
+            starting_bus_stop = self.get_bus_stop_from_name(name=starting_bus_stop_name)
+            ending_bus_stop_name = bus_stop_names[i + 1]
+            ending_bus_stop = self.get_bus_stop_from_name(name=ending_bus_stop_name)
+
+            route = find_path(starting_node_osm_id=starting_bus_stop.get('osm_id'),
+                              ending_node_osm_id=ending_bus_stop.get('osm_id'),
+                              edges=self.edges_dictionary,
+                              points=self.points_dictionary)
+
+            if route is not None:
+                route['starting_bus_stop_name'] = starting_bus_stop_name
+                route['ending_bus_stop_name'] = ending_bus_stop_name
+
+            intermediate_routes.append(route)
+
+        return intermediate_routes
 

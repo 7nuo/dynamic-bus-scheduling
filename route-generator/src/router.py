@@ -1,3 +1,5 @@
+#!/usr/local/bin/python
+# -*- coding: utf-8 -*-
 """
 Copyright 2016 Eleftherios Anagnostopoulos for Ericsson AB
 
@@ -21,10 +23,12 @@ import os
 import time
 import json
 
+
 class Tester(object):
     """
 
     """
+
     def __init__(self):
         self.edges = {}
         self.points = {}
@@ -96,11 +100,62 @@ class Tester(object):
 
 if __name__ == '__main__':
     mongo = MongoConnector(host='127.0.0.1', port=27017)
+
+    # for bus_stop in mongo.get_bus_stops_dictionary_to_list():
+    #     print bus_stop
+
+    # print mongo.get_bus_stops_dictionary_to_list()
+
+    bus_stops = ['Centralstationen', 'Stadshuset', 'Skolgatan', 'Ekonomikum', 'Studentstaden', 'Rickomberga',
+                 'Oslogatan', 'Reykjaviksgatan', 'Ekebyhus', 'Sernanders väg', 'Flogsta centrum']
+    #
+    # print mongo.get_route_between_multiple_bus_stops(bus_stop_names=bus_stops)
+
+    #
+    # for bus_stop in bus_stops:
+    #     print mongo.get_bus_stop_from_name(name=bus_stop)
+
+    # for i in range(0, len(bus_stops) - 2):
+    #     print len(mongo.get_multiple_routes_between_bus_stops(starting_bus_stop_name=bus_stops[i],
+    #                                                       ending_bus_stop_name=bus_stops[i + 1]))
+
+    # print mongo.get_bus_stop_from_name(name='')
+    # print mongo.get_bus_stop_from_name(name='Centralstationen')
+    # print mongo.get_bus_stop_from_name(name='Stadshuset')
+    # print mongo.get_bus_stop_from_name(name='Skolgatan')
+    # print mongo.get_bus_stop_from_name(name='Ekonomikum')
+    # print mongo.get_bus_stop_from_name(name='Studentstaden')
+    # print mongo.get_bus_stop_from_name(name='Rickomberga')
+    # print mongo.get_bus_stop_from_name(name='Oslogatan')
+    # print mongo.get_bus_stop_from_name(name='Reykjaviksgatan')
+    # print mongo.get_bus_stop_from_name(name='Ekebyhus')
+    # print mongo.get_bus_stop_from_name(name='Sernanders väg'.decode('utf-8')).get('name')
+    # print str(mongo.get_bus_stop_from_name(name='Sernanders väg')).encode("ascii")
+    # print unicode(str(mongo.get_bus_stop_from_name(name='Sernanders väg')), 'utf-8').encode('utf-8')
+    # print mongo.get_bus_stop_from_name(name='Flogsta centrum')
+    # print mongo.get_bus_stop_from_name(name='Säves väg')
+
+    # print mongo.get_multiple_routes_between_bus_stops(starting_bus_stop_name='Centralstationen', ending_bus_stop_name='Stadshuset')
+    # print mongo.get_multiple_routes_between_bus_stops(starting_bus_stop_name='Stadshuset', ending_bus_stop_name='')
+    # print mongo.get_multiple_routes_between_bus_stops(starting_bus_stop_name='', ending_bus_stop_name='')
+    # print mongo.get_multiple_routes_between_bus_stops(starting_bus_stop_name='', ending_bus_stop_name='')
+    # print mongo.get_multiple_routes_between_bus_stops(starting_bus_stop_name='', ending_bus_stop_name='')
+    # print mongo.get_multiple_routes_between_bus_stops(starting_bus_stop_name='', ending_bus_stop_name='')
+    # print mongo.get_multiple_routes_between_bus_stops(starting_bus_stop_name='', ending_bus_stop_name='')
+    # print mongo.get_multiple_routes_between_bus_stops(starting_bus_stop_name='', ending_bus_stop_name='')
+    # print mongo.get_multiple_routes_between_bus_stops(starting_bus_stop_name='', ending_bus_stop_name='')
+    # print mongo.get_multiple_routes_between_bus_stops(starting_bus_stop_name='', ending_bus_stop_name='')
+    # print mongo.get_multiple_routes_between_bus_stops(starting_bus_stop_name='', ending_bus_stop_name='')
+    # print mongo.get_multiple_routes_between_bus_stops(starting_bus_stop_name='', ending_bus_stop_name='')
+
+    start = time.time()
+    print mongo.get_route_between_multiple_bus_stops(bus_stop_names=bus_stops)
     # print mongo.get_route_between_bus_stops(starting_bus_stop_name='Centralstationen', ending_bus_stop_name='Stadshuset')
+    print time.time() - start
     # response = mongo.get_route_between_bus_stops(starting_bus_stop_name='Centralstationen', ending_bus_stop_name='Stadshuset')
     # json_response = json.loads(response)
     # print json_response
-    print mongo.get_multiple_routes_between_bus_stops(starting_bus_stop_name='Centralstationen', ending_bus_stop_name='Stadshuset')
+    # print mongo.get_multiple_routes_between_bus_stops(starting_bus_stop_name='Centralstationen', ending_bus_stop_name='Stadshuset')
 
     # log(module_name='MongoConnector', log_type='INFO', log_message='clear_all_collections(): starting')
     # start_time = time.time()
@@ -128,7 +183,7 @@ if __name__ == '__main__':
     # log(module_name='Parser', log_type='INFO',
     #     log_message='populate_all_collections(): finished - elapsed time = ' + str(elapsed_time) + ' sec')
 
-    # for bus_stop in mongo.get_bus_stops():
+    # for bus_stop in mongo.get_bus_stops_dictionary_to_list():
     #     print bus_stop
 
     # print mongo.get_bus_stop_from_name(name='Centralstationen')
