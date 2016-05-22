@@ -3,7 +3,8 @@ import multiprocessing
 # WORKING_DIR
 
 bind = "127.0.0.1:2000"
-workers = multiprocessing.cpu_count() * 2 + 1
+# workers = multiprocessing.cpu_count() * 2 + 1
+workers = 1
 worker_class = "gevent"
 # logconfig = "/home/monadsrv/Desktop/RequestHandler/logging.conf"
 # accesslog = "/home/monadsrv/Desktop/RequestHandler/logs/serverAccess.log"

@@ -106,18 +106,18 @@ if __name__ == '__main__':
 
     # print mongo.get_bus_stops_dictionary_to_list()
 
-    bus_stops = ['Centralstationen', 'Stadshuset', 'Skolgatan', 'Ekonomikum', 'Studentstaden', 'Rickomberga',
+    bus_stop_names = ['Centralstationen', 'Stadshuset', 'Skolgatan', 'Ekonomikum', 'Studentstaden', 'Rickomberga',
                  'Oslogatan', 'Reykjaviksgatan', 'Ekebyhus', 'Sernanders väg', 'Flogsta centrum']
     #
-    # print mongo.get_route_between_multiple_bus_stops(bus_stop_names=bus_stops)
+    # print mongo.get_route_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
 
     #
-    # for bus_stop in bus_stops:
+    # for bus_stop in bus_stop_names:
     #     print mongo.get_bus_stop_from_name(name=bus_stop)
 
-    # for i in range(0, len(bus_stops) - 2):
-    #     print len(mongo.get_multiple_routes_between_bus_stops(starting_bus_stop_name=bus_stops[i],
-    #                                                       ending_bus_stop_name=bus_stops[i + 1]))
+    # for i in range(0, len(bus_stop_names) - 2):
+    #     print len(mongo.get_multiple_routes_between_bus_stops(starting_bus_stop_name=bus_stop_names[i],
+    #                                                       ending_bus_stop_name=bus_stop_names[i + 1]))
 
     # print mongo.get_bus_stop_from_name(name='')
     # print mongo.get_bus_stop_from_name(name='Centralstationen')
@@ -149,7 +149,7 @@ if __name__ == '__main__':
     # print mongo.get_multiple_routes_between_bus_stops(starting_bus_stop_name='', ending_bus_stop_name='')
 
     start = time.time()
-    print mongo.get_route_between_multiple_bus_stops(bus_stop_names=bus_stops)
+    print mongo.get_route_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
     # print mongo.get_route_between_bus_stops(starting_bus_stop_name='Centralstationen', ending_bus_stop_name='Stadshuset')
     print time.time() - start
     # response = mongo.get_route_between_bus_stops(starting_bus_stop_name='Centralstationen', ending_bus_stop_name='Stadshuset')

@@ -29,40 +29,42 @@ def application(env, start_response):
         response = 'ERROR'
     else:
         if path_info == '/get_bus_stops':
-            bus_stops = mongo.get_bus_stops_dictionary_to_list()
+            result = mongo.get_bus_stops_dictionary_to_list()
             response_status = '200 OK'
             response_type = 'application/json'
-            response = json.dumps(bus_stops)
+            response = json.dumps(result)
 
         elif path_info == '/get_route_between_bus_stops':
             form = cgi.FieldStorage(fp=env['wsgi.input'], environ=data_env)
             starting_bus_stop_name = form.getvalue('starting_bus_stop_name')
             ending_bus_stop_name = form.getvalue('ending_bus_stop_name')
 
-            route = mongo.get_route_between_bus_stops(starting_bus_stop_name=starting_bus_stop_name,
-                                                      ending_bus_stop_name=ending_bus_stop_name)
+            result = mongo.get_route_between_bus_stops(starting_bus_stop_name=starting_bus_stop_name,
+                                                       ending_bus_stop_name=ending_bus_stop_name)
             response_status = '200 OK'
             response_type = 'application/json'
-            response = json.dumps(route, cls=MyEncoder)
+            response = json.dumps(result, cls=MyEncoder)
 
         elif path_info == '/get_multiple_routes_between_bus_stops':
             form = cgi.FieldStorage(fp=env['wsgi.input'], environ=data_env)
             starting_bus_stop_name = form.getvalue('starting_bus_stop_name')
             ending_bus_stop_name = form.getvalue('ending_bus_stop_name')
+            number_of_routes = int(form.getvalue('number_of_routes'))
 
-            routes = mongo.get_multiple_routes_between_bus_stops(starting_bus_stop_name=starting_bus_stop_name,
-                                                                 ending_bus_stop_name=ending_bus_stop_name)
+            result = mongo.get_multiple_routes_between_bus_stops(starting_bus_stop_name=starting_bus_stop_name,
+                                                                 ending_bus_stop_name=ending_bus_stop_name,
+                                                                 number_of_routes=number_of_routes)
             response_status = '200 OK'
             response_type = 'application/json'
-            response = json.dumps(routes, cls=MyEncoder)
+            response = json.dumps(result, cls=MyEncoder)
 
         elif path_info == '/get_route_between_multiple_bus_stops':
             form = cgi.FieldStorage(fp=env['wsgi.input'], environ=data_env)
             bus_stop_names = form.getvalue('bus_stop_names')
-            intermediate_routes = mongo.get_route_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
+            result = mongo.get_route_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
             response_status = '200 OK'
             response_type = 'application/json'
-            response = json.dumps(intermediate_routes, cls=MyEncoder)
+            response = json.dumps(result, cls=MyEncoder)
 
     response_headers = [
         ('Content-Type', response_type),

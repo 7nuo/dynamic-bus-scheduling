@@ -59,7 +59,7 @@ class Parser(object):
 
     def add_bus_stop(self, osm_id, name, point):
         """
-        Add a bus_stop to the bus_stops dictionary.
+        Add a bus_stop to the bus_stop_names dictionary.
 
         :type osm_id: integer
         :type name: string
@@ -282,7 +282,7 @@ class Parser(object):
 
     def parse_edges(self, osm_id, tags, references):
         """
-        Parse the edges which connect the nodes, bus_stops, and points of the map.
+        Parse the edges which connect the nodes, bus_stop_names, and points of the map.
 
         :param osm_id: Corresponds to the osm_id of the way.
         :type osm_id: integer
@@ -369,7 +369,7 @@ class Parser(object):
 
     def populate_bus_stops(self):
         self.connection.insert_bus_stops(bus_stops=self.get_list_of_bus_stops())
-        log(module_name='Parser', log_type='DEBUG', log_message='bus_stops collection ok')
+        log(module_name='Parser', log_type='DEBUG', log_message='bus_stop_names collection ok')
 
     def populate_ways(self):
         self.connection.insert_ways(ways=self.get_list_of_ways())
@@ -391,7 +391,7 @@ class Parser(object):
     #
     # def print_bus_stops(self):
     #     print '-- Printing Bus Stops --'
-    #     for osm_id, values in self.bus_stops.iteritems():
+    #     for osm_id, values in self.bus_stop_names.iteritems():
     #         print 'Bus_Stop: ' + str(osm_id) + ', Name: ' + str(values.get('name').encode('utf-8')) + \
     #               ', Point: ' + values.get('point').coordinates_to_string()
     #

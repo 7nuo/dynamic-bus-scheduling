@@ -32,13 +32,16 @@ def get_route_between_bus_stops(starting_bus_stop_name, ending_bus_stop_name):
     data = {'starting_bus_stop_name': starting_bus_stop_name,
             'ending_bus_stop_name': ending_bus_stop_name}
     request = requests.post(url, data=data, headers=headers)
-    route = json.loads(request.text)
 
-    # print route
+    # response = {'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #             'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #             'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
+    #                       'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}}
+    response = json.loads(request.text)
 
-    # route: {'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
-    #         'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}
-
+    starting_bus_stop = response.get('starting_bus_stop')
+    ending_bus_stop = response.get('ending_bus_stop')
+    route = response.get('route')
     total_distance = route.get('total_distance')
     total_time = route.get('total_time')
     node_osm_ids = route.get('node_osm_ids')
@@ -49,8 +52,8 @@ def get_route_between_bus_stops(starting_bus_stop_name, ending_bus_stop_name):
     times_from_previous_node = route.get('times_from_previous_node')
 
     output = '\nRequest: get_route_between_bus_stops' + \
-             '\nstarting_bus_stop: ' + starting_bus_stop_name + \
-             '\nending_bus_stop: ' + ending_bus_stop_name + \
+             '\nstarting_bus_stop: ' + str(starting_bus_stop) + \
+             '\nending_bus_stop: ' + str(ending_bus_stop) + \
              '\ntotal_distance: ' + str(total_distance) +\
              '\ntotal_time: ' + str(total_time) +\
              '\nnode_osm_ids: ' + str(node_osm_ids) +\
@@ -63,24 +66,23 @@ def get_route_between_bus_stops(starting_bus_stop_name, ending_bus_stop_name):
     print output
 
 
-def get_multiple_routes_between_bus_stops(starting_bus_stop_name, ending_bus_stop_name):
+def get_multiple_routes_between_bus_stops(starting_bus_stop_name, ending_bus_stop_name, number_of_routes):
     url = host + ':' + port + '/get_multiple_routes_between_bus_stops'
     headers = {'content-type': 'application/x-www-form-urlencoded'}
     data = {'starting_bus_stop_name': starting_bus_stop_name,
-            'ending_bus_stop_name': ending_bus_stop_name}
-
-    # sess = requests.Session()
-    # adapter = requests.adapters.HTTPAdapter(max_retries=10)
-    # sess.mount('http://', adapter)
-    # request = sess.post(url, data=data, headers=headers, timeout=60)
-
+            'ending_bus_stop_name': ending_bus_stop_name,
+            'number_of_routes': number_of_routes}
     request = requests.post(url, data=data, headers=headers, timeout=60)
-    routes = json.loads(request.text)
 
-    # print routes
+    # response = {'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #             'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #             'routes': [{'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
+    #                         'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}]}
+    response = json.loads(request.text)
 
-    # routes: [{'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
-    #           'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}]
+    starting_bus_stop = response.get('starting_bus_stop')
+    ending_bus_stop = response.get('ending_bus_stop')
+    routes = response.get('routes')
 
     for route in routes:
         total_distance = route.get('total_distance')
@@ -93,8 +95,8 @@ def get_multiple_routes_between_bus_stops(starting_bus_stop_name, ending_bus_sto
         times_from_previous_node = route.get('times_from_previous_node')
 
         output = '\nRequest: get_multiple_routes_between_bus_stops' + \
-                 '\nstarting_bus_stop: ' + starting_bus_stop_name + \
-                 '\nending_bus_stop: ' + ending_bus_stop_name + \
+                 '\nstarting_bus_stop: ' + str(starting_bus_stop) + \
+                 '\nending_bus_stop: ' + str(ending_bus_stop) + \
                  '\ntotal_distance: ' + str(total_distance) +\
                  '\ntotal_time: ' + str(total_time) +\
                  '\nnode_osm_ids: ' + str(node_osm_ids) +\
@@ -112,28 +114,29 @@ def get_route_between_multiple_bus_stops(bus_stop_names):
     headers = {'content-type': 'application/x-www-form-urlencoded'}
     data = {'bus_stop_names': bus_stop_names}
     request = requests.post(url, data=data, headers=headers)
-    intermediate_routes = json.loads(request.text)
+    response = json.loads(request.text)
 
-    # intermediate_routes: [{'starting_bus_stop_name', 'ending_bus_stop_name', 'total_distance', 'total_time',
-    #                        'node_osm_ids', 'points', 'distances_from_starting_node', 'times_from_starting_node',
-    #                        'distances_from_previous_node', 'times_from_previous_node'}]
+    # response = [{'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #              'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #              'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
+    #                        'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}}]
 
-    print '\nRequest: get_route_between_multiple_bus_stops'
+    for intermediate_response in response:
+        starting_bus_stop = intermediate_response.get('starting_bus_stop')
+        ending_bus_stop = intermediate_response.get('ending_bus_stop')
+        intermediate_route = intermediate_response.get('route')
+        total_distance = intermediate_route.get('total_distance')
+        total_time = intermediate_route.get('total_time')
+        node_osm_ids = intermediate_route.get('node_osm_ids')
+        points = intermediate_route.get('points')
+        distances_from_starting_node = intermediate_route.get('distances_from_starting_node')
+        times_from_starting_node = intermediate_route.get('times_from_starting_node')
+        distances_from_previous_node = intermediate_route.get('distances_from_previous_node')
+        times_from_previous_node = intermediate_route.get('times_from_previous_node')
 
-    for route in intermediate_routes:
-        starting_bus_stop_name = route.get('starting_bus_stop_name')
-        ending_bus_stop_name = route.get('ending_bus_stop_name')
-        total_distance = route.get('total_distance')
-        total_time = route.get('total_time')
-        node_osm_ids = route.get('node_osm_ids')
-        points = route.get('points')
-        distances_from_starting_node = route.get('distances_from_starting_node')
-        times_from_starting_node = route.get('times_from_starting_node')
-        distances_from_previous_node = route.get('distances_from_previous_node')
-        times_from_previous_node = route.get('times_from_previous_node')
-
-        output = '\nstarting_bus_stop: ' + starting_bus_stop_name + \
-                 '\nending_bus_stop: ' + ending_bus_stop_name + \
+        output = '\nRequest: get_route_between_multiple_bus_stops' + \
+                 '\nstarting_bus_stop: ' + str(starting_bus_stop) + \
+                 '\nending_bus_stop: ' + str(ending_bus_stop) + \
                  '\ntotal_distance: ' + str(total_distance) +\
                  '\ntotal_time: ' + str(total_time) +\
                  '\nnode_osm_ids: ' + str(node_osm_ids) +\
@@ -147,14 +150,22 @@ def get_route_between_multiple_bus_stops(bus_stop_names):
 
 
 if __name__ == '__main__':
+    # start = time.time()
+    # get_route_between_bus_stops(starting_bus_stop_name='Centralstationen', ending_bus_stop_name='Flogsta centrum')
+    # get_multiple_routes_between_bus_stops(starting_bus_stop_name='Centralstationen',
+    #                                       ending_bus_stop_name='Flogsta centrum',
+    #                                       number_of_routes=1)
+    # print 'Time: ' + str(time.time() - start)
+
     bus_stop_names = ['Centralstationen', 'Stadshuset', 'Skolgatan', 'Ekonomikum', 'Studentstaden', 'Rickomberga',
                       'Oslogatan', 'Reykjaviksgatan', 'Ekebyhus', 'Sernanders väg', 'Flogsta centrum']
+
+    # bus_stop_names = ['Centralstationen', 'Ekonomikum', 'Oslogatan', 'Flogsta centrum', 'Oslogatan', 'Ekonomikum',
+    #                   'Centralstationen']
 
     start = time.time()
     get_route_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
     print 'Time: ' + str(time.time() - start)
-
-
 
     # get_route_between_bus_stops(starting_bus_stop_name='Flogsta centrum', ending_bus_stop_name='Säves väg')
     # get_multiple_routes_between_bus_stops(starting_bus_stop_name='Centralstationen', ending_bus_stop_name='Stadshuset')

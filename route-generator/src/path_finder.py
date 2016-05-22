@@ -233,15 +233,16 @@ def find_path(starting_node_osm_id, ending_node_osm_id, edges, points):
     return None
 
 
-def find_multiple_paths(starting_node_osm_id, ending_node_osm_id, edges, points):
+def find_multiple_paths(starting_node_osm_id, ending_node_osm_id, edges, points, number_of_paths):
     """
 
     :param starting_node_osm_id: osm_id: integer
     :param ending_node_osm_id: osm_id: integer
     :param edges: {starting_node_osm_id -> [{ending_node_osm_id, max_speed, road_type, way_id, traffic_density}]
     :param points: {osm_id -> point}
-    :return: {'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
-              'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}
+    :param number_of_paths: integer
+    :return: [{'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
+               'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}]
     """
     paths = []
 
@@ -283,7 +284,7 @@ def find_multiple_paths(starting_node_osm_id, ending_node_osm_id, edges, points)
         if current_node.osm_id == ending_node_osm_id:
             paths.append(reconstruct_path(list_of_nodes=current_node.get_previous_nodes()))
 
-            if len(paths) > 1:
+            if len(paths) > number_of_paths - 1:
                 return paths
             else:
                 continue
