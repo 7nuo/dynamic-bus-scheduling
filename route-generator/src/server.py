@@ -66,6 +66,17 @@ def application(env, start_response):
             response_type = 'application/json'
             response = json.dumps(result, cls=MyEncoder)
 
+        elif path_info == '/get_multiple_routes_between_multiple_bus_stops':
+            form = cgi.FieldStorage(fp=env['wsgi.input'], environ=data_env)
+            bus_stop_names = form.getvalue('bus_stop_names')
+            number_of_routes = int(form.getvalue('number_of_routes'))
+
+            result = mongo.get_multiple_routes_between__multiple_bus_stops(bus_stop_names=bus_stop_names,
+                                                                           number_of_routes=number_of_routes)
+            response_status = '200 OK'
+            response_type = 'application/json'
+            response = json.dumps(result, cls=MyEncoder)
+
     response_headers = [
         ('Content-Type', response_type),
         ('Content-Length', str(len(response)))

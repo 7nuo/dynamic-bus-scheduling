@@ -487,13 +487,37 @@ class MongoConnector(object):
 
         return final_route
 
-    # def get_multiple_routes_between_multiple_bus_stops(self, bus_stop_names):
-    #     """
-    #     Find a multiple routes between multiple bus_stop_names, based on their names.
-    #
-    #     :param bus_stop_names: [string]
-    #     :return: [{'starting_bus_stop_name', 'ending_bus_stop_name', 'total_distance', 'total_time', 'node_osm_ids',
-    #                'points', 'distances_from_starting_node', 'times_from_starting_node',
-    #                'distances_from_previous_node', 'times_from_previous_node'}]
-    #     """
+    def get_multiple_routes_between_multiple_bus_stops(self, bus_stop_names, number_of_routes):
+        """
+        Find a multiple routes between multiple bus_stop_names, based on their names.
+
+        :param bus_stop_names: [string]
+        :param number_of_routes: integer
+        :return: [{'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                   'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                   'routes': [{'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
+                               'times_from_starting_node', 'distances_from_previous_node',
+                               'times_from_previous_node'}]}]
+        """
+        final_route = []
+
+        for i in range(0, len(bus_stop_names) - 1):
+            starting_bus_stop_name = bus_stop_names[i]
+            starting_bus_stop = self.get_bus_stop_from_name(name=starting_bus_stop_name)
+            ending_bus_stop_name = bus_stop_names[i + 1]
+            ending_bus_stop = self.get_bus_stop_from_name(name=ending_bus_stop_name)
+
+            routes = find_multiple_paths(starting_node_osm_id=starting_bus_stop.get('osm_id'),
+                                         ending_node_osm_id=ending_bus_stop.get('osm_id'),
+                                         edges=self.edges_dictionary,
+                                         points=self.points_dictionary,
+                                         number_of_paths=number_of_routes)
+
+            intermediate_route = {'starting_bus_stop': starting_bus_stop,
+                                  'ending_bus_stop': ending_bus_stop,
+                                  'routes': routes}
+
+            final_route.append(intermediate_route)
+
+        return final_route
 

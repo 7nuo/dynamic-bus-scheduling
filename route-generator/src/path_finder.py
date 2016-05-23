@@ -297,19 +297,19 @@ def find_multiple_paths(starting_node_osm_id, ending_node_osm_id, edges, points,
             next_node_osm_id = edge.get('ending_node')
 
             # Check whether the next_node has already been evaluated.
-            # if next_node_osm_id in closed_set:
-            #     next_node = closed_set.get(next_node_osm_id)
-            #     # continue
-            # else:
-            #     next_node = Node(osm_id=next_node_osm_id, point=points.get(next_node_osm_id))
-            #     next_node.heuristic_estimated_distance, next_node.heuristic_estimated_time_on_road = \
-            #         heuristic_cost_estimate(starting_point=next_node.point,
-            #                                 ending_point=points.get(ending_node_osm_id))
+            if next_node_osm_id in closed_set:
+                next_node = closed_set.get(next_node_osm_id)
+                # continue
+            else:
+                next_node = Node(osm_id=next_node_osm_id, point=points.get(next_node_osm_id))
+                next_node.heuristic_estimated_distance, next_node.heuristic_estimated_time_on_road = \
+                    heuristic_cost_estimate(starting_point=next_node.point,
+                                            ending_point=points.get(ending_node_osm_id))
 
-            next_node = Node(osm_id=next_node_osm_id, point=points.get(next_node_osm_id))
-            next_node.heuristic_estimated_distance, next_node.heuristic_estimated_time_on_road = \
-                heuristic_cost_estimate(starting_point=next_node.point,
-                                        ending_point=points.get(ending_node_osm_id))
+            # next_node = Node(osm_id=next_node_osm_id, point=points.get(next_node_osm_id))
+            # next_node.heuristic_estimated_distance, next_node.heuristic_estimated_time_on_road = \
+            #     heuristic_cost_estimate(starting_point=next_node.point,
+            #                             ending_point=points.get(ending_node_osm_id))
 
             max_speed = edge.get('max_speed')
             road_type = edge.get('road_type')
@@ -327,6 +327,9 @@ def find_multiple_paths(starting_node_osm_id, ending_node_osm_id, edges, points,
             # Calculate new g_score values
             new_g_score_distance = current_node.g_score_distance + additional_g_score_distance
             new_g_score_time_on_road = current_node.g_score_time_on_road + additional_g_score_time_on_road
+
+            if next_node.g_score_time_on_road < new_g_score_time_on_road:
+                continue
 
             next_node.g_score_distance = new_g_score_distance
             next_node.g_score_time_on_road = new_g_score_time_on_road
