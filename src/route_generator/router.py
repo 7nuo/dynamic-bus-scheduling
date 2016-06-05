@@ -1,3 +1,5 @@
+#!/usr/local/bin/python
+# -*- coding: utf-8 -*-
 """
 Copyright 2016 Eleftherios Anagnostopoulos for Ericsson AB
 
