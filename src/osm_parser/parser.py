@@ -246,7 +246,7 @@ class Parser(object):
 
     def initialize_connection(self, host, port):
         self.connection = MongoConnection(host=host, port=port)
-        log(module_name='Parser', log_type='DEBUG', log_message='connection ok')
+        log(module_name='parser', log_type='DEBUG', log_message='connection ok')
 
     def parse(self):
         parser = OSMParser(

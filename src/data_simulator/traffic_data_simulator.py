@@ -14,11 +14,14 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-# Maximum amount of speed for roads without a predefined value
-standard_speed = 50
-# Road types that can be accessed by a bus
-bus_road_types = ('motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary',
-                  'secondary_link', 'tertiary', 'tertiary_link', 'unclassified', 'residential', 'bus_road')
+from src.mongodb_database.mongo_connection import MongoConnection
+from src.common.logger import log
 
-mongodb_host = '127.0.0.1'
-mongodb_port = 27017
+
+class TrafficDataSimulator(object):
+    def __init__(self):
+        self.connection = None
+
+    def initialize_connection(self, host, port):
+        self.connection = MongoConnection(host=host, port=port)
+        log(module_name='traffic_data_simulator', log_type='DEBUG', log_message='connection ok')

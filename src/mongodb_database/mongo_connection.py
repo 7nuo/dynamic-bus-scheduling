@@ -27,6 +27,7 @@ class MongoConnection(object):
         self.bus_stops_collection = self.db.BusStops
         self.edges_collection = self.db.Edges
         self.address_book_collection = self.db.AddressBook
+        self.bus_lines_collection = self.db.BusLines
 
     def clear_all_collections(self):
         self.clear_nodes()
@@ -35,6 +36,7 @@ class MongoConnection(object):
         self.clear_bus_stops()
         self.clear_edges()
         self.clear_address_book()
+        self.clear_bus_lines()
 
     def clear_address_book(self):
         """
@@ -43,6 +45,15 @@ class MongoConnection(object):
         :return: The number of deleted documents.
         """
         result = self.address_book_collection.delete_many({})
+        return result.deleted_count
+
+    def clear_bus_lines(self):
+        """
+        Delete all the documents of hte BusLines collection.
+
+        :return: The number of deleted documents.
+        """
+        result = self.bus_lines_collection.delete_many({})
         return result.deleted_count
 
     def clear_bus_stops(self):
@@ -99,6 +110,16 @@ class MongoConnection(object):
         """
         result = self.address_book_collection.delete({'name': name})
         return result.deleted_count == 1
+
+    def delete_bus_line(self, line_id):
+        """
+        Delete a bus_line document based on the line_id.
+
+        :type line_id: string
+        :return: True if the bus_line exists in the database, otherwise False.
+        """
+        result = self.bus_lines_collection.delete_one({'line_id': line_id})
+        return result.deleted_count
 
     def delete_bus_stop(self, osm_id):
         """
@@ -171,6 +192,15 @@ class MongoConnection(object):
         :return: {'name', 'node_id', 'point': {'longitude', 'latitude'}}
         """
         return self.address_book_collection.find({'name': name}, {"_id": 0})
+
+    def find_bus_line(self, line_id):
+        """
+        Retrieve a bus_line based on the line_id.
+
+        :type line_id: string
+        :return: {'line_id', 'bus_stops': [{'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
+        """
+        return self.bus_lines_collection.find_one({'line_id': line_id}, {"_id": 0})
 
     def find_bus_stop(self, osm_id):
         """
@@ -259,6 +289,29 @@ class MongoConnection(object):
         """
         return self.ways_collection.find_one({'osm_id': osm_id}, {"_id": 0})
 
+    def get_bus_lines(self):
+        """
+        Retrieve all the documents of the BusLines collection.
+
+        :return: Cursor -> {'line_id', 'bus_stops': [{'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
+        """
+        return self.bus_lines_collection.find({}, {"_id": 0})
+
+    def get_bus_lines_dictionary(self):
+        """
+        Retrieve a dictionary containing all the documents of the BusLines collection.
+
+        :return: {line_id -> {'bus_stops': [{'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}}
+        """
+        bus_lines_dictionary = {}
+        bus_lines_cursor = self.get_bus_lines()
+
+        # Cursor -> {'line_id', 'bus_stops': [{'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
+        for bus_line_document in bus_lines_cursor:
+            bus_lines_dictionary[bus_line_document.get('line_id')] = {'bus_stops': bus_line_document.get('bus_stops')}
+
+        return bus_lines_dictionary
+
     def get_bus_stops(self):
         """
         Retrieve all the documents of the BusStops collection.
@@ -266,6 +319,25 @@ class MongoConnection(object):
         :return: Cursor -> {'osm_id', 'name', 'point': {'longitude', 'latitude'}}
         """
         return self.bus_stops_collection.find({}, {"_id": 0})
+
+    def get_bus_stops_dictionary(self):
+        """
+        Retrieve a dictionary containing all the documents of the BusStops collection.
+
+        :return: {name -> {'osm_id', 'point': {'longitude', 'latitude'}}}
+        """
+        bus_stops_dictionary = {}
+        bus_stops_cursor = self.get_bus_stops()
+
+        # Cursor -> {'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+        for bus_stop_document in bus_stops_cursor:
+            name = bus_stop_document.get('name')
+
+            if name not in bus_stops_dictionary:
+                bus_stops_dictionary[name] = {'osm_id': bus_stop_document.get('osm_id'),
+                                              'point': bus_stop_document.get('point')}
+
+        return bus_stops_dictionary
 
     def get_edges(self):
         """
@@ -355,6 +427,26 @@ class MongoConnection(object):
         :param address_book: [{'name', 'node_id', 'point': {'longitude', 'latitude'}}]
         """
         self.address_book_collection.insert_many(address_book)
+
+    def insert_bus_line(self, line_id, bus_stops):
+        """
+        Insert a bus_line document to the BusLines collection.
+
+        :type line_id: string
+        :param bus_stops: [{'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        :return: The ObjectId of the inserted document.
+        """
+        document = {'line_id': line_id, 'bus_stops': bus_stops}
+        result = self.bus_lines_collection.insert_one(document)
+        return result.inserted_id
+
+    def insert_bus_lines(self, bus_lines):
+        """
+        Insert a list of bus_line documents to the BusLines collection.
+
+        :param bus_lines: {'line_id', 'bus_stops': [{'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
+        """
+        self.bus_lines_collection.insert_many(bus_lines)
 
     def insert_bus_stop(self, osm_id, name, point):
         """
