@@ -371,7 +371,7 @@ class Parser(object):
 
     def populate_bus_stops(self):
         self.connection.insert_bus_stops(bus_stops=self.get_list_of_bus_stops())
-        log(module_name='Parser', log_type='DEBUG', log_message='bus_stop_names collection ok')
+        log(module_name='Parser', log_type='DEBUG', log_message='bus_stops collection ok')
 
     def populate_ways(self):
         self.connection.insert_ways(ways=self.get_list_of_ways())
@@ -428,30 +428,6 @@ class Parser(object):
     #         print 'Way: ' + str(osm_id) + ', Tags: ' + str(values.get('tags')) + \
     #               ', References: ' + str(values.get('references'))
     #
-        # self.parser.test_edges()
-        # self.parser.print_nodes()
-        # self.parser.print_edges()
-        # self.parser.print_bus_stops()
-        # self.parser.print_address_book()
-        # print self.get_bus_stop_closest_to_coordinates(17.5945912, 59.8462059)
-        # print self.get_bus_stops_within_distance(17.5945912, 59.8462059, 100)
-        # print self.get_center_point_from_address_name('Forno Romano').coordinates_to_string()
-        # Center:(17.6433065, 59.8579188)
-
-        # points = []
-        #
-        # point = Point(longitude=1.0, latitude=1.0)
-        # points.append(point)
-        # point = Point(longitude=2.0, latitude=2.0)
-        # points.append(point)
-        # point = Point(longitude=3.0, latitude=3.0)
-        # points.append(point)
-        # point = Point(longitude=0.5, latitude=0.5)
-        # points.append(point)
-        #
-        # point = Point(longitude=0.0, latitude=0.0)
-        #
-        # print closest_to(point, points)
 
     # def check_coordinates_list(self, coordinates_list):
     #     """

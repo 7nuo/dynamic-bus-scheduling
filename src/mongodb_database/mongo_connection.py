@@ -555,3 +555,42 @@ class MongoConnection(object):
         :param ways: [{'osm_id', 'tags', 'references'}]
         """
         self.ways_collection.insert_many(ways)
+
+    def print_bus_stops(self, counter):
+        bus_stops_cursor = self.bus_stops_collection.find({}, {"_id": 0})
+        i = 0
+
+        for bus_stop in bus_stops_cursor:
+            if i < counter:
+                print bus_stop
+                i += 1
+            else:
+                break
+
+        print 'Total number of BusStops: ' + str(bus_stops_cursor.count())
+
+    def print_edges(self, counter):
+        edges_cursor = self.edges_collection.find({}, {"_id": 0})
+        i = 0
+
+        for edge in edges_cursor:
+            if i < counter:
+                print edge
+                i += 1
+            else:
+                break
+
+        print 'Total number of Edges: ' + str(edges_cursor.count())
+
+    def print_nodes(self, counter):
+        nodes_cursor = self.nodes_collection.find({}, {"_id": 0})
+        i = 0
+
+        for node in nodes_cursor:
+            if i < counter:
+                print node
+                i += 1
+            else:
+                break
+
+        print 'Total number of Nodes: ' + str(nodes_cursor.count())

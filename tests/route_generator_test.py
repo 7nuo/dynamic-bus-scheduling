@@ -107,8 +107,8 @@ def get_multiple_routes_between_bus_stops(starting_bus_stop_name, ending_bus_sto
         distances_from_previous_node = route.get('distances_from_previous_node')
         times_from_previous_node = route.get('times_from_previous_node')
 
-        output = '\nRequest: get_multiple_routes_between_bus_stops' + \
-                 '\nstarting_bus_stop: ' + str(starting_bus_stop) + \
+        # output = '\nRequest: get_multiple_routes_between_bus_stops' + \
+        output = '\nstarting_bus_stop: ' + str(starting_bus_stop) + \
                  '\nending_bus_stop: ' + str(ending_bus_stop) + \
                  '\ntotal_distance: ' + str(total_distance) +\
                  '\ntotal_time: ' + str(total_time) +\
@@ -147,8 +147,8 @@ def get_route_between_multiple_bus_stops(bus_stop_names):
         distances_from_previous_node = intermediate_route.get('distances_from_previous_node')
         times_from_previous_node = intermediate_route.get('times_from_previous_node')
 
-        output = '\nRequest: get_route_between_multiple_bus_stops' + \
-                 '\nstarting_bus_stop: ' + str(starting_bus_stop) + \
+        # output = '\nRequest: get_route_between_multiple_bus_stops' + \
+        output = '\nstarting_bus_stop: ' + str(starting_bus_stop) + \
                  '\nending_bus_stop: ' + str(ending_bus_stop) + \
                  '\ntotal_distance: ' + str(total_distance) +\
                  '\ntotal_time: ' + str(total_time) +\
@@ -191,8 +191,8 @@ def get_multiple_routes_between_multiple_bus_stops(bus_stop_names, number_of_rou
             distances_from_previous_node = intermediate_route.get('distances_from_previous_node')
             times_from_previous_node = intermediate_route.get('times_from_previous_node')
 
-            output = '\nRequest: get_route_between_multiple_bus_stops' + \
-                     '\nstarting_bus_stop: ' + str(starting_bus_stop) + \
+            # output = '\nRequest: get_route_between_multiple_bus_stops' + \
+            output = '\nstarting_bus_stop: ' + str(starting_bus_stop) + \
                      '\nending_bus_stop: ' + str(ending_bus_stop) + \
                      '\ntotal_distance: ' + str(total_distance) +\
                      '\ntotal_time: ' + str(total_time) +\
@@ -210,7 +210,9 @@ if __name__ == '__main__':
     log(module_name='route_generator_test', log_type='INFO',
         log_message='get_route_between_multiple_bus_stops: starting')
     bus_stop_names = ['Centralstationen', 'Stadshuset', 'Skolgatan', 'Ekonomikum', 'Studentstaden', 'Rickomberga',
-                      'Oslogatan', 'Reykjaviksgatan', 'Ekebyhus', 'Sernanders väg', 'Flogsta centrum']
+                      'Oslogatan', 'Reykjaviksgatan', 'Ekebyhus', 'Sernanders väg', 'Flogsta centrum', 'Sernanders väg',
+                      'Ekebyhus', 'Reykjaviksgatan', 'Oslogatan', 'Rickomberga', 'Studentstaden', 'Ekonomikum',
+                      'Skolgatan', 'Stadshuset', 'Centralstationen']
     start_time = time.time()
     get_route_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
     elapsed_time = time.time() - start_time
