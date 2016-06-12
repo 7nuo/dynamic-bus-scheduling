@@ -89,6 +89,19 @@ def application(env, start_response):
             response_type = 'application/json'
             response = json.dumps(result, cls=MyEncoder)
 
+        elif path_info == '/test_multiple_routes_between_bus_stops':
+            form = cgi.FieldStorage(fp=env['wsgi.input'], environ=data_env)
+            starting_bus_stop_name = form.getvalue('starting_bus_stop_name')
+            ending_bus_stop_name = form.getvalue('ending_bus_stop_name')
+            number_of_routes = int(form.getvalue('number_of_routes'))
+
+            result = router.test_multiple_routes_between_bus_stops(starting_bus_stop_name=starting_bus_stop_name,
+                                                                   ending_bus_stop_name=ending_bus_stop_name,
+                                                                   number_of_routes=number_of_routes)
+            response_status = '200 OK'
+            response_type = 'application/json'
+            response = json.dumps(result, cls=MyEncoder)
+
     response_headers = [
         ('Content-Type', response_type),
         ('Content-Length', str(len(response)))

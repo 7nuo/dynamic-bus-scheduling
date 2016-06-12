@@ -17,6 +17,30 @@ specific language governing permissions and limitations under the License.
 import time
 from src.mongodb_database.mongo_connection import MongoConnection
 from src.common.logger import log
+from src.common.variables import mongodb_host, mongodb_port
+
+
+class TimetableGenerator(object):
+    def __init__(self):
+        self.bus_stops_dictionary = {}
+        self.connection = None
+
+    def initialize_connection(self):
+        """
+        Initialize connection with the MongoDB Database.
+
+        """
+        self.connection = MongoConnection(host=mongodb_host, port=mongodb_port)
+        log(module_name='timetable_generator', log_type='DEBUG', log_message='connection ok')
+
+    def retrieve_bus_stops_dictionary(self):
+        """
+        Retrieve a dictionary containing all the documents of the BusStops collection.
+
+        bus_stops_dictionary: {name -> {'osm_id', 'point': {'longitude', 'latitude'}}}
+        """
+        self.bus_stops_dictionary = self.connection.get_bus_stops_dictionary()
+        log(module_name='bus_lines_simulator', log_type='DEBUG', log_message='bus_stops_dictionary ok')
 
 
 if __name__ == '__main__':
@@ -38,7 +62,7 @@ if __name__ == '__main__':
     # mongo.print_nodes(counter=100)
 
     # log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_stops')
-    # mongo.print_bus_stops(counter=500)
+    # mongo.print_bus_stops(counter=100)
     #
     # log(module_name='mongodb_database_test', log_type='INFO', log_message='print_edges')
     # mongo.print_edges(counter=1000)

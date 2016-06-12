@@ -15,6 +15,7 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
 from path_finder import find_path, find_multiple_paths
+from multiple_paths_finder import _find_multiple_paths
 from src.common.logger import log
 from src.geospatial_data.point import distance, Point
 from src.mongodb_database.mongo_connection import MongoConnection
@@ -522,3 +523,27 @@ class Router(object):
             final_route.append(intermediate_route)
 
         return final_route
+
+    def test_multiple_routes_between_bus_stops(self, starting_bus_stop_name, ending_bus_stop_name, number_of_routes):
+        """
+        Find multiple routes between two bus_stop_names, based on their names.
+
+        :param starting_bus_stop_name: string
+        :param ending_bus_stop_name: string
+        :param number_of_routes: integer
+        :return: {'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                  'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                  'routes': [{'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
+                              'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}]}
+        """
+        starting_bus_stop = self.get_bus_stop_from_name(name=starting_bus_stop_name)
+        ending_bus_stop = self.get_bus_stop_from_name(name=ending_bus_stop_name)
+
+        routes = _find_multiple_paths(starting_node_osm_id=starting_bus_stop.get('osm_id'),
+                                      ending_node_osm_id=ending_bus_stop.get('osm_id'),
+                                      edges=self.edges_dictionary,
+                                      points=self.points_dictionary,
+                                      number_of_paths=number_of_routes)
+
+        result = {'starting_bus_stop': starting_bus_stop, 'ending_bus_stop': ending_bus_stop, 'routes': routes}
+        return result

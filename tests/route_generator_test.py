@@ -206,7 +206,68 @@ def get_multiple_routes_between_multiple_bus_stops(bus_stop_names, number_of_rou
             print output
 
 
+def test_multiple_routes_between_bus_stops(starting_bus_stop_name, ending_bus_stop_name, number_of_routes):
+    url = host + ':' + port + '/test_multiple_routes_between_bus_stops'
+    headers = {'content-type': 'application/x-www-form-urlencoded'}
+    data = {'starting_bus_stop_name': starting_bus_stop_name,
+            'ending_bus_stop_name': ending_bus_stop_name,
+            'number_of_routes': number_of_routes}
+    request = requests.post(url, data=data, headers=headers, timeout=60)
+
+    # response = {'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #             'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #             'routes': [{'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
+    #                         'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}]}
+    response = json.loads(request.text)
+
+    routes = response.get('routes')
+    # print len(routes[0])
+    # print len(routes[1])
+    for route in routes:
+        print route
+
+    # starting_bus_stop = response.get('starting_bus_stop')
+    # ending_bus_stop = response.get('ending_bus_stop')
+    # routes = response.get('routes')
+
+    # for route in routes:
+    #     total_distance = route.get('total_distance')
+    #     total_time = route.get('total_time')
+    #     node_osm_ids = route.get('node_osm_ids')
+    #     points = route.get('points')
+    #     distances_from_starting_node = route.get('distances_from_starting_node')
+    #     times_from_starting_node = route.get('times_from_starting_node')
+    #     distances_from_previous_node = route.get('distances_from_previous_node')
+    #     times_from_previous_node = route.get('times_from_previous_node')
+    #
+    #     # output = '\nRequest: get_multiple_routes_between_bus_stops' + \
+    #     output = '\nstarting_bus_stop: ' + str(starting_bus_stop) + \
+    #              '\nending_bus_stop: ' + str(ending_bus_stop) + \
+    #              '\ntotal_distance: ' + str(total_distance) +\
+    #              '\ntotal_time: ' + str(total_time) +\
+    #              '\nnode_osm_ids: ' + str(node_osm_ids) +\
+    #              '\npoints: ' + str(points) +\
+    #              '\ndistances_from_starting_node: ' + str(distances_from_starting_node) +\
+    #              '\ntimes_from_starting_node: ' + str(times_from_starting_node) +\
+    #              '\ndistances_from_previous_node: ' + str(distances_from_previous_node) +\
+    #              '\ntimes_from_previous_node: ' + str(times_from_previous_node)
+    #
+    #     print output
+
+
 if __name__ == '__main__':
+    # log(module_name='route_generator_test', log_type='INFO',
+    #     log_message='get_route_between_multiple_bus_stops: starting')
+    # bus_stop_names = ['Centralstationen', 'Stadshuset', 'Skolgatan', 'Ekonomikum', 'Studentstaden', 'Rickomberga',
+    #                   'Oslogatan', 'Reykjaviksgatan', 'Ekebyhus', 'Sernanders väg', 'Flogsta centrum', 'Sernanders väg',
+    #                   'Ekebyhus', 'Reykjaviksgatan', 'Oslogatan', 'Rickomberga', 'Studentstaden', 'Ekonomikum',
+    #                   'Skolgatan', 'Stadshuset', 'Centralstationen']
+    # start_time = time.time()
+    # get_route_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
+    # elapsed_time = time.time() - start_time
+    # log(module_name='route_generator_test', log_type='INFO',
+    #     log_message='get_route_between_multiple_bus_stops: finished - elapsed_time = ' + str(elapsed_time) + ' sec')
+
     log(module_name='route_generator_test', log_type='INFO',
         log_message='get_route_between_multiple_bus_stops: starting')
     bus_stop_names = ['Centralstationen', 'Stadshuset', 'Skolgatan', 'Ekonomikum', 'Studentstaden', 'Rickomberga',
@@ -214,7 +275,10 @@ if __name__ == '__main__':
                       'Ekebyhus', 'Reykjaviksgatan', 'Oslogatan', 'Rickomberga', 'Studentstaden', 'Ekonomikum',
                       'Skolgatan', 'Stadshuset', 'Centralstationen']
     start_time = time.time()
-    get_route_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
+    test_multiple_routes_between_bus_stops(starting_bus_stop_name='Sernanders väg',
+                                           ending_bus_stop_name='Flogsta centrum',
+                                           number_of_routes=0)
+    # get_route_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
     elapsed_time = time.time() - start_time
-    log(module_name='mongodb_database_test', log_type='INFO',
-        log_message='initialize_database_connection: finished - elapsed_time = ' + str(elapsed_time) + ' sec')
+    log(module_name='route_generator_test', log_type='INFO',
+        log_message='get_route_between_multiple_bus_stops: finished - elapsed_time = ' + str(elapsed_time) + ' sec')
