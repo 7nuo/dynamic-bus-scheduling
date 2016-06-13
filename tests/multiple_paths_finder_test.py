@@ -1,5 +1,6 @@
 from src.geospatial_data.point import Point
-from src.route_generator.multiple_paths_finder import _find_multiple_paths
+from src.route_generator.multiple_paths_finder import find_waypoints_between_two_nodes
+
 
 class Tester(object):
     def __init__(self):
@@ -53,6 +54,6 @@ if __name__ == '__main__':
     tester = Tester()
     tester.populate_points()
     tester.populate_edges()
-    paths = _find_multiple_paths(starting_node_osm_id=0, ending_node_osm_id=3, edges=tester.edges,
-                                 points=tester.points, number_of_paths=0)
+    paths = find_waypoints_between_two_nodes(starting_node_osm_id=0, ending_node_osm_id=3, edges=tester.edges,
+                                             points=tester.points, number_of_paths=0)
     print paths

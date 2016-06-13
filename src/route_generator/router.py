@@ -14,16 +14,17 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from path_finder import find_path, find_multiple_paths
-from multiple_paths_finder import _find_multiple_paths
+from path_finder import find_path
+from multiple_paths_finder import find_waypoints_between_two_nodes
 from src.common.logger import log
+from src.common.variables import mongodb_host, mongodb_port
 from src.geospatial_data.point import distance, Point
 from src.mongodb_database.mongo_connection import MongoConnection
 
 
 class Router(object):
-    def __init__(self, host, port):
-        self.connection = MongoConnection(host=host, port=port)
+    def __init__(self):
+        self.connection = MongoConnection(host=mongodb_host, port=mongodb_port)
         log(module_name='Router', log_type='DEBUG', log_message='connection ok')
         self.bus_stops_dictionary = {}
         self.edges_dictionary = {}
@@ -402,8 +403,8 @@ class Router(object):
 
         :type starting_point: Point
         :type ending_point: Point
-        :return route: {'total_distance', 'total_time', 'nodes', 'points', 'total_distances',
-                        'total_times', 'partial_distances', 'partial_times'}
+        :return {'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
+                 'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}}
         """
         starting_osm_id = self.get_closest_starting_node_in_edges_from_point(provided_point=starting_point)
         ending_osm_id = self.get_closest_ending_node_in_edges_from_point(provided_point=ending_point)
@@ -413,16 +414,16 @@ class Router(object):
                           points=self.points_dictionary)
         return route
 
-    def get_route_between_bus_stops(self, starting_bus_stop_name, ending_bus_stop_name):
+    def get_route_between_two_bus_stops(self, starting_bus_stop_name, ending_bus_stop_name):
         """
-        Find a route between two bus_stop_names, based on their names.
+        Find a route between two bus_stops, based on their names.
 
         :param starting_bus_stop_name: string
         :param ending_bus_stop_name: string
-        :return: {'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                  'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                  'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
-                            'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}}
+        :return {'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                 'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                 'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
+                           'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}}
         """
         starting_bus_stop = self.get_bus_stop_from_name(name=starting_bus_stop_name)
         ending_bus_stop = self.get_bus_stop_from_name(name=ending_bus_stop_name)
@@ -432,44 +433,20 @@ class Router(object):
                           edges=self.edges_dictionary,
                           points=self.points_dictionary)
 
-        result = {'starting_bus_stop': starting_bus_stop, 'ending_bus_stop': ending_bus_stop, 'route': route}
-        return result
-
-    def get_multiple_routes_between_bus_stops(self, starting_bus_stop_name, ending_bus_stop_name, number_of_routes):
-        """
-        Find multiple routes between two bus_stop_names, based on their names.
-
-        :param starting_bus_stop_name: string
-        :param ending_bus_stop_name: string
-        :param number_of_routes: integer
-        :return: {'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                  'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                  'routes': [{'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
-                              'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}]}
-        """
-        starting_bus_stop = self.get_bus_stop_from_name(name=starting_bus_stop_name)
-        ending_bus_stop = self.get_bus_stop_from_name(name=ending_bus_stop_name)
-
-        routes = find_multiple_paths(starting_node_osm_id=starting_bus_stop.get('osm_id'),
-                                     ending_node_osm_id=ending_bus_stop.get('osm_id'),
-                                     edges=self.edges_dictionary,
-                                     points=self.points_dictionary,
-                                     number_of_paths=number_of_routes)
-
-        result = {'starting_bus_stop': starting_bus_stop, 'ending_bus_stop': ending_bus_stop, 'routes': routes}
-        return result
+        response = {'starting_bus_stop': starting_bus_stop, 'ending_bus_stop': ending_bus_stop, 'route': route}
+        return response
 
     def get_route_between_multiple_bus_stops(self, bus_stop_names):
         """
-        Find a route between multiple bus_stop_names, based on their names.
+        Find a route between multiple bus_stop, based on their names.
 
         :param bus_stop_names: [string]
-        :return: [{'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                   'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                   'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
-                             'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}}]
+        :return [{'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                  'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                  'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
+                            'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}}]
         """
-        final_route = []
+        response = []
 
         for i in range(0, len(bus_stop_names) - 1):
             starting_bus_stop_name = bus_stop_names[i]
@@ -486,23 +463,41 @@ class Router(object):
                                   'ending_bus_stop': ending_bus_stop,
                                   'route': route}
 
-            final_route.append(intermediate_route)
+            response.append(intermediate_route)
 
-        return final_route
+        return response
 
-    def get_multiple_routes_between_multiple_bus_stops(self, bus_stop_names, number_of_routes):
+    def get_waypoints_between_two_bus_stops(self, starting_bus_stop_name, ending_bus_stop_name):
         """
-        Find a multiple routes between multiple bus_stop_names, based on their names.
+        Find the waypoints of all possible routes between two bus_stops, based on their names.
+
+        :param starting_bus_stop_name: string
+        :param ending_bus_stop_name: string
+        :return {'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                 'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                 'waypoints': [[{'osm_id', 'point': {'longitude', 'latitude'}}]]}
+        """
+        starting_bus_stop = self.get_bus_stop_from_name(name=starting_bus_stop_name)
+        ending_bus_stop = self.get_bus_stop_from_name(name=ending_bus_stop_name)
+
+        waypoints = find_waypoints_between_two_nodes(starting_node_osm_id=starting_bus_stop.get('osm_id'),
+                                                     ending_node_osm_id=ending_bus_stop.get('osm_id'),
+                                                     edges=self.edges_dictionary,
+                                                     points=self.points_dictionary)
+
+        response = {'starting_bus_stop': starting_bus_stop, 'ending_bus_stop': ending_bus_stop, 'waypoints': waypoints}
+        return response
+
+    def get_waypoints_between_multiple_bus_stops(self, bus_stop_names):
+        """
+        Find the waypoints of all possible routes between multiple bus_stops, based on their names.
 
         :param bus_stop_names: [string]
-        :param number_of_routes: integer
-        :return: [{'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                   'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                   'routes': [{'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
-                               'times_from_starting_node', 'distances_from_previous_node',
-                               'times_from_previous_node'}]}]
+        :return [{'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                  'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                  'waypoints': [[{'osm_id', 'point': {'longitude', 'latitude'}}]]}]
         """
-        final_route = []
+        response = []
 
         for i in range(0, len(bus_stop_names) - 1):
             starting_bus_stop_name = bus_stop_names[i]
@@ -510,40 +505,75 @@ class Router(object):
             ending_bus_stop_name = bus_stop_names[i + 1]
             ending_bus_stop = self.get_bus_stop_from_name(name=ending_bus_stop_name)
 
-            routes = find_multiple_paths(starting_node_osm_id=starting_bus_stop.get('osm_id'),
-                                         ending_node_osm_id=ending_bus_stop.get('osm_id'),
-                                         edges=self.edges_dictionary,
-                                         points=self.points_dictionary,
-                                         number_of_paths=number_of_routes)
+            waypoints = find_waypoints_between_two_nodes(starting_node_osm_id=starting_bus_stop.get('osm_id'),
+                                                         ending_node_osm_id=ending_bus_stop.get('osm_id'),
+                                                         edges=self.edges_dictionary,
+                                                         points=self.points_dictionary)
 
-            intermediate_route = {'starting_bus_stop': starting_bus_stop,
-                                  'ending_bus_stop': ending_bus_stop,
-                                  'routes': routes}
+            intermediate_response = {'starting_bus_stop': starting_bus_stop,
+                                     'ending_bus_stop': ending_bus_stop,
+                                     'waypoints': waypoints}
 
-            final_route.append(intermediate_route)
+            response.append(intermediate_response)
 
-        return final_route
+        return response
 
-    def test_multiple_routes_between_bus_stops(self, starting_bus_stop_name, ending_bus_stop_name, number_of_routes):
-        """
-        Find multiple routes between two bus_stop_names, based on their names.
+    # def get_multiple_routes_between_bus_stops(self, starting_bus_stop_name, ending_bus_stop_name, number_of_routes):
+    #     """
+    #     Find multiple routes between two bus_stop_names, based on their names.
+    #
+    #     :param starting_bus_stop_name: string
+    #     :param ending_bus_stop_name: string
+    #     :param number_of_routes: integer
+    #     :return {'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #              'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #              'routes': [{'total_distance', 'total_time', 'node_osm_ids', 'points',
+    #                          'distances_from_starting_node', 'times_from_starting_node',
+    #                          'distances_from_previous_node', 'times_from_previous_node'}]}
+    #     """
+    #     starting_bus_stop = self.get_bus_stop_from_name(name=starting_bus_stop_name)
+    #     ending_bus_stop = self.get_bus_stop_from_name(name=ending_bus_stop_name)
+    #
+    #     routes = find_multiple_paths(starting_node_osm_id=starting_bus_stop.get('osm_id'),
+    #                                  ending_node_osm_id=ending_bus_stop.get('osm_id'),
+    #                                  edges=self.edges_dictionary,
+    #                                  points=self.points_dictionary,
+    #                                  number_of_paths=number_of_routes)
+    #
+    #     result = {'starting_bus_stop': starting_bus_stop, 'ending_bus_stop': ending_bus_stop, 'routes': routes}
+    #     return result
 
-        :param starting_bus_stop_name: string
-        :param ending_bus_stop_name: string
-        :param number_of_routes: integer
-        :return: {'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                  'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                  'routes': [{'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
-                              'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}]}
-        """
-        starting_bus_stop = self.get_bus_stop_from_name(name=starting_bus_stop_name)
-        ending_bus_stop = self.get_bus_stop_from_name(name=ending_bus_stop_name)
+    # def get_multiple_routes_between_multiple_bus_stops(self, bus_stop_names, number_of_routes):
+    #     """
+    #     Find a multiple routes between multiple bus_stop_names, based on their names.
+    #
+    #     :param bus_stop_names: [string]
+    #     :param number_of_routes: integer
+    #     :return [{'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #               'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #               'routes': [{'total_distance', 'total_time', 'node_osm_ids', 'points',
+    #                           'distances_from_starting_node', 'times_from_starting_node',
+    #                           'distances_from_previous_node', 'times_from_previous_node'}]}]
+    #     """
+    #     final_route = []
+    #
+    #     for i in range(0, len(bus_stop_names) - 1):
+    #         starting_bus_stop_name = bus_stop_names[i]
+    #         starting_bus_stop = self.get_bus_stop_from_name(name=starting_bus_stop_name)
+    #         ending_bus_stop_name = bus_stop_names[i + 1]
+    #         ending_bus_stop = self.get_bus_stop_from_name(name=ending_bus_stop_name)
+    #
+    #         routes = find_multiple_paths(starting_node_osm_id=starting_bus_stop.get('osm_id'),
+    #                                      ending_node_osm_id=ending_bus_stop.get('osm_id'),
+    #                                      edges=self.edges_dictionary,
+    #                                      points=self.points_dictionary,
+    #                                      number_of_paths=number_of_routes)
+    #
+    #         intermediate_route = {'starting_bus_stop': starting_bus_stop,
+    #                               'ending_bus_stop': ending_bus_stop,
+    #                               'routes': routes}
+    #
+    #         final_route.append(intermediate_route)
+    #
+    #     return final_route
 
-        routes = _find_multiple_paths(starting_node_osm_id=starting_bus_stop.get('osm_id'),
-                                      ending_node_osm_id=ending_bus_stop.get('osm_id'),
-                                      edges=self.edges_dictionary,
-                                      points=self.points_dictionary,
-                                      number_of_paths=number_of_routes)
-
-        result = {'starting_bus_stop': starting_bus_stop, 'ending_bus_stop': ending_bus_stop, 'routes': routes}
-        return result

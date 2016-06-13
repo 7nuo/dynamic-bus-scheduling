@@ -14,17 +14,12 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-# import multiprocessing
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
-
-bind = "127.0.0.1:2000"
-# workers = multiprocessing.cpu_count() * 2 + 1
-workers = 1
-worker_class = "gevent"
-backlog = 2048  # Number of requests to keep in the backlog if every worker is busy
-
-
-def when_ready(server):
-    print "\nServer is running..."
+# from src.mongodb_database.mongo_connection import MongoConnection
+# from src.common.logger import log
+# from src.common.variables import mongodb_host, mongodb_port
+#
+# from src.route_generator.route_generator_client import get_waypoints_between_multiple_bus_stops
+#
+#
+# def generate_bus_line_from_multiple_bus_stops(bus_stops):
+#      =

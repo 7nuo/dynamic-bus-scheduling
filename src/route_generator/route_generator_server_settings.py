@@ -14,14 +14,21 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-# Maximum amount of speed for roads without a predefined value
-standard_speed = 50
-# Road types that can be accessed by a bus
-bus_road_types = ('motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary',
-                  'secondary_link', 'tertiary', 'tertiary_link', 'unclassified', 'residential', 'bus_road')
+# import multiprocessing
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
+from src.common.variables import route_generator_host, route_generator_port
 
-mongodb_host = '127.0.0.1'
-mongodb_port = 27017
+print route_generator_host + ':' + route_generator_port
 
-route_generator_host = '127.0.0.1'
-route_generator_port = '2000'
+bind = route_generator_host + ':' + route_generator_port
+# bind = "127.0.0.1:2000"
+# workers = multiprocessing.cpu_count() * 2 + 1
+workers = 1
+worker_class = "gevent"
+backlog = 2048  # Number of requests to keep in the backlog if every worker is busy
+
+
+def when_ready(server):
+    print "\nServer is running..."
