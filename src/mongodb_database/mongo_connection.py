@@ -28,6 +28,7 @@ class MongoConnection(object):
         self.edges_collection = self.db.Edges
         self.address_book_collection = self.db.AddressBook
         self.bus_lines_collection = self.db.BusLines
+        self.bus_stop_waypoints_collection = self.db.BusStopWaypoints
 
     def clear_all_collections(self):
         self.clear_nodes()
@@ -37,6 +38,7 @@ class MongoConnection(object):
         self.clear_edges()
         self.clear_address_book()
         self.clear_bus_lines()
+        self.clear_bus_stop_waypoints()
 
     def clear_address_book(self):
         """
@@ -49,16 +51,25 @@ class MongoConnection(object):
 
     def clear_bus_lines(self):
         """
-        Delete all the documents of hte BusLines collection.
+        Delete all the documents of the BusLines collection.
 
         :return: The number of deleted documents.
         """
         result = self.bus_lines_collection.delete_many({})
         return result.deleted_count
 
+    def clear_bus_stop_waypoints(self):
+        """
+        Delete all the documents of the BusStopWaypoints collection.
+
+        :return: The number of deleted documents.
+        """
+        result = self.bus_stop_waypoints_collection.delete_many({})
+        return result.deleted_count
+
     def clear_bus_stops(self):
         """
-        Delete all the documents of hte BusStops collection.
+        Delete all the documents of the BusStops collection.
 
         :return: The number of deleted documents.
         """
@@ -119,7 +130,7 @@ class MongoConnection(object):
         :return: True if the bus_line exists in the database, otherwise False.
         """
         result = self.bus_lines_collection.delete_one({'line_id': line_id})
-        return result.deleted_count
+        return result.deleted_count == 1
 
     def delete_bus_stop(self, osm_id):
         """
@@ -129,7 +140,18 @@ class MongoConnection(object):
         :return: True if the bus_stop exists in the database, otherwise False.
         """
         result = self.bus_stops_collection.delete_one({'osm_id': osm_id})
-        return result.deleted_count
+        return result.deleted_count == 1
+
+    def delete_bus_stop_waypoints(self, starting_bus_stop_osm_id, ending_bus_stop_osm_id):
+        """
+
+        :type starting_bus_stop_osm_id: integer
+        :type ending_bus_stop_osm_id: integer
+        :return: True if the document exists, otherwise False.
+        """
+        result = self.bus_stop_waypoints_collection.delete_one({'starting_bus_stop.osm_id': starting_bus_stop_osm_id,
+                                                                'ending_bus_stop.osm_id': ending_bus_stop_osm_id})
+        return result.deleted_count == 1
 
     def delete_edge(self, starting_node, ending_node):
         """
@@ -139,7 +161,7 @@ class MongoConnection(object):
         :type starting_node: integer
         :param ending_node: osm_id
         :type ending_node: integer
-        :return: True if the document exists, otherwise False
+        :return: True if the document exists, otherwise False.
         """
         result = self.edges_collection.delete_one({'starting_node': starting_node, 'ending_node': ending_node})
         return result.deleted_count
@@ -227,7 +249,6 @@ class MongoConnection(object):
         :type names: [string]
         :return: [{'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         """
-        # collection1.find({'albums': {'$in': [3, 7, 8]}})
         return self.bus_stops_collection.find({'name': {'$in': names}}, {"_id": 0})
 
     def find_bus_stop_from_coordinates(self, longitude, latitude):
@@ -346,6 +367,57 @@ class MongoConnection(object):
         :return: Cursor -> {'starting_node', 'ending_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}
         """
         return self.edges_collection.find({}, {"_id": 0})
+
+    def get_edges_dictionary(self):
+        """
+        Retrieve a dictionary containing all the documents of the Edges collection.
+
+        :return: {starting_node -> {'ending_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}}
+        """
+        edges_dictionary = {}
+        edges_cursor = self.get_edges()
+
+        # Cursor -> {'starting_node', 'ending_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}
+        for edges_document in edges_cursor:
+            starting_node = edges_document.get('starting_node')
+            del edges_document['starting_node']
+
+            if starting_node in edges_dictionary:
+                edges_dictionary[starting_node].append(edges_document)
+            else:
+                edges_dictionary[starting_node] = [edges_document]
+
+        return edges_dictionary
+
+    def get_edges_including_ids(self):
+        """
+        Retrieve all the documents of the Edges collection, including their ids.
+
+        :return: Cursor -> {'_id', 'starting_node', 'ending_node', 'max_speed',
+                            'road_type', 'way_id', 'traffic_density'}
+        """
+        return self.edges_collection.find({})
+
+    def get_edges_dictionary_including_ids(self):
+        """
+        Retrieve a dictionary containing all the documents of the Edges collection.
+
+        :return: {starting_node -> {'ending_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}}
+        """
+        edges_dictionary = {}
+        edges_cursor = self.get_edges_including_ids()
+
+        # Cursor -> {'_id', 'starting_node', 'ending_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}
+        for edges_document in edges_cursor:
+            starting_node = edges_document.get('starting_node')
+            del edges_document['starting_node']
+
+            if starting_node in edges_dictionary:
+                edges_dictionary[starting_node].append(edges_document)
+            else:
+                edges_dictionary[starting_node] = [edges_document]
+
+        return edges_dictionary
 
     def get_ending_nodes_of_edges(self):
         """
@@ -570,7 +642,7 @@ class MongoConnection(object):
         print 'Total number of BusStops: ' + str(bus_stops_cursor.count())
 
     def print_edges(self, counter):
-        edges_cursor = self.edges_collection.find({}, {"_id": 0})
+        edges_cursor = self.get_edges_including_ids()
         i = 0
 
         for edge in edges_cursor:

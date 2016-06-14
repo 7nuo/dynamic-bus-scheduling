@@ -17,6 +17,8 @@ specific language governing permissions and limitations under the License.
 import cgi
 import json
 
+from bson import ObjectId
+
 from router import Router
 
 
@@ -25,7 +27,10 @@ router = Router()
 
 class JSONResponseEncoder(json.JSONEncoder):
     def default(self, o):
-        return o.__dict__
+        if isinstance(o, ObjectId):
+            return str(o)
+        else:
+            return o.__dict__
 
 
 def application(env, start_response):

@@ -34,7 +34,7 @@ class Router(object):
 
     def initialize_dictionaries(self):
         self.bus_stops_dictionary = self.get_bus_stops_dictionary()
-        self.edges_dictionary = self.get_edges_dictionary()
+        self.edges_dictionary = self.connection.get_edges_dictionary_including_ids()
         self.points_dictionary = self.get_points_dictionary()
 
     def clear_all_collections(self):
@@ -270,33 +270,6 @@ class Router(object):
                 pass
 
         return closest_starting_node
-
-    def get_edges_dictionary(self):
-        """
-        Retrieve a dictionary containing all the documents of the Edges collection.
-
-        :return: {starting_node -> {'ending_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}}
-        """
-        edges_dictionary = {}
-        edges_cursor = self.connection.get_edges()
-
-        # Cursor -> {'starting_node', 'ending_node', 'max_speed', 'road_type', 'way_id', 'traffic_density'}
-        for edges_document in edges_cursor:
-            starting_node = edges_document.get('starting_node')
-
-            if starting_node in edges_dictionary:
-                edges_dictionary[starting_node].append({'ending_node': edges_document.get('ending_node'),
-                                                        'max_speed': edges_document.get('max_speed'),
-                                                        'road_type': edges_document.get('road_type'),
-                                                        'way_id': edges_document.get('way_id'),
-                                                        'traffic_density': edges_document.get('traffic_density')})
-            else:
-                edges_dictionary[starting_node] = [{'ending_node': edges_document.get('ending_node'),
-                                                    'max_speed': edges_document.get('max_speed'),
-                                                    'road_type': edges_document.get('road_type'),
-                                                    'way_id': edges_document.get('way_id'),
-                                                    'traffic_density': edges_document.get('traffic_density')}]
-        return edges_dictionary
 
     def get_ending_nodes_of_edges(self):
         """

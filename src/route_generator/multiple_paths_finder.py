@@ -30,8 +30,6 @@ class MultiplePathsNode(object):
             self.followed_paths.append(followed_path)
 
     def set_followed_paths(self, followed_paths_of_previous_node):
-        # print followed_paths_of_previous_node
-
         if len(followed_paths_of_previous_node) > 0:
             for followed_path_of_previous_node in followed_paths_of_previous_node:
                 followed_path = followed_path_of_previous_node + [{'osm_id': self.osm_id, 'point': self.point}]
@@ -95,12 +93,12 @@ def find_waypoints_between_two_nodes(starting_node_osm_id, ending_node_osm_id, e
 
     while len(open_set) > 0:
         current_node = open_set.pop()
-        # print 'current_node:', current_node.osm_id, 'open_set:', str(open_set)
 
         if current_node.osm_id == ending_node_osm_id:
-            # print 'ok'
+
             for followed_path in current_node.get_followed_paths():
-                waypoints.append(followed_path)
+                waypoints.append(process_followed_path(followed_path=followed_path, edges=edges))
+
             current_node.followed_paths = []
             continue
 
@@ -109,17 +107,39 @@ def find_waypoints_between_two_nodes(starting_node_osm_id, ending_node_osm_id, e
 
         for edge in edges.get(current_node.osm_id):
             next_node_osm_id = edge.get('ending_node')
-            # print edge
 
             if next_node_osm_id in closed_set:
                 continue
             else:
                 next_node = MultiplePathsNode(osm_id=next_node_osm_id, point=points.get(next_node_osm_id))
                 next_node.set_followed_paths(followed_paths_of_previous_node=current_node.get_followed_paths())
-                # print 'followed_paths_of_current_node:', current_node.get_followed_paths(), \
-                #       'followed_paths_of_next_node:', next_node.get_followed_paths()
                 open_set.push(new_node=next_node)
 
         closed_set[current_node.osm_id] = current_node
 
     return waypoints
+
+
+def process_followed_path(followed_path, edges):
+    updated_path = []
+
+    for i in range(0, len(followed_path) - 1):
+        starting_node = followed_path[i]
+        ending_node = followed_path[i + 1]
+        edge = get_edge(edges=edges, starting_node=starting_node.get('osm_id'), ending_node=ending_node.get('osm_id'))
+        path_entry = {'edge_id': edge.get('_id'), 'starting_node': starting_node, 'ending_node': ending_node}
+        updated_path.append(path_entry)
+
+    return updated_path
+
+
+def get_edge(edges, starting_node, ending_node):
+    edge = None
+    starting_node_edges = edges[starting_node]
+
+    for starting_node_edge in starting_node_edges:
+        if starting_node_edge.get('ending_node') == ending_node:
+            edge = starting_node_edge
+            break
+
+    return edge
