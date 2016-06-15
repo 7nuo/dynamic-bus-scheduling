@@ -19,6 +19,7 @@ import requests
 import json
 import time
 from src.common.logger import log
+from src.look_ahead.look_ahead_handler import LookAheadHandler
 
 host = 'http://127.0.0.1'
 port = '2000'
@@ -48,38 +49,41 @@ def get_route_between_multiple_bus_stops(bus_stop_names):
     #     total_time = intermediate_route.get('total_time')
 
 if __name__ == '__main__':
-    starting_datetime = datetime(2016, 6, 10, 8, 0, 0, 00000)
-    # ending_datetime = datetime(2016, 6, 10, 8, 0, 0, 00000) + timedelta(hours=1)
-    current_datetime = starting_datetime
-
     bus_stop_names = ['Centralstationen', 'Stadshuset', 'Skolgatan', 'Ekonomikum', 'Studentstaden', 'Rickomberga',
                       'Oslogatan', 'Reykjaviksgatan', 'Ekebyhus', 'Sernanders väg', 'Flogsta centrum', 'Sernanders väg',
                       'Ekebyhus', 'Reykjaviksgatan', 'Oslogatan', 'Rickomberga', 'Studentstaden', 'Ekonomikum',
                       'Skolgatan', 'Stadshuset', 'Centralstationen']
 
-    route_generator_response = get_route_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
-    times = []
+    look_ahead_handler = LookAheadHandler()
+    look_ahead_handler.generate_waypoints_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
 
-    for intermediate_response in route_generator_response:
-        starting_bus_stop = unicode(intermediate_response.get('starting_bus_stop').get('name')).encode('utf-8')
-        ending_bus_stop = unicode(intermediate_response.get('ending_bus_stop').get('name')).encode('utf-8')
-        # ending_bus_stop = unicode(intermediate_response.get('ending_bus_stop').get('name')).encode('utf-8')
-        intermediate_route = intermediate_response.get('route')
-        total_time = intermediate_route.get('total_time')
-
-        times.append({'starting_bus_stop': starting_bus_stop,
-                      'ending_bus_stop': ending_bus_stop,
-                      'departure_datetime': current_datetime,
-                      'arrival_datetime': current_datetime + timedelta(minutes=total_time/60)})
-
-        current_datetime += timedelta(minutes=total_time//60+1)
-
-    for time_entry in times:
-        starting_bus_stop = str(time_entry.get('starting_bus_stop'))
-        departure_datetime = str(time_entry.get('departure_datetime'))
-        ending_bus_stop = str(time_entry.get('ending_bus_stop'))
-        arrival_datetime = str(time_entry.get('arrival_datetime'))
-        print 'starting_bus_stop: ' + starting_bus_stop + \
-              ' - departure_datetime: ' + departure_datetime + \
-              ' - ending_bus_stop: ' + ending_bus_stop + \
-              ' - arrival_datetime: ' + arrival_datetime
+    # starting_datetime = datetime(2016, 6, 10, 8, 0, 0, 00000)
+    # # ending_datetime = datetime(2016, 6, 10, 8, 0, 0, 00000) + timedelta(hours=1)
+    # current_datetime = starting_datetime
+    #
+    # route_generator_response = get_route_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
+    # times = []
+    #
+    # for intermediate_response in route_generator_response:
+    #     starting_bus_stop = unicode(intermediate_response.get('starting_bus_stop').get('name')).encode('utf-8')
+    #     ending_bus_stop = unicode(intermediate_response.get('ending_bus_stop').get('name')).encode('utf-8')
+    #     # ending_bus_stop = unicode(intermediate_response.get('ending_bus_stop').get('name')).encode('utf-8')
+    #     intermediate_route = intermediate_response.get('route')
+    #     total_time = intermediate_route.get('total_time')
+    #
+    #     times.append({'starting_bus_stop': starting_bus_stop,
+    #                   'ending_bus_stop': ending_bus_stop,
+    #                   'departure_datetime': current_datetime,
+    #                   'arrival_datetime': current_datetime + timedelta(minutes=total_time/60)})
+    #
+    #     current_datetime += timedelta(minutes=total_time//60+1)
+    #
+    # for time_entry in times:
+    #     starting_bus_stop = str(time_entry.get('starting_bus_stop'))
+    #     departure_datetime = str(time_entry.get('departure_datetime'))
+    #     ending_bus_stop = str(time_entry.get('ending_bus_stop'))
+    #     arrival_datetime = str(time_entry.get('arrival_datetime'))
+    #     print 'starting_bus_stop: ' + starting_bus_stop + \
+    #           ' - departure_datetime: ' + departure_datetime + \
+    #           ' - ending_bus_stop: ' + ending_bus_stop + \
+    #           ' - arrival_datetime: ' + arrival_datetime

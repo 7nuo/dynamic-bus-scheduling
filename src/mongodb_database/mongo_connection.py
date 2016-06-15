@@ -360,6 +360,21 @@ class MongoConnection(object):
 
         return bus_stops_dictionary
 
+    def get_bus_stop_waypoints(self, starting_bus_stop_osm_id, ending_bus_stop_osm_id):
+        """
+        Retrieve the waypoints between two bus_stops.
+
+        :param starting_bus_stop_osm_id: integer
+        :param ending_bus_stop_osm_id: integer
+        :return: {'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                  'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                  'waypoints': [{'edge_id', 'starting_node': {'osm_id', 'point': {'longitude', latitude}},
+                                 'ending_node': {'osm_id', 'point': {'longitude', latitude}}}]}
+        """
+        return self.bus_stop_waypoints_collection.find_one({'starting_bus_stop.osm_id': starting_bus_stop_osm_id,
+                                                            'ending_bus_stop.osm_id': ending_bus_stop_osm_id},
+                                                           {"_id": 0})
+
     def get_edges(self):
         """
         Retrieve all the documents of the Edges collection.
@@ -541,6 +556,44 @@ class MongoConnection(object):
         """
         self.bus_stops_collection.insert_many(bus_stops)
 
+    def insert_bus_stop_waypoints(self, starting_bus_stop, ending_bus_stop, waypoints):
+        """
+        Insert a new document to the BusStopWaypoints collection, or update the waypoints
+        if the document already exists in the database.
+
+        :param starting_bus_stop: {'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+        :param ending_bus_stop: {'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+        :param waypoints: [{'edge_id', 'starting_node': {'osm_id', 'point': {'longitude', latitude}},
+                            'ending_node': {'osm_id', 'point': {'longitude', latitude}}}]
+        :return: The ObjectId, if a new document was inserted.
+        """
+        # document = {'starting_bus_stop': starting_bus_stop, 'ending_bus_stop': ending_bus_stop,
+        #             'waypoints': waypoints}
+        # result = self.bus_stop_waypoints_collection.insert_one(document)
+        # return result.inserted_id
+        key = {'starting_bus_stop': starting_bus_stop, 'ending_bus_stop': ending_bus_stop}
+        data = {'$set': {'waypoints': waypoints}}
+        result = self.bus_stop_waypoints_collection.update_one(key, data, upsert=True)
+        return result.upserted_id
+
+    def insert_bus_stop_waypoints_documents(self, bus_stop_waypoints_documents):
+        """
+        Insert multiple documents to the BusStopWaypoints collection,
+        or update the waypoints of the already existing ones.
+
+        :param bus_stop_waypoints_documents:
+                [{'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                  'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                  'waypoints': [{'edge_id', 'starting_node': {'osm_id', 'point': {'longitude', latitude}},
+                                 'ending_node': {'osm_id', 'point': {'longitude', latitude}}}]}]
+        """
+        for document in bus_stop_waypoints_documents:
+            starting_bus_stop = document.get('starting_bus_stop')
+            ending_bus_stop = document.get('ending_bus_stop')
+            waypoints = document.get('waypoints')
+            self.insert_bus_stop_waypoints(starting_bus_stop=starting_bus_stop, ending_bus_stop=ending_bus_stop,
+                                           waypoints=waypoints)
+
     def insert_edge(self, starting_node, ending_node, max_speed, road_type, way_id, traffic_density):
         """
         Insert an edge document to the Edges collection.
@@ -666,3 +719,25 @@ class MongoConnection(object):
                 break
 
         print 'Total number of Nodes: ' + str(nodes_cursor.count())
+
+    def print_waypoints_between_bus_stops(self, counter):
+        documents_cursor = self.bus_stop_waypoints_collection.find({}, {'_id': 0})
+        i = 0
+
+        for document in documents_cursor:
+            if i < counter:
+                print document
+                i += 1
+            else:
+                break
+
+        print 'Total: ' + str(documents_cursor.count())
+
+    # def test(self):
+    #     self.clear_bus_stop_waypoints()
+    #     print self.insert_bus_stop_waypoints(starting_bus_stop='1', ending_bus_stop='2', waypoints='0')
+    #     print self.insert_bus_stop_waypoints(starting_bus_stop='2', ending_bus_stop='3', waypoints='0')
+    #     print self.insert_bus_stop_waypoints(starting_bus_stop='1', ending_bus_stop='2', waypoints='00')
+    #
+    #     for i in self.bus_stop_waypoints_collection.find({}, {'_id': 0}):
+    #         print i

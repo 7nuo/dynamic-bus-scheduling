@@ -35,7 +35,10 @@ if __name__ == '__main__':
     #     log_message='clear_all_collections: finished - elapsed_time = ' + str(elapsed_time) + ' sec')
 
     log(module_name='mongodb_database_test', log_type='INFO', log_message='print_nodes')
-    mongo.print_nodes(counter=100)
+    # mongo.print_nodes(counter=100)
+    # mongo.test()
+    # mongo.clear_bus_stop_waypoints()
+    mongo.print_waypoints_between_bus_stops(counter=10000)
 
     # log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_stops')
     # mongo.print_bus_stops(counter=500)

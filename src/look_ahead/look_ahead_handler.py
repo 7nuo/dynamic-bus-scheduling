@@ -17,12 +17,14 @@ specific language governing permissions and limitations under the License.
 from src.mongodb_database.mongo_connection import MongoConnection
 from src.common.logger import log
 from src.common.variables import mongodb_host, mongodb_port
+from src.route_generator.route_generator_client import get_waypoints_between_multiple_bus_stops
 
 
 class LookAheadHandler(object):
     def __init__(self):
         self.bus_stops_dictionary = {}
-        self.connection = None
+        self.connection = MongoConnection(host=mongodb_host, port=mongodb_port)
+        log(module_name='look_ahead_handler', log_type='DEBUG', log_message='connection ok')
 
     def get_bus_line_from_multiple_bus_stops(self, bus_stops):
         pass
@@ -39,3 +41,7 @@ class LookAheadHandler(object):
         """
         self.bus_stops_dictionary = self.connection.get_bus_stops_dictionary()
         log(module_name='look_ahead_handler', log_type='DEBUG', log_message='bus_stops_dictionary ok')
+
+    def generate_waypoints_between_multiple_bus_stops(self, bus_stop_names):
+        route_generator_response = get_waypoints_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
+        self.connection.insert_bus_stop_waypoints_documents(bus_stop_waypoints_documents=route_generator_response)
