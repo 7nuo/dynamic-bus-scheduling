@@ -31,7 +31,7 @@ class Parser(object):
 
     def __init__(self, osm_filename):
         """
-        :param osm_filename: Directory of the input OSM file
+        :param osm_filename: Directory of the input OSM file.
         :type osm_filename: string
         """
         self.osm_filename = osm_filename
@@ -73,8 +73,8 @@ class Parser(object):
         """
         Add an edge to the edges dictionary.
 
-        :param starting_node: osm_id: integer
-        :param ending_node: osm_id: integer
+        :param starting_node: {'osm_id', 'point': {'longitude', 'latitude'}}
+        :param ending_node: {'osm_id', 'point': {'longitude', 'latitude'}}
         :type max_speed: float or integer
         :type road_type: string
         :param way_id: osm_id: integer
@@ -188,18 +188,19 @@ class Parser(object):
         return list_of_bus_stops
 
     def get_list_of_edges(self):
+        """
+        Returns a list containing all the edges.
+
+        :return: [{'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                   'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                   'max_speed', 'road_type', 'way_id', 'traffic_density'}]
+        """
         list_of_edges = []
 
-        for osm_id, list_of_values in self.edges.iteritems():
-            for values in list_of_values:
-                ending_node = values.get('ending_node')
-                max_speed = values.get('max_speed')
-                road_type = values.get('road_type')
-                way_id = values.get('way_id')
-                traffic_density = values.get('traffic_density')
-                document = {'starting_node': osm_id, 'ending_node': ending_node, 'max_speed': max_speed,
-                            'road_type': road_type, 'way_id': way_id, 'traffic_density': traffic_density}
-                list_of_edges.append(document)
+        for starting_node, list_of_starting_node_documents in self.edges.iteritems():
+            for starting_node_document in list_of_starting_node_documents:
+                starting_node_document['starting_node'] = starting_node
+                list_of_edges.append(starting_node_document)
 
         return list_of_edges
 
@@ -242,7 +243,7 @@ class Parser(object):
         :type osm_id: integer
         :return: Point
         """
-        self.points.get(osm_id)
+        return self.points.get(osm_id)
 
     def initialize_connection(self, host, port):
         self.connection = MongoConnection(host=host, port=port)
@@ -297,11 +298,19 @@ class Parser(object):
         road_type = tags.get('highway')
 
         for reference_index in range(len(references) - 1):
-            self.add_edge(starting_node=references[reference_index], ending_node=references[reference_index + 1],
+            starting_node_osm_id = references[reference_index]
+            starting_node_point = self.get_point_from_osm_id(osm_id=starting_node_osm_id)
+            starting_node = {'osm_id': starting_node_osm_id, 'point': starting_node_point}
+
+            ending_node_osm_id = references[reference_index + 1]
+            ending_node_point = self.get_point_from_osm_id(osm_id=ending_node_osm_id)
+            ending_node = {'osm_id': ending_node_osm_id, 'point': ending_node_point}
+
+            self.add_edge(starting_node=starting_node, ending_node=ending_node,
                           max_speed=max_speed, road_type=road_type, way_id=osm_id)
 
             if not oneway:
-                self.add_edge(starting_node=references[reference_index + 1], ending_node=references[reference_index],
+                self.add_edge(starting_node=ending_node, ending_node=starting_node,
                               max_speed=max_speed, road_type=road_type, way_id=osm_id)
 
     def parse_nodes(self, nodes):
