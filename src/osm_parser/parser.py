@@ -83,13 +83,14 @@ class Parser(object):
         if traffic_density is None:
             traffic_density = 0
 
-        if starting_node in self.edges:
-            self.edges[starting_node].append({'ending_node': ending_node, 'max_speed': max_speed,
-                                              'road_type': road_type, 'way_id': way_id,
-                                              'traffic_density': traffic_density})
+        starting_node_osm_id = starting_node.get('osm_id')
+        edge_document = {'starting_node': starting_node, 'ending_node': ending_node, 'max_speed': max_speed,
+                         'road_type': road_type, 'way_id': way_id, 'traffic_density': traffic_density}
+
+        if starting_node_osm_id in self.edges:
+            self.edges[starting_node_osm_id].append(edge_document)
         else:
-            self.edges[starting_node] = [{'ending_node': ending_node, 'max_speed': max_speed, 'road_type': road_type,
-                                          'way_id': way_id, 'traffic_density': traffic_density}]
+            self.edges[starting_node_osm_id] = [edge_document]
 
     def add_node(self, osm_id, tags, point):
         """
@@ -383,7 +384,7 @@ class Parser(object):
         log(module_name='Parser', log_type='DEBUG', log_message='bus_stops collection ok')
 
     def populate_ways(self):
-        self.connection.insert_ways(ways=self.get_list_of_ways())
+        self.connection.insert_ways(way_documents=self.get_list_of_ways())
         log(module_name='Parser', log_type='DEBUG', log_message='ways collection ok')
 
     def populate_all_collections(self):
