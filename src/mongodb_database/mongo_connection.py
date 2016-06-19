@@ -399,6 +399,15 @@ class MongoConnection(object):
 
         return bus_stops_dictionary
 
+    def get_bus_stops_list(self):
+        """
+        Retrieve a list containing all the documents of the BusStops collection.
+
+        :return: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        """
+        bus_stops_list = list(self.get_bus_stops())
+        return bus_stops_list
+
     def get_bus_stop_waypoints(self, starting_bus_stop_osm_id, ending_bus_stop_osm_id):
         """
         Retrieve the waypoints between two bus_stops.
@@ -490,6 +499,22 @@ class MongoConnection(object):
         """
         cursor = self.points_collection.find({})
         return cursor
+
+    def get_points_dictionary(self):
+        """
+        Retrieve a dictionary containing all the documents of the Points collection.
+
+        :return points_dictionary: {osm_id -> {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}}
+        """
+        points_dictionary = {}
+        points_cursor = self.connection.get_points()
+        # Cursor -> {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
+
+        for point_document in points_cursor:
+            osm_id = point_document.get('osm_id')
+            points_dictionary[osm_id] = point_document
+
+        return points_dictionary
 
     def has_edges(self, node_osm_id):
         """

@@ -31,8 +31,6 @@ if __name__ == '__main__':
     log(module_name='osm_parser', log_type='INFO',
         log_message='parse: finished - elapsed time = ' + str(elapsed_time) + ' sec')
 
-    parser.initialize_connection(host='127.0.0.1', port=27017)
-
     log(module_name='osm_parser', log_type='INFO', log_message='populate_all_collections: starting')
     start_time = time.time()
     parser.populate_all_collections()

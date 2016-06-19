@@ -34,7 +34,7 @@ class Router(object):
 
     def initialize_dictionaries(self):
         self.bus_stops_dictionary = self.get_bus_stops_dictionary()
-        self.edges_dictionary = self.connection.get_edges_dictionary_including_ids()
+        self.edges_dictionary = self.get_edges_dictionary()
         self.points_dictionary = self.get_points_dictionary()
 
     def clear_all_collections(self):
@@ -127,36 +127,19 @@ class Router(object):
         """
         Retrieve a dictionary containing all the documents of the BusStops collection.
 
-        :return: {name -> {'osm_id', 'point': {'longitude', 'latitude'}}}
+        :return: {name -> {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}}
         """
-        bus_stops_dictionary = {}
-        bus_stops_cursor = self.connection.get_bus_stops()
-
-        # Cursor -> {'osm_id', 'name', 'point': {'longitude', 'latitude'}}
-        for bus_stop_document in bus_stops_cursor:
-            name = bus_stop_document.get('name')
-
-            if name not in bus_stops_dictionary:
-                bus_stops_dictionary[name] = {'osm_id': bus_stop_document.get('osm_id'),
-                                              'point': bus_stop_document.get('point')}
-
+        bus_stops_dictionary = self.connection.get_bus_stops_dictionary()
         return bus_stops_dictionary
 
-    def get_bus_stops_dictionary_to_list(self):
+    def get_bus_stops_list(self):
         """
         Retrieve a list containing all the documents of the BusStops collection.
 
-        :return: [{'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        :return: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         """
-        bus_stops = []
-
-        for bus_stop_name, bus_stop_values in self.bus_stops_dictionary.iteritems():
-            bus_stop_osm_id = bus_stop_values.get('osm_id')
-            bus_stop_point = bus_stop_values.get('point')
-            bus_stop = {'osm_id': bus_stop_osm_id, 'name': bus_stop_name, 'point': bus_stop_point}
-            bus_stops.append(bus_stop)
-
-        return bus_stops
+        bus_stops_list = self.connection.get_bus_stops_list()
+        return bus_stops_list
 
     def get_bus_stops_within_distance_from_coordinates(self, longitude, latitude, maximum_distance):
         """
@@ -271,6 +254,17 @@ class Router(object):
 
         return closest_starting_node
 
+    def get_edges_dictionary(self):
+        """
+        Retrieve a dictionary containing all the documents of the Edges collection.
+
+        :return: {starting_node_osm_id -> {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                                           'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                                           'max_speed', 'road_type', 'way_id', 'traffic_density'}
+        """
+        edges_dictionary = self.connection.get_edges_dictionary()
+        return edges_dictionary
+
     def get_ending_nodes_of_edges(self):
         """
         Retrieve all the ending nodes which are included in the Edges collection.
@@ -308,18 +302,9 @@ class Router(object):
         """
         Retrieve a dictionary containing all the documents of the Points collection.
 
-        :return points_dictionary: {osm_id -> point}
+        :return points_dictionary: {osm_id -> {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}}
         """
-        points_dictionary = {}
-        points_cursor = self.connection.get_points()
-
-        for point_document in points_cursor:
-            # {'osm_id': osm_id, 'point': {'longitude': point.longitude, 'latitude': point.latitude}}
-            osm_id = point_document.get('osm_id')
-            point_entry = point_document.get('point')
-            points_dictionary[osm_id] = Point(longitude=point_entry.get('longitude'),
-                                              latitude=point_entry.get('latitude'))
-
+        points_dictionary = self.connection.get_points_dictionary()
         return points_dictionary
 
     def get_points_of_edges(self):
