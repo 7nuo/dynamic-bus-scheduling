@@ -438,9 +438,9 @@ class MongoConnection(object):
         """
         Retrieve a dictionary containing all the documents of the Edges collection.
 
-        :return: {starting_node_osm_id -> {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                           'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                           'max_speed', 'road_type', 'way_id', 'traffic_density'}
+        :return: {starting_node_osm_id -> [{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                                            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                                            'max_speed', 'road_type', 'way_id', 'traffic_density'}]}
         """
         edges_dictionary = {}
         edges_cursor = self.get_edges()
@@ -458,13 +458,24 @@ class MongoConnection(object):
 
         return edges_dictionary
 
+    def get_edges_list(self):
+        """
+        Retrieve a list containing all the documents of the Edges collection.
+
+        :return: [{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                   'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                   'max_speed', 'road_type', 'way_id', 'traffic_density'}]
+        """
+        edges_list = list(self.get_edges())
+        return edges_list
+
     def get_ending_nodes_of_edges_dictionary(self):
         """
         Retrieve a dictionary containing all the ending_nodes which are included in the Edges collection.
 
-        :return: {ending_node_osm_id -> {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                         'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                         'max_speed', 'road_type', 'way_id', 'traffic_density'}
+        :return: {ending_node_osm_id -> [{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                                          'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                                          'max_speed', 'road_type', 'way_id', 'traffic_density'}]}
         """
         ending_nodes_dictionary = {}
         edges_cursor = self.get_edges()
@@ -507,7 +518,7 @@ class MongoConnection(object):
         :return points_dictionary: {osm_id -> {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}}
         """
         points_dictionary = {}
-        points_cursor = self.connection.get_points()
+        points_cursor = self.get_points()
         # Cursor -> {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
 
         for point_document in points_cursor:

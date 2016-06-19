@@ -15,7 +15,7 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
 from src.common.variables import bus_road_types, standard_speed
-from src.geospatial_data.point import distance
+from src.geospatial_data.point import distance, Point
 
 
 class Node(object):
@@ -128,10 +128,12 @@ def find_path(starting_node_osm_id, ending_node_osm_id, edges, points):
     Implement the A* search algorithm in order to find the less time-consuming path
     between the starting and the ending node.
 
-    :param starting_node_osm_id: osm_id: integer
-    :param ending_node_osm_id: osm_id: integer
-    :param edges: {starting_node_osm_id -> [{ending_node_osm_id, max_speed, road_type, way_id, traffic_density}]
-    :param points: {osm_id -> point}
+    :param starting_node_osm_id: integer
+    :param ending_node_osm_id: integer
+    :param edges: {starting_node_osm_id -> [{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                                             'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                                             'max_speed', 'road_type', 'way_id', 'traffic_density'}]}
+    :param points: {osm_id -> {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}}
     :return: {'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
               'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}
     """
@@ -149,7 +151,7 @@ def find_path(starting_node_osm_id, ending_node_osm_id, edges, points):
 
     # Distance and time to ending node is estimated heuristically.
     starting_node_f_score_distance, starting_node_f_score_time_on_road = heuristic_cost_estimate(
-        starting_point=starting_node.point, ending_point=points.get(ending_node_osm_id))
+        starting_point_document=starting_node.point, ending_point_document=points.get(ending_node_osm_id))
 
     starting_node.set_f_score(f_score_distance=starting_node_f_score_distance,
                               f_score_time_on_road=starting_node_f_score_time_on_road)
@@ -171,14 +173,14 @@ def find_path(starting_node_osm_id, ending_node_osm_id, edges, points):
 
         # ending_node has been discovered.
         if current_node.osm_id == ending_node_osm_id:
-            return reconstruct_path(list_of_nodes=current_node.get_previous_nodes())
+            return reconstruct_path(list_of_nodes=current_node.get_previous_nodes(), edges=edges)
 
         # current_node does not have any edges.
         if current_node.osm_id not in edges:
             continue
 
         for edge in edges.get(current_node.osm_id):
-            next_node_osm_id = edge.get('ending_node')
+            next_node_osm_id = edge.get('ending_node').get('osm_id')
 
             # Check whether the next_node has already been evaluated.
             if next_node_osm_id in closed_set:
@@ -187,8 +189,8 @@ def find_path(starting_node_osm_id, ending_node_osm_id, edges, points):
             else:
                 next_node = Node(osm_id=next_node_osm_id, point=points.get(next_node_osm_id))
                 next_node.heuristic_estimated_distance, next_node.heuristic_estimated_time_on_road = \
-                    heuristic_cost_estimate(starting_point=next_node.point,
-                                            ending_point=points.get(ending_node_osm_id))
+                    heuristic_cost_estimate(starting_point_document=next_node.point,
+                                            ending_point_document=points.get(ending_node_osm_id))
 
             max_speed = edge.get('max_speed')
             road_type = edge.get('road_type')
@@ -196,8 +198,8 @@ def find_path(starting_node_osm_id, ending_node_osm_id, edges, points):
 
             # Calculate the difference in values between current_node and next_node.
             additional_g_score_distance, additional_g_score_time_on_road = g_score_estimate(
-                starting_point=current_node.point,
-                ending_point=next_node.point,
+                starting_point_document=current_node.point,
+                ending_point_document=next_node.point,
                 max_speed=max_speed,
                 road_type=road_type,
                 traffic_density=traffic_density
@@ -350,11 +352,14 @@ def find_path(starting_node_osm_id, ending_node_osm_id, edges, points):
 #     return paths
 
 
-def reconstruct_path(list_of_nodes):
+def reconstruct_path(list_of_nodes, edges):
     """
     Get a dictionary containing the parameters of the path.
 
     :param list_of_nodes: The list of nodes which consist the optimal path.
+    :param edges: {starting_node_osm_id -> [{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                                             'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                                             'max_speed', 'road_type', 'way_id', 'traffic_density'}]}
     :return: {'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
               'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}
     """
@@ -391,8 +396,24 @@ def reconstruct_path(list_of_nodes):
     total_distance = previous_distance
     total_time = previous_time
 
+    followed_edges = []
+
+    for i in range(0, len(node_osm_ids) - 1):
+        starting_node_osm_id = node_osm_ids[i]
+        ending_node_osm_id = node_osm_ids[i + 1]
+        list_of_starting_node_edges = edges.get(starting_node_osm_id)
+        edge = None
+
+        for starting_node_edge in list_of_starting_node_edges:
+            if starting_node_edge.get('ending_node').get('osm_id') == ending_node_osm_id:
+                edge = starting_node_edge
+                break
+
+        followed_edges.append(edge)
+
     final_path = {'total_distance': total_distance, 'total_time': total_time, 'node_osm_ids': node_osm_ids,
-                  'points': points, 'distances_from_starting_node': distances_from_starting_node,
+                  'points': points, 'edges': followed_edges,
+                  'distances_from_starting_node': distances_from_starting_node,
                   'times_from_starting_node': times_from_starting_node,
                   'distances_from_previous_node': distances_from_previous_node,
                   'times_from_previous_node': times_from_previous_node}
@@ -423,17 +444,23 @@ def estimate_traffic_speed_decrease_factor(traffic_density):
     return traffic_speed_decrease_factor
 
 
-def g_score_estimate(starting_point, ending_point, max_speed, road_type, traffic_density):
+def g_score_estimate(starting_point_document, ending_point_document, max_speed, road_type, traffic_density):
     """
     Estimate the cost of getting from the starting point to the ending point.
 
-    :param starting_point: Point
-    :param ending_point: Point
+    :param starting_point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
+    :param ending_point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
     :param max_speed: float
     :param road_type: One of the road types that can be accessed by a bus (string).
     :param traffic_density: float value between 0 and 1.
     :return: (f_score_distance in meters, f_score_time_on_road in seconds)
     """
+    starting_point = Point(longitude=starting_point_document.get('point').get('longitude'),
+                           latitude=starting_point_document.get('point').get('latitude'))
+
+    ending_point = Point(longitude=ending_point_document.get('point').get('longitude'),
+                         latitude=ending_point_document.get('point').get('latitude'))
+
     estimated_distance = distance(point_one=starting_point, point_two=ending_point)
     road_type_speed_decrease_factor = estimate_road_type_speed_decrease_factor(road_type=road_type)
     traffic_speed_decrease_factor = estimate_traffic_speed_decrease_factor(traffic_density=traffic_density)
@@ -442,14 +469,20 @@ def g_score_estimate(starting_point, ending_point, max_speed, road_type, traffic
     return estimated_distance, estimated_time_on_road
 
 
-def heuristic_cost_estimate(starting_point, ending_point):
+def heuristic_cost_estimate(starting_point_document, ending_point_document):
     """
     Make a rough estimation regarding the cost of getting from the starting point to the ending point.
 
-    :param starting_point: Point
-    :param ending_point:  Point
+    :param starting_point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
+    :param ending_point_document:  {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
     :return: (f_score_distance in meters, f_score_time_on_road in seconds)
     """
+    starting_point = Point(longitude=starting_point_document.get('point').get('longitude'),
+                           latitude=starting_point_document.get('point').get('latitude'))
+
+    ending_point = Point(longitude=ending_point_document.get('point').get('longitude'),
+                         latitude=ending_point_document.get('point').get('latitude'))
+
     estimated_distance = distance(point_one=starting_point, point_two=ending_point)
     estimated_time_on_road = estimated_distance / (float(standard_speed) * 1000 / 3600)
     return estimated_distance, estimated_time_on_road
