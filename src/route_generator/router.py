@@ -403,8 +403,9 @@ class Router(object):
         :param ending_bus_stop_name: string
         :return {'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                 'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
-                           'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}}
+                 'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                           'distances_from_starting_node', 'times_from_starting_node',
+                           'distances_from_previous_node', 'times_from_previous_node'}}
         """
         starting_bus_stop = self.get_bus_stop_from_name(name=starting_bus_stop_name)
         ending_bus_stop = self.get_bus_stop_from_name(name=ending_bus_stop_name)
@@ -422,10 +423,11 @@ class Router(object):
         Find a route between multiple bus_stop, based on their names.
 
         :param bus_stop_names: [string]
-        :return [{'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                  'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                  'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
-                            'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}}]
+        :return [{'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                  'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                            'distances_from_starting_node', 'times_from_starting_node',
+                            'distances_from_previous_node', 'times_from_previous_node'}}]
         """
         response = []
 
@@ -454,17 +456,18 @@ class Router(object):
 
         :param starting_bus_stop_name: string
         :param ending_bus_stop_name: string
-        :return {'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                 'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                 'waypoints': [[{'osm_id', 'point': {'longitude', 'latitude'}}]]}
+        :return {'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                 'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                 'waypoints': [[{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                                 'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                                 'max_speed', 'road_type', 'way_id', 'traffic_density'}]]}
         """
         starting_bus_stop = self.get_bus_stop_from_name(name=starting_bus_stop_name)
         ending_bus_stop = self.get_bus_stop_from_name(name=ending_bus_stop_name)
 
         waypoints = find_waypoints_between_two_nodes(starting_node_osm_id=starting_bus_stop.get('osm_id'),
                                                      ending_node_osm_id=ending_bus_stop.get('osm_id'),
-                                                     edges=self.edges_dictionary,
-                                                     points=self.points_dictionary)
+                                                     edges=self.edges_dictionary)
 
         response = {'starting_bus_stop': starting_bus_stop, 'ending_bus_stop': ending_bus_stop, 'waypoints': waypoints}
         return response
@@ -474,9 +477,11 @@ class Router(object):
         Find the waypoints of all possible routes between multiple bus_stops, based on their names.
 
         :param bus_stop_names: [string]
-        :return [{'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                  'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                  'waypoints': [[{'osm_id', 'point': {'longitude', 'latitude'}}]]}]
+        :return [{'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                  'waypoints': [[{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                                  'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                                  'max_speed', 'road_type', 'way_id', 'traffic_density'}]]}]
         """
         response = []
 
@@ -488,8 +493,7 @@ class Router(object):
 
             waypoints = find_waypoints_between_two_nodes(starting_node_osm_id=starting_bus_stop.get('osm_id'),
                                                          ending_node_osm_id=ending_bus_stop.get('osm_id'),
-                                                         edges=self.edges_dictionary,
-                                                         points=self.points_dictionary)
+                                                         edges=self.edges_dictionary)
 
             intermediate_response = {'starting_bus_stop': starting_bus_stop,
                                      'ending_bus_stop': ending_bus_stop,

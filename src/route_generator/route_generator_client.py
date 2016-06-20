@@ -23,10 +23,11 @@ def get_route_between_two_bus_stops(starting_bus_stop_name, ending_bus_stop_name
     """
     :param starting_bus_stop_name: string
     :param ending_bus_stop_name: string
-    :return: {'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-              'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-              'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
-                        'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}}
+    :return: {'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+              'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+              'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                        'distances_from_starting_node', 'times_from_starting_node',
+                        'distances_from_previous_node', 'times_from_previous_node'}}
     """
     url = 'http://' + route_generator_host + ':' + route_generator_port + '/get_route_between_two_bus_stops'
     headers = {'content-type': 'application/x-www-form-urlencoded'}
@@ -40,10 +41,11 @@ def get_route_between_two_bus_stops(starting_bus_stop_name, ending_bus_stop_name
 def get_route_between_multiple_bus_stops(bus_stop_names):
     """
     :param bus_stop_names: [string]
-    :return: [{'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-               'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-               'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
-                         'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}}]
+    :return: [{'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+               'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+               'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                         'distances_from_starting_node', 'times_from_starting_node',
+                         'distances_from_previous_node', 'times_from_previous_node'}}]
     """
     url = 'http://' + route_generator_host + ':' + route_generator_port + '/get_route_between_multiple_bus_stops'
     headers = {'content-type': 'application/x-www-form-urlencoded'}
@@ -57,9 +59,11 @@ def get_waypoints_between_two_bus_stops(starting_bus_stop_name, ending_bus_stop_
     """
     :param starting_bus_stop_name: string
     :param ending_bus_stop_name: string
-    :return: {'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-              'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-              'waypoints': [[{'osm_id', 'point': {'longitude', 'latitude'}}]]}
+    :return: {'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+              'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+              'waypoints': [[{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                              'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                              'max_speed', 'road_type', 'way_id', 'traffic_density'}]]}
     """
     url = 'http://' + route_generator_host + ':' + route_generator_port + '/get_waypoints_between_two_bus_stops'
     headers = {'content-type': 'application/x-www-form-urlencoded'}
@@ -73,9 +77,11 @@ def get_waypoints_between_two_bus_stops(starting_bus_stop_name, ending_bus_stop_
 def get_waypoints_between_multiple_bus_stops(bus_stop_names):
     """
     :param bus_stop_names: [string]
-    :return: [{'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-               'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-               'waypoints': [[{'osm_id', 'point': {'longitude', 'latitude'}}]]}]
+    :return: [{'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+               'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+               'waypoints': [[{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                               'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                               'max_speed', 'road_type', 'way_id', 'traffic_density'}]]}]
     """
     url = 'http://' + route_generator_host + ':' + route_generator_port + '/get_waypoints_between_multiple_bus_stops'
     headers = {'content-type': 'application/x-www-form-urlencoded'}

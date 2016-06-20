@@ -134,7 +134,7 @@ def find_path(starting_node_osm_id, ending_node_osm_id, edges, points):
                                              'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
                                              'max_speed', 'road_type', 'way_id', 'traffic_density'}]}
     :param points: {osm_id -> {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}}
-    :return: {'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
+    :return: {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges', 'distances_from_starting_node',
               'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}
     """
     # A dictionary with the nodes that have already been evaluated: {node_osm_id -> node}
@@ -360,7 +360,7 @@ def reconstruct_path(list_of_nodes, edges):
     :param edges: {starting_node_osm_id -> [{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
                                              'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
                                              'max_speed', 'road_type', 'way_id', 'traffic_density'}]}
-    :return: {'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
+    :return: {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges', 'distances_from_starting_node',
               'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}
     """
     node_osm_ids = []

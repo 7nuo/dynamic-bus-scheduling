@@ -17,9 +17,8 @@ specific language governing permissions and limitations under the License.
 
 
 class MultiplePathsNode(object):
-    def __init__(self, osm_id, point):
+    def __init__(self, osm_id):
         self.osm_id = osm_id
-        self.point = point
         self.followed_paths = []
 
     def __str__(self):
@@ -32,7 +31,7 @@ class MultiplePathsNode(object):
     def set_followed_paths(self, followed_paths_of_previous_node):
         if len(followed_paths_of_previous_node) > 0:
             for followed_path_of_previous_node in followed_paths_of_previous_node:
-                followed_path = followed_path_of_previous_node + [{'osm_id': self.osm_id, 'point': self.point}]
+                followed_path = followed_path_of_previous_node + [self.osm_id]
                 self.add_followed_path(followed_path=followed_path)
         else:
             followed_path = [self.osm_id]
@@ -82,13 +81,25 @@ class MultiplePathsSet(object):
         return node
 
 
-def find_waypoints_between_two_nodes(starting_node_osm_id, ending_node_osm_id, edges, points):
+def find_waypoints_between_two_nodes(starting_node_osm_id, ending_node_osm_id, edges):
+    """
+    Find all the possible list of edges which connect two nodes.
+
+    :param starting_node_osm_id: integer
+    :param ending_node_osm_id: integer
+    :param edges: {starting_node_osm_id -> [{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                                             'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                                             'max_speed', 'road_type', 'way_id', 'traffic_density'}]}
+    :return: waypoints: [[{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                           'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                           'max_speed', 'road_type', 'way_id', 'traffic_density'}]]
+    """
     waypoints = []
     closed_set = {}
     open_set = MultiplePathsSet()
 
-    starting_node = MultiplePathsNode(osm_id=starting_node_osm_id, point=points.get(starting_node_osm_id))
-    starting_node.followed_paths = [[{'osm_id': starting_node.osm_id, 'point': starting_node.point}]]
+    starting_node = MultiplePathsNode(osm_id=starting_node_osm_id)
+    starting_node.followed_paths = [[starting_node.osm_id]]
     open_set.push(new_node=starting_node)
 
     while len(open_set) > 0:
@@ -106,12 +117,12 @@ def find_waypoints_between_two_nodes(starting_node_osm_id, ending_node_osm_id, e
             continue
 
         for edge in edges.get(current_node.osm_id):
-            next_node_osm_id = edge.get('ending_node')
+            next_node_osm_id = edge.get('ending_node').get('osm_id')
 
             if next_node_osm_id in closed_set:
                 continue
             else:
-                next_node = MultiplePathsNode(osm_id=next_node_osm_id, point=points.get(next_node_osm_id))
+                next_node = MultiplePathsNode(osm_id=next_node_osm_id)
                 next_node.set_followed_paths(followed_paths_of_previous_node=current_node.get_followed_paths())
                 open_set.push(new_node=next_node)
 
@@ -121,14 +132,22 @@ def find_waypoints_between_two_nodes(starting_node_osm_id, ending_node_osm_id, e
 
 
 def process_followed_path(followed_path, edges):
+    """
+
+    :param followed_path: [osm_id]
+    :param edges: {starting_node_osm_id -> [{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                                             'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                                             'max_speed', 'road_type', 'way_id', 'traffic_density'}]}
+    :return:
+    """
     updated_path = []
 
     for i in range(0, len(followed_path) - 1):
         starting_node = followed_path[i]
         ending_node = followed_path[i + 1]
-        edge = get_edge(edges=edges, starting_node=starting_node.get('osm_id'), ending_node=ending_node.get('osm_id'))
-        path_entry = {'edge_id': edge.get('_id'), 'starting_node': starting_node, 'ending_node': ending_node}
-        updated_path.append(path_entry)
+        edge = get_edge(edges=edges, starting_node=starting_node, ending_node=ending_node)
+        # path_entry = {'edge_id': edge.get('_id'), 'starting_node': starting_node, 'ending_node': ending_node}
+        updated_path.append(edge)
 
     return updated_path
 
@@ -138,7 +157,7 @@ def get_edge(edges, starting_node, ending_node):
     starting_node_edges = edges[starting_node]
 
     for starting_node_edge in starting_node_edges:
-        if starting_node_edge.get('ending_node') == ending_node:
+        if starting_node_edge.get('ending_node').get('osm_id') == ending_node:
             edge = starting_node_edge
             break
 

@@ -408,20 +408,49 @@ class MongoConnection(object):
         bus_stops_list = list(self.get_bus_stops())
         return bus_stops_list
 
-    def get_bus_stop_waypoints(self, starting_bus_stop_osm_id, ending_bus_stop_osm_id):
+    def get_bus_stop_waypoints(self, starting_bus_stop_name, ending_bus_stop_name):
         """
-        Retrieve the waypoints between two bus_stops.
+        Retrieve the waypoints (ObjectIds of edge documents) between two bus_stops.
 
-        :param starting_bus_stop_osm_id: integer
-        :param ending_bus_stop_osm_id: integer
-        :return: {'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                  'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                  'waypoints': [[{'edge_id', 'starting_node': {'osm_id', 'point': {'longitude', latitude}},
-                                  'ending_node': {'osm_id', 'point': {'longitude', latitude}}}]]}
+        :param starting_bus_stop_name: string
+        :param ending_bus_stop_name: string
+        :return: {'_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                  'waypoints': [[edge_object_id]]}
         """
-        return self.bus_stop_waypoints_collection.find_one({'starting_bus_stop.osm_id': starting_bus_stop_osm_id,
-                                                            'ending_bus_stop.osm_id': ending_bus_stop_osm_id},
-                                                           {"_id": 0})
+        bus_stop_waypoints = self.bus_stop_waypoints_collection.find_one({
+            'starting_bus_stop.name': starting_bus_stop_name,
+            'ending_bus_stop.name': ending_bus_stop_name})
+        return bus_stop_waypoints
+
+    def get_bus_stop_waypoints_detailed_edges(self, starting_bus_stop_name, ending_bus_stop_name):
+        """
+        Retrieve the waypoints (detailed edge documents) between two bus_stops.
+
+        :param starting_bus_stop_name: string
+        :param ending_bus_stop_name: string
+        :return: {'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                  'waypoints': [[{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                                  'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                                  'max_speed', 'road_type', 'way_id', 'traffic_density'}]]}
+        """
+        bus_stop_waypoints = self.bus_stop_waypoints_collection.find_one({
+            'starting_bus_stop.name': starting_bus_stop_name,
+            'ending_bus_stop.name': ending_bus_stop_name})
+
+        lists_of_edge_object_ids = bus_stop_waypoints.get('waypoints')
+        lists_of_detailed_edges = []
+
+        for list_of_edge_object_ids in lists_of_edge_object_ids:
+            list_of_edge_object_ids = [ObjectId(i) for i in list_of_edge_object_ids]
+            cursor = self.edges_collection.find({'_id': {'$in': list_of_edge_object_ids}})
+            list_of_detailed_edges = list(cursor)
+            # list_of_detailed_edges = [i.get('traffic_density') if i.get('traffic_density') > 0 else -1 for i in cursor]
+            lists_of_detailed_edges.append(list_of_detailed_edges)
+
+        bus_stop_waypoints['waypoints'] = lists_of_detailed_edges
+        return bus_stop_waypoints
 
     def get_edges(self):
         """
@@ -621,38 +650,15 @@ class MongoConnection(object):
         Insert a new document to the BusStopWaypoints collection, or update the waypoints
         if the document already exists in the database.
 
-        :param starting_bus_stop: {'osm_id', 'name', 'point': {'longitude', 'latitude'}}
-        :param ending_bus_stop: {'osm_id', 'name', 'point': {'longitude', 'latitude'}}
-        :param waypoints: [[{'edge_id', 'starting_node': {'osm_id', 'point': {'longitude', latitude}},
-                             'ending_node': {'osm_id', 'point': {'longitude', latitude}}}]]
+        :param starting_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+        :param ending_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+        :param waypoints: [[edge_object_id]]
         :return: The ObjectId, if a new document was inserted.
         """
-        # document = {'starting_bus_stop': starting_bus_stop, 'ending_bus_stop': ending_bus_stop,
-        #             'waypoints': waypoints}
-        # result = self.bus_stop_waypoints_collection.insert_one(document)
-        # return result.inserted_id
         key = {'starting_bus_stop': starting_bus_stop, 'ending_bus_stop': ending_bus_stop}
         data = {'$set': {'waypoints': waypoints}}
         result = self.bus_stop_waypoints_collection.update_one(key, data, upsert=True)
         return result.upserted_id
-
-    def insert_bus_stop_waypoints_documents(self, bus_stop_waypoints_documents):
-        """
-        Insert multiple documents to the BusStopWaypoints collection,
-        or update the waypoints of the already existing ones.
-
-        :param bus_stop_waypoints_documents:
-                [{'starting_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                  'ending_bus_stop': {'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                  'waypoints': [{'edge_id', 'starting_node': {'osm_id', 'point': {'longitude', latitude}},
-                                 'ending_node': {'osm_id', 'point': {'longitude', latitude}}}]}]
-        """
-        for document in bus_stop_waypoints_documents:
-            starting_bus_stop = document.get('starting_bus_stop')
-            ending_bus_stop = document.get('ending_bus_stop')
-            waypoints = document.get('waypoints')
-            self.insert_bus_stop_waypoints(starting_bus_stop=starting_bus_stop, ending_bus_stop=ending_bus_stop,
-                                           waypoints=waypoints)
 
     def insert_edge(self, starting_node, ending_node, max_speed, road_type, way_id, traffic_density):
         """
@@ -823,12 +829,3 @@ class MongoConnection(object):
                 break
 
         print 'Total: ' + str(documents_cursor.count())
-
-    # def test(self):
-    #     self.clear_bus_stop_waypoints()
-    #     print self.insert_bus_stop_waypoints(starting_bus_stop='1', ending_bus_stop='2', waypoints='0')
-    #     print self.insert_bus_stop_waypoints(starting_bus_stop='2', ending_bus_stop='3', waypoints='0')
-    #     print self.insert_bus_stop_waypoints(starting_bus_stop='1', ending_bus_stop='2', waypoints='00')
-    #
-    #     for i in self.bus_stop_waypoints_collection.find({}, {'_id': 0}):
-    #         print i

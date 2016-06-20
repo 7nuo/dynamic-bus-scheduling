@@ -43,5 +43,38 @@ class LookAheadHandler(object):
         log(module_name='look_ahead_handler', log_type='DEBUG', log_message='bus_stops_dictionary ok')
 
     def generate_waypoints_between_multiple_bus_stops(self, bus_stop_names):
+        """
+
+        :param bus_stop_names: [string]
+        :return:
+        """
         route_generator_response = get_waypoints_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
-        self.connection.insert_bus_stop_waypoints_documents(bus_stop_waypoints_documents=route_generator_response)
+        # [{'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        #   'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        #   'waypoints': [[{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        #                   'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        #                   'max_speed', 'road_type', 'way_id', 'traffic_density'}]]}]
+
+        for intermediate_response in route_generator_response:
+            starting_bus_stop = intermediate_response.get('starting_bus_stop')
+            ending_bus_stop = intermediate_response.get('ending_bus_stop')
+            waypoints = intermediate_response.get('waypoints')
+            lists_of_edge_object_ids = []
+
+            for list_of_edges in waypoints:
+                list_of_edge_object_ids = []
+
+                for edge in list_of_edges:
+                    edge_object_id = edge.get('_id')
+                    list_of_edge_object_ids.append(edge_object_id)
+
+                lists_of_edge_object_ids.append(list_of_edge_object_ids)
+
+            # waypoints: [[edge_object_id]]
+            waypoints = lists_of_edge_object_ids
+            self.connection.insert_bus_stop_waypoints(starting_bus_stop=starting_bus_stop,
+                                                      ending_bus_stop=ending_bus_stop,
+                                                      waypoints=waypoints)
+
+        # print self.connection.get_bus_stop_waypoints_detailed_edges(starting_bus_stop_name='Centralstationen',
+        #                                                             ending_bus_stop_name='Stadshuset')
