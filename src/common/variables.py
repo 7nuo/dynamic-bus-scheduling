@@ -25,3 +25,4 @@ mongodb_port = 27017
 
 route_generator_host = '127.0.0.1'
 route_generator_port = '2000'
+route_generator_request_timeout = 30

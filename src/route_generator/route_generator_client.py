@@ -16,10 +16,41 @@ specific language governing permissions and limitations under the License.
 """
 import requests
 import json
-from src.common.variables import route_generator_host, route_generator_port
+
+from bson import ObjectId
+
+from src.common.variables import route_generator_host, route_generator_port, route_generator_request_timeout
 
 
-def get_route_between_two_bus_stops(starting_bus_stop_name, ending_bus_stop_name):
+class JSONResponseEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, ObjectId):
+            return str(o)
+        else:
+            return o.__dict__
+
+
+def get_route_between_two_bus_stops(starting_bus_stop, ending_bus_stop):
+    """
+    :param starting_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+    :param ending_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+    :return: {'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+              'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+              'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                        'distances_from_starting_node', 'times_from_starting_node',
+                        'distances_from_previous_node', 'times_from_previous_node'}}
+    """
+    url = 'http://' + route_generator_host + ':' + route_generator_port + '/get_route_between_two_bus_stops'
+    headers = {'content-type': 'application/x-www-form-urlencoded'}
+    data = {'starting_bus_stop': starting_bus_stop,
+            'ending_bus_stop': ending_bus_stop}
+    json_data = json.dumps(data, cls=JSONResponseEncoder)
+    request = requests.post(url, data=json_data, headers=headers, timeout=route_generator_request_timeout)
+    response = json.loads(request.text)
+    return response
+
+
+def get_route_between_two_bus_stop_names(starting_bus_stop_name, ending_bus_stop_name):
     """
     :param starting_bus_stop_name: string
     :param ending_bus_stop_name: string
@@ -29,16 +60,34 @@ def get_route_between_two_bus_stops(starting_bus_stop_name, ending_bus_stop_name
                         'distances_from_starting_node', 'times_from_starting_node',
                         'distances_from_previous_node', 'times_from_previous_node'}}
     """
-    url = 'http://' + route_generator_host + ':' + route_generator_port + '/get_route_between_two_bus_stops'
+    url = 'http://' + route_generator_host + ':' + route_generator_port + '/get_route_between_two_bus_stop_names'
     headers = {'content-type': 'application/x-www-form-urlencoded'}
     data = {'starting_bus_stop_name': starting_bus_stop_name,
             'ending_bus_stop_name': ending_bus_stop_name}
-    request = requests.post(url, data=data, headers=headers, timeout=30)
+    request = requests.post(url, data=data, headers=headers, timeout=route_generator_request_timeout)
     response = json.loads(request.text)
     return response
 
 
-def get_route_between_multiple_bus_stops(bus_stop_names):
+def get_route_between_multiple_bus_stops(bus_stops):
+    """
+    :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+    :return: [{'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+               'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+               'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                         'distances_from_starting_node', 'times_from_starting_node',
+                         'distances_from_previous_node', 'times_from_previous_node'}}]
+    """
+    url = 'http://' + route_generator_host + ':' + route_generator_port + '/get_route_between_multiple_bus_stops'
+    headers = {'content-type': 'application/json'}
+    data = {'bus_stops': bus_stops}
+    json_data = json.dumps(data, cls=JSONResponseEncoder)
+    request = requests.post(url, data=json_data, headers=headers, timeout=route_generator_request_timeout)
+    response = json.loads(request.text)
+    return response
+
+
+def get_route_between_multiple_bus_stop_names(bus_stop_names):
     """
     :param bus_stop_names: [string]
     :return: [{'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -47,10 +96,10 @@ def get_route_between_multiple_bus_stops(bus_stop_names):
                          'distances_from_starting_node', 'times_from_starting_node',
                          'distances_from_previous_node', 'times_from_previous_node'}}]
     """
-    url = 'http://' + route_generator_host + ':' + route_generator_port + '/get_route_between_multiple_bus_stops'
+    url = 'http://' + route_generator_host + ':' + route_generator_port + '/get_route_between_multiple_bus_stop_names'
     headers = {'content-type': 'application/x-www-form-urlencoded'}
     data = {'bus_stop_names': bus_stop_names}
-    request = requests.post(url, data=data, headers=headers, timeout=30)
+    request = requests.post(url, data=data, headers=headers, timeout=route_generator_request_timeout)
     response = json.loads(request.text)
     return response
 
@@ -69,7 +118,7 @@ def get_waypoints_between_two_bus_stops(starting_bus_stop_name, ending_bus_stop_
     headers = {'content-type': 'application/x-www-form-urlencoded'}
     data = {'starting_bus_stop_name': starting_bus_stop_name,
             'ending_bus_stop_name': ending_bus_stop_name}
-    request = requests.post(url, data=data, headers=headers, timeout=30)
+    request = requests.post(url, data=data, headers=headers, timeout=route_generator_request_timeout)
     response = json.loads(request.text)
     return response
 
@@ -86,7 +135,7 @@ def get_waypoints_between_multiple_bus_stops(bus_stop_names):
     url = 'http://' + route_generator_host + ':' + route_generator_port + '/get_waypoints_between_multiple_bus_stops'
     headers = {'content-type': 'application/x-www-form-urlencoded'}
     data = {'bus_stop_names': bus_stop_names}
-    request = requests.post(url, data=data, headers=headers, timeout=30)
+    request = requests.post(url, data=data, headers=headers, timeout=route_generator_request_timeout)
     response = json.loads(request.text)
     return response
 
@@ -165,7 +214,7 @@ def get_waypoints_between_multiple_bus_stops(bus_stop_names):
 #             distances_from_previous_node = intermediate_route.get('distances_from_previous_node')
 #             times_from_previous_node = intermediate_route.get('times_from_previous_node')
 #
-#             # output = '\nRequest: get_route_between_multiple_bus_stops' + \
+#             # output = '\nRequest: get_route_between_multiple_bus_stop_names' + \
 #             output = '\nstarting_bus_stop: ' + str(starting_bus_stop) + \
 #                      '\nending_bus_stop: ' + str(ending_bus_stop) + \
 #                      '\ntotal_distance: ' + str(total_distance) +\

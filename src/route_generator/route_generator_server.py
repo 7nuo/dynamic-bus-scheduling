@@ -44,21 +44,51 @@ def application(env, start_response):
         response = 'ERROR'
     else:
         if path_info == '/get_route_between_two_bus_stops':
+            # form = cgi.FieldStorage(fp=env['wsgi.input'], environ=data_env)
+            # starting_bus_stop = form.getvalue('starting_bus_stop')
+            # ending_bus_stop = form.getvalue('ending_bus_stop')
+            request_body_size = int(env.get('CONTENT_LENGTH', 0))
+            request_body = env['wsgi.input'].read(request_body_size)
+            json_request_body = json.loads(request_body)
+
+            starting_bus_stop = json_request_body.get('starting_bus_stop')
+            ending_bus_stop = json_request_body.get('ending_bus_stop')
+
+            result = router.get_route_between_two_bus_stops(starting_bus_stop=starting_bus_stop,
+                                                            ending_bus_stop=ending_bus_stop)
+            response_status = '200 OK'
+            response_type = 'application/json'
+            response = json.dumps(result, cls=JSONResponseEncoder)
+
+        elif path_info == '/get_route_between_two_bus_stop_names':
             form = cgi.FieldStorage(fp=env['wsgi.input'], environ=data_env)
 
             starting_bus_stop_name = form.getvalue('starting_bus_stop_name')
             ending_bus_stop_name = form.getvalue('ending_bus_stop_name')
-            result = router.get_route_between_two_bus_stops(starting_bus_stop_name=starting_bus_stop_name,
-                                                            ending_bus_stop_name=ending_bus_stop_name)
+            result = router.get_route_between_two_bus_stop_names(starting_bus_stop_name=starting_bus_stop_name,
+                                                                 ending_bus_stop_name=ending_bus_stop_name)
             response_status = '200 OK'
             response_type = 'application/json'
             response = json.dumps(result, cls=JSONResponseEncoder)
 
         elif path_info == '/get_route_between_multiple_bus_stops':
+            # form = cgi.FieldStorage(fp=env['wsgi.input'], environ=data_env)
+            # bus_stops = form.getvalue('bus_stops')
+            request_body_size = int(env.get('CONTENT_LENGTH', 0))
+            request_body = env['wsgi.input'].read(request_body_size)
+            bus_stops = json.loads(request_body).get('bus_stops')
+
+            result = router.get_route_between_multiple_bus_stops(bus_stops=bus_stops)
+
+            response_status = '200 OK'
+            response_type = 'application/json'
+            response = json.dumps(result, cls=JSONResponseEncoder)
+
+        elif path_info == '/get_route_between_multiple_bus_stop_names':
             form = cgi.FieldStorage(fp=env['wsgi.input'], environ=data_env)
 
             bus_stop_names = form.getvalue('bus_stop_names')
-            result = router.get_route_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
+            result = router.get_route_between_multiple_bus_stop_names(bus_stop_names=bus_stop_names)
 
             response_status = '200 OK'
             response_type = 'application/json'

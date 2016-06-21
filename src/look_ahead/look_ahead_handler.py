@@ -17,7 +17,9 @@ specific language governing permissions and limitations under the License.
 from src.mongodb_database.mongo_connection import MongoConnection
 from src.common.logger import log
 from src.common.variables import mongodb_host, mongodb_port
-from src.route_generator.route_generator_client import get_waypoints_between_multiple_bus_stops
+from src.route_generator.route_generator_client import get_route_between_multiple_bus_stops, \
+    get_waypoints_between_multiple_bus_stops
+from datetime import datetime, timedelta
 
 
 class LookAheadHandler(object):
@@ -25,9 +27,6 @@ class LookAheadHandler(object):
         self.bus_stops_dictionary = {}
         self.connection = MongoConnection(host=mongodb_host, port=mongodb_port)
         log(module_name='look_ahead_handler', log_type='DEBUG', log_message='connection ok')
-
-    def get_bus_line_from_multiple_bus_stops(self, bus_stops):
-        pass
 
     def initialize_connection(self):
         self.connection = MongoConnection(host=mongodb_host, port=mongodb_port)
@@ -42,18 +41,26 @@ class LookAheadHandler(object):
         self.bus_stops_dictionary = self.connection.get_bus_stops_dictionary()
         log(module_name='look_ahead_handler', log_type='DEBUG', log_message='bus_stops_dictionary ok')
 
-    def generate_waypoints_between_multiple_bus_stops(self, bus_stop_names):
+    def generate_bus_line(self, line_id, bus_stop_names):
         """
 
+        :param line_id: integer
         :param bus_stop_names: [string]
         :return:
         """
+        log(module_name='look_ahead_handler', log_type='DEBUG',
+            log_message='get_waypoints_between_multiple_bus_stops (route_generator): starting')
         route_generator_response = get_waypoints_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
+        log(module_name='look_ahead_handler', log_type='DEBUG',
+            log_message='get_waypoints_between_multiple_bus_stops (route_generator): finished')
         # [{'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         #   'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         #   'waypoints': [[{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
         #                   'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
         #                   'max_speed', 'road_type', 'way_id', 'traffic_density'}]]}]
+
+        bus_stops = []
+        starting_bus_stop_controller = True
 
         for intermediate_response in route_generator_response:
             starting_bus_stop = intermediate_response.get('starting_bus_stop')
@@ -76,5 +83,60 @@ class LookAheadHandler(object):
                                                       ending_bus_stop=ending_bus_stop,
                                                       waypoints=waypoints)
 
-        # print self.connection.get_bus_stop_waypoints_detailed_edges(starting_bus_stop_name='Centralstationen',
-        #                                                             ending_bus_stop_name='Stadshuset')
+            if starting_bus_stop_controller:
+                bus_stops.append(starting_bus_stop)
+                starting_bus_stop_controller = False
+
+            bus_stops.append(ending_bus_stop)
+
+        log(module_name='look_ahead_handler', log_type='DEBUG',
+            log_message='bus_stop_waypoints (mongodb_database): ok')
+
+        self.connection.insert_bus_line(line_id=line_id, bus_stops=bus_stops)
+
+        log(module_name='look_ahead_handler', log_type='DEBUG',
+            log_message='bus_line (mongodb_database): ok')
+
+    def generate_bus_line_timetable(self, line_id):
+        """
+
+        :param line_id: integer
+        :return:
+        """
+        starting_datetime = datetime(2016, 6, 23, 12, 0, 0, 00000)
+        current_datetime = starting_datetime
+        timetable = []
+
+        # {'_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
+        bus_line = self.connection.find_bus_line(line_id=line_id)
+        bus_stops = bus_line.get('bus_stops')
+
+        # [{'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        #   'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        #   'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+        #             'distances_from_starting_node', 'times_from_starting_node',
+        #             'distances_from_previous_node', 'times_from_previous_node'}}]
+        route_generator_response = get_route_between_multiple_bus_stops(bus_stops=bus_stops)
+
+        for intermediate_response in route_generator_response:
+            starting_bus_stop = unicode(intermediate_response.get('starting_bus_stop').get('name')).encode('utf-8')
+            ending_bus_stop = unicode(intermediate_response.get('ending_bus_stop').get('name')).encode('utf-8')
+            intermediate_route = intermediate_response.get('route')
+            total_time = intermediate_route.get('total_time')
+
+            timetable.append({'starting_bus_stop': starting_bus_stop,
+                              'ending_bus_stop': ending_bus_stop,
+                              'departure_datetime': current_datetime,
+                              'arrival_datetime': current_datetime + timedelta(minutes=total_time/60)})
+
+            current_datetime += timedelta(minutes=total_time//60+1)
+
+        for timetable_entry in timetable:
+            starting_bus_stop = str(timetable_entry.get('starting_bus_stop'))
+            departure_datetime = str(timetable_entry.get('departure_datetime'))
+            ending_bus_stop = str(timetable_entry.get('ending_bus_stop'))
+            arrival_datetime = str(timetable_entry.get('arrival_datetime'))
+            print 'starting_bus_stop: ' + starting_bus_stop + \
+                  ' - departure_datetime: ' + departure_datetime + \
+                  ' - ending_bus_stop: ' + ending_bus_stop + \
+                  ' - arrival_datetime: ' + arrival_datetime
