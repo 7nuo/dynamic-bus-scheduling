@@ -153,52 +153,46 @@ if __name__ == '__main__':
     bus_stop_names = ['Centralstationen', 'Stadshuset', 'Skolgatan', 'Ekonomikum', 'Studentstaden', 'Rickomberga',
                       'Oslogatan', 'Reykjaviksgatan', 'Ekebyhus', 'Sernanders väg', 'Flogsta centrum',
                       'Sernanders väg', 'Ekebyhus', 'Reykjaviksgatan', 'Oslogatan', 'Rickomberga',
-                      'Studentstaden', 'Ekonomikum','Skolgatan', 'Stadshuset', 'Centralstationen']
+                      'Studentstaden', 'Ekonomikum', 'Skolgatan', 'Stadshuset', 'Centralstationen']
 
-    # get_route_between_two_bus_stop_names
-    log(module_name='route_generator_test', log_type='INFO',
-        log_message='get_route_between_two_bus_stop_names: starting')
-
-    start_time = time.time()
-    test_get_route_between_two_bus_stop_names(starting_bus_stop_name='Centralstationen',
-                                              ending_bus_stop_name='Stadshuset')
-    elapsed_time = time.time() - start_time
-
-    log(module_name='route_generator_test', log_type='INFO',
-        log_message='get_route_between_two_bus_stop_names: finished - elapsed_time = ' + str(elapsed_time) + ' sec')
+    # # get_route_between_two_bus_stop_names
+    # log(module_name='route_generator_test', log_type='INFO',
+    #     log_message='get_route_between_two_bus_stop_names: starting')
+    # start_time = time.time()
+    # test_get_route_between_two_bus_stop_names(
+    #     starting_bus_stop_name='Ekebyhus',
+    #     ending_bus_stop_name='Sernanders väg'
+    # )
+    # elapsed_time = time.time() - start_time
+    # log(module_name='route_generator_test', log_type='INFO',
+    #     log_message='get_route_between_two_bus_stop_names: finished - elapsed_time = ' + str(elapsed_time) + ' sec')
 
     # # get_route_between_multiple_bus_stop_names
     # log(module_name='route_generator_test', log_type='INFO',
     #     log_message='get_route_between_multiple_bus_stop_names: starting')
-    #
     # start_time = time.time()
     # test_get_route_between_multiple_bus_stop_names(bus_stop_names=bus_stop_names)
     # elapsed_time = time.time() - start_time
-    #
     # log(module_name='route_generator_test', log_type='INFO',
-    #     log_message='get_route_between_multiple_bus_stop_names: finished - elapsed_time = ' +\
+    #     log_message='get_route_between_multiple_bus_stop_names: finished - elapsed_time = ' +
     #                 str(elapsed_time) + ' sec')
 
     # # get_waypoints_between_two_bus_stops
     # log(module_name='route_generator_test', log_type='INFO',
     #     log_message='get_waypoints_between_two_bus_stops: starting')
-    #
     # start_time = time.time()
-    # test_get_waypoints_between_two_bus_stops(starting_bus_stop_name='Sernanders väg',
-    #                                          ending_bus_stop_name='Flogsta centrum')
+    # test_get_waypoints_between_two_bus_stops(starting_bus_stop_name='Ekebyhus',
+    #                                          ending_bus_stop_name='Sernanders väg')
     # elapsed_time = time.time() - start_time
-    #
     # log(module_name='route_generator_test', log_type='INFO',
     #     log_message='get_waypoints_between_two_bus_stops: finished - elapsed_time = ' + str(elapsed_time) + ' sec')
 
-    # get_waypoints_between_multiple_bus_stops
+    # # get_waypoints_between_multiple_bus_stops
     # log(module_name='route_generator_test', log_type='INFO',
     #     log_message='get_waypoints_between_multiple_bus_stops: starting')
-    #
     # start_time = time.time()
     # test_get_waypoints_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
     # elapsed_time = time.time() - start_time
-    #
     # log(module_name='route_generator_test', log_type='INFO',
     #     log_message='get_waypoints_between_multiple_bus_stops: finished - elapsed_time = ' +
     #                 str(elapsed_time) + ' sec')

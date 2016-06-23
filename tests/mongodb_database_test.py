@@ -36,19 +36,19 @@ if __name__ == '__main__':
     #     log_message='clear_all_collections: finished - elapsed_time = ' + str(elapsed_time) + ' sec')
 
     # log(module_name='mongodb_database_test', log_type='INFO', log_message='print_nodes')
-    # mongo.print_nodes(counter=100)
-    # mongo.test()
-    # mongo.clear_bus_stop_waypoints()
-    # mongo.print_waypoints_between_bus_stops(counter=10000)
+    # mongo.print_nodes(counter=200)
 
     # log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_stops')
-    # mongo.print_bus_stops(counter=500)
+    # mongo.print_bus_stops(counter=200)
     #
     # log(module_name='mongodb_database_test', log_type='INFO', log_message='print_edges')
-    # mongo.print_edges(counter=1000)
+    # mongo.print_edges(counter=200)
 
     # log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_line')
     # mongo.print_bus_line(line_id=1)
 
-    log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_line_waypoints')
-    mongo.print_bus_line_waypoints(line_id=1)
+    # log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_line_waypoints')
+    # mongo.print_bus_line_waypoints(line_id=1)
+
+    # log(module_name='mongodb_database_test', log_type='INFO', log_message='print_detailed_bus_line_waypoints')
+    # mongo.print_detailed_bus_line_waypoints(line_id=1)

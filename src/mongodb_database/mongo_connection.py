@@ -436,6 +436,7 @@ class MongoConnection(object):
         bus_stop_waypoints = self.bus_stop_waypoints_collection.find_one({
             'starting_bus_stop.name': starting_bus_stop_name,
             'ending_bus_stop.name': ending_bus_stop_name})
+
         return bus_stop_waypoints
 
     def get_bus_stop_waypoints_detailed_edges(self, starting_bus_stop_name, ending_bus_stop_name):
@@ -450,18 +451,18 @@ class MongoConnection(object):
                                   'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
                                   'max_speed', 'road_type', 'way_id', 'traffic_density'}]]}
         """
-        bus_stop_waypoints = self.bus_stop_waypoints_collection.find_one({
-            'starting_bus_stop.name': starting_bus_stop_name,
-            'ending_bus_stop.name': ending_bus_stop_name})
+        bus_stop_waypoints = self.get_bus_stop_waypoints(starting_bus_stop_name=starting_bus_stop_name,
+                                                         ending_bus_stop_name=ending_bus_stop_name)
+        # {'_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        #  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        #  'waypoints': [[edge_object_id]]}
 
         lists_of_edge_object_ids = bus_stop_waypoints.get('waypoints')
         lists_of_detailed_edges = []
 
         for list_of_edge_object_ids in lists_of_edge_object_ids:
             list_of_edge_object_ids = [ObjectId(i) for i in list_of_edge_object_ids]
-            cursor = self.edges_collection.find({'_id': {'$in': list_of_edge_object_ids}})
-            list_of_detailed_edges = list(cursor)
-            # list_of_detailed_edges = [i.get('traffic_density') if i.get('traffic_density') > 0 else -1 for i in cursor]
+            list_of_detailed_edges = [self.edges_collection.find_one({'_id': i}) for i in list_of_edge_object_ids]
             lists_of_detailed_edges.append(list_of_detailed_edges)
 
         bus_stop_waypoints['waypoints'] = lists_of_detailed_edges
@@ -570,6 +571,34 @@ class MongoConnection(object):
             points_dictionary[osm_id] = point_document
 
         return points_dictionary
+
+    def get_traffic_density_between_two_bus_stop_names(self, starting_bus_stop_name, ending_bus_stop_name):
+        """
+
+        :param starting_bus_stop_name:
+        :param ending_bus_stop_name:
+        :return: {'_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                  'waypoints': [[{'edge_object_id', 'traffic_density'}]]}
+        """
+        bus_stop_waypoints = self.get_bus_stop_waypoints(starting_bus_stop_name=starting_bus_stop_name,
+                                                         ending_bus_stop_name=ending_bus_stop_name)
+        # {'_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        #  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        #  'waypoints': [[edge_object_id]]}
+
+        lists_of_edge_object_ids = bus_stop_waypoints.get('waypoints')
+        lists_of_edge_traffic = []
+
+        for list_of_edge_object_ids in lists_of_edge_object_ids:
+            list_of_edge_object_ids = [ObjectId(i) for i in list_of_edge_object_ids]
+            list_of_detailed_edges = [self.edges_collection.find_one({'_id': i}) for i in list_of_edge_object_ids]
+            list_of_edge_traffic = [{'edge_object_id': i.get('_id'), 'traffic_density': i.get('traffic_density')}
+                                    for i in list_of_detailed_edges]
+            lists_of_edge_traffic.append(list_of_edge_traffic)
+
+        bus_stop_waypoints['waypoints'] = lists_of_edge_traffic
+        return bus_stop_waypoints
 
     def has_edges(self, node_osm_id):
         """
@@ -776,6 +805,26 @@ class MongoConnection(object):
         result = self.ways_collection.insert_many(way_documents)
         return result.inserted_ids
 
+    def update_traffic_density(self, edge_object_id, new_traffic_density):
+        """
+        Update the traffic_density value of an edge document.
+        edge_document: {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                        'max_speed', 'road_type', 'way_id', 'traffic_density'}
+
+        :param edge_object_id: ObjectId of edge document
+        :param new_traffic_density: float [0, 1]
+        :return:
+        """
+        key = {'_id': ObjectId(edge_object_id)}
+        data = {'$set': {'traffic_density': new_traffic_density}}
+        self.edges_collection.update_one(key, data, upsert=False)
+
+    def clear_traffic_density(self):
+        key = {}
+        data = {'$set': {'traffic_density': 0}}
+        self.edges_collection.update_many(key, data, upsert=False)
+
     def print_bus_stops(self, counter):
         documents_cursor = self.get_bus_stops()
         i = 0
@@ -854,7 +903,39 @@ class MongoConnection(object):
         bus_stop_names = [bus_stop.get('name') for bus_stop in bus_stops]
         self.print_waypoints_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
 
+    def print_detailed_bus_line_waypoints(self, line_id):
+        """
+        :param line_id: integer
+        """
+        # {'_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
+        bus_line_document = self.find_bus_line(line_id=line_id)
+        bus_stops = bus_line_document.get('bus_stops')
+
+        bus_stop_names = [bus_stop.get('name') for bus_stop in bus_stops]
+        self.print_detailed_waypoints_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
+
     def print_waypoints_between_two_bus_stops(self, starting_bus_stop_name, ending_bus_stop_name):
+        """
+        :param starting_bus_stop_name: string
+        :param ending_bus_stop_name: string
+        """
+        bus_stop_waypoints = self.get_bus_stop_waypoints(starting_bus_stop_name=starting_bus_stop_name,
+                                                         ending_bus_stop_name=ending_bus_stop_name)
+        # {'_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        #  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        #  'waypoints': [[edge_object_id]]}
+
+        starting_bus_stop = bus_stop_waypoints.get('starting_bus_stop')
+        ending_bus_stop = bus_stop_waypoints.get('ending_bus_stop')
+        waypoints = bus_stop_waypoints.get('waypoints')
+
+        print '\nstarting_bus_stop: ' + str(starting_bus_stop) + \
+              '\nending_bus_stop: ' + str(ending_bus_stop)
+
+        for alternative_waypoints in waypoints:
+            print 'alternative_waypoints: ' + str(alternative_waypoints)
+
+    def print_detailed_waypoints_between_two_bus_stops(self, starting_bus_stop_name, ending_bus_stop_name):
         """
         :param starting_bus_stop_name: string
         :param ending_bus_stop_name: string
@@ -886,3 +967,38 @@ class MongoConnection(object):
             ending_bus_stop_name = bus_stop_names[i + 1]
             self.print_waypoints_between_two_bus_stops(starting_bus_stop_name=starting_bus_stop_name,
                                                        ending_bus_stop_name=ending_bus_stop_name)
+
+    def print_detailed_waypoints_between_multiple_bus_stops(self, bus_stop_names):
+        """
+        :param bus_stop_names: [string]
+        """
+        for i in range(0, len(bus_stop_names) - 1):
+            starting_bus_stop_name = bus_stop_names[i]
+            ending_bus_stop_name = bus_stop_names[i + 1]
+            self.print_detailed_waypoints_between_two_bus_stops(starting_bus_stop_name=starting_bus_stop_name,
+                                                                ending_bus_stop_name=ending_bus_stop_name)
+
+    def print_traffic_density_between_two_bus_stops(self, starting_bus_stop_name, ending_bus_stop_name):
+        """
+
+        :param starting_bus_stop_name: string
+        :param ending_bus_stop_name: string
+        :return:
+        """
+        bus_stop_waypoints = self.get_traffic_density_between_two_bus_stop_names(
+            starting_bus_stop_name=starting_bus_stop_name,
+            ending_bus_stop_name=ending_bus_stop_name
+        )
+        # {'_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        #  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        #  'waypoints': [[{'edge_object_id', 'traffic_density'}]]}
+
+        starting_bus_stop = bus_stop_waypoints.get('starting_bus_stop')
+        ending_bus_stop = bus_stop_waypoints.get('ending_bus_stop')
+        waypoints = bus_stop_waypoints.get('waypoints')
+
+        print '\nstarting_bus_stop: ' + str(starting_bus_stop) + \
+              '\nending_bus_stop: ' + str(ending_bus_stop)
+
+        for alternative_waypoints in waypoints:
+            print 'alternative_waypoints: ' + str(alternative_waypoints)
