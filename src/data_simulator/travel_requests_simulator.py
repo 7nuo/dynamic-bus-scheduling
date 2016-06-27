@@ -16,12 +16,26 @@ specific language governing permissions and limitations under the License.
 """
 from src.mongodb_database.mongo_connection import MongoConnection
 from src.common.logger import log
+from src.common.variables import mongodb_host, mongodb_port
+import random
 
 
 class TravelRequestsSimulator(object):
     def __init__(self):
-        self.connection = None
+        self.connection = MongoConnection(host=mongodb_host, port=mongodb_port)
+        log(module_name='travel_requests_simulator', log_type='DEBUG', log_message='mongodb_database connection ok')
 
-    def initialize_connection(self, host, port):
-        self.connection = MongoConnection(host=host, port=port)
-        log(module_name='travel_requests_simulator', log_type='DEBUG', log_message='connection ok')
+    def generate_travel_requests(self):
+        weighted_choices = [('Red', 1), ('Blue', 2)]
+        population = [val for val, cnt in weighted_choices for i in range(cnt)]
+        rc = 0
+        bc = 0
+
+        for i in range(0, 100000):
+            x = random.choice(population)
+            if x == 'Red':
+                rc += 1
+            else:
+                bc += 1
+
+        print rc, bc

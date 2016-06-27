@@ -32,7 +32,7 @@ if __name__ == '__main__':
     elapsed_time = time.time() - start_time
     log(module_name='traffic_data_simulator_test', log_type='INFO',
         log_message='initialize_traffic_data_simulator: finished - elapsed_time = ' + str(elapsed_time) + ' sec')
-
+    #
     # log(module_name='traffic_data_simulator_test', log_type='INFO',
     #     log_message='print_traffic_density_between_two_bus_stops: starting')
     # start_time = time.time()
@@ -45,29 +45,29 @@ if __name__ == '__main__':
     #     log_message='print_traffic_density_between_two_bus_stops: finished - elapsed_time = ' +
     #                 str(elapsed_time) + ' sec')
 
-    # log(module_name='traffic_data_simulator_test', log_type='INFO',
-    #     log_message='generate_traffic_between_bus_stop_names: starting')
-    # start_time = time.time()
-    # traffic_data_simulator.generate_traffic_between_bus_stop_names(
-    #     starting_bus_stop_name='Ekebyhus',
-    #     ending_bus_stop_name='Sernanders väg',
-    #     waypoints_index=0,
-    #     new_traffic_density=0.99
-    # )
-    # traffic_data_simulator.generate_traffic_between_bus_stop_names(
-    #     starting_bus_stop_name='Ekebyhus',
-    #     ending_bus_stop_name='Sernanders väg',
-    #     waypoints_index=1,
-    #     new_traffic_density=0.1
-    # )
-    # traffic_data_simulator.print_traffic_density_between_two_bus_stops(
-    #     starting_bus_stop_name='Ekebyhus',
-    #     ending_bus_stop_name='Sernanders väg',
-    # )
-    # elapsed_time = time.time() - start_time
-    # log(module_name='traffic_data_simulator_test', log_type='INFO',
-    #     log_message='generate_traffic_between_bus_stop_names: finished - elapsed_time = ' +
-    #                 str(elapsed_time) + ' sec')
+    log(module_name='traffic_data_simulator_test', log_type='INFO',
+        log_message='generate_traffic_between_bus_stop_names: starting')
+    start_time = time.time()
+    traffic_data_simulator.generate_traffic_between_bus_stop_names(
+        starting_bus_stop_name='Ekebyhus',
+        ending_bus_stop_name='Sernanders väg',
+        waypoints_index=0,
+        new_traffic_density=0.99
+    )
+    traffic_data_simulator.generate_traffic_between_bus_stop_names(
+        starting_bus_stop_name='Ekebyhus',
+        ending_bus_stop_name='Sernanders väg',
+        waypoints_index=1,
+        new_traffic_density=0.1
+    )
+    traffic_data_simulator.print_traffic_density_between_two_bus_stops(
+        starting_bus_stop_name='Ekebyhus',
+        ending_bus_stop_name='Sernanders väg',
+    )
+    elapsed_time = time.time() - start_time
+    log(module_name='traffic_data_simulator_test', log_type='INFO',
+        log_message='generate_traffic_between_bus_stop_names: finished - elapsed_time = ' +
+                    str(elapsed_time) + ' sec')
 
     # log(module_name='traffic_data_simulator_test', log_type='INFO',
     #     log_message='clear_traffic_density: starting')

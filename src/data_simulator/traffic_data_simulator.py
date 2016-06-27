@@ -57,9 +57,3 @@ class TrafficDataSimulator(object):
             starting_bus_stop_name=starting_bus_stop_name,
             ending_bus_stop_name=ending_bus_stop_name
         )
-
-        # self.connection.update_traffic_density(edge_object_id='57670622bad582438052d91b', new_traffic_density=0.99)\
-        # self.connection.clear_traffic_density()
-
-        # self.connection.print_detailed_waypoints_between_two_bus_stops(starting_bus_stop_name=starting_bus_stop_name,
-        #                                                                ending_bus_stop_name=ending_bus_stop_name)

@@ -30,6 +30,7 @@ class MongoConnection(object):
         self.address_book_collection = self.db.AddressBook
         self.bus_lines_collection = self.db.BusLines
         self.bus_stop_waypoints_collection = self.db.BusStopWaypoints
+        self.travel_requests_collection = self.db.TravelRequests
 
     def clear_all_collections(self):
         self.clear_nodes()
@@ -40,6 +41,7 @@ class MongoConnection(object):
         self.clear_address_book()
         self.clear_bus_lines()
         self.clear_bus_stop_waypoints()
+        self.clear_travel_requests()
 
     def clear_address_book(self):
         """
@@ -102,6 +104,15 @@ class MongoConnection(object):
         :return: The number of deleted documents.
         """
         result = self.points_collection.delete_many({})
+        return result.deleted_count
+
+    def clear_travel_requests(self):
+        """
+        Delete all the documents of the TravelRequests collection.
+
+        :return: The number of deleted documents.
+        """
+        result = self.travel_requests_collection.delete_many({})
         return result.deleted_count
 
     def clear_ways(self):
@@ -194,6 +205,7 @@ class MongoConnection(object):
     def delete_node(self, osm_id):
         """
         Delete a node document based on the osm_id.
+        node_document: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
 
         :type osm_id: integer
         :return: True if node exists in database, otherwise False.
@@ -203,7 +215,8 @@ class MongoConnection(object):
 
     def delete_point(self, osm_id):
         """
-        Delete a point documents based on the osm_id.
+        Delete a point document based on the osm_id.
+        point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
 
         :type osm_id: integer
         :return: True if the point exists in the database, otherwise False.
@@ -211,9 +224,34 @@ class MongoConnection(object):
         result = self.points_collection.delete_one({'osm_id': osm_id})
         return result.deleted_count == 1
 
+    def delete_travel_request(self, travel_request_id):
+        """
+        Delete a document from the TravelRequests collection, based on the travel_request_id entry.
+        travel_request_document: {'_id', 'travel_request_id, 'client_id', 'line_id', 'starting_bus_stop_id',
+                                  'ending_bus_stop_id', 'departure_datetime', 'arrival_datetime'}
+
+        :param travel_request_id: integer
+        :return: True if the document exists, otherwise False.
+        """
+        result = self.travel_requests_collection.delete_one({'travel_request_id': travel_request_id})
+        return result.deleted_count == 1
+
+    def delete_travel_requests(self, travel_request_ids):
+        """
+        Delete multiple documents from the TravelRequests collection, based on the travel_request_id entry.
+        travel_request_document: {'_id', 'travel_request_id, 'client_id', 'line_id', 'starting_bus_stop_id',
+                                  'ending_bus_stop_id', 'departure_datetime', 'arrival_datetime'}
+
+        :param travel_request_ids: [integer]
+        :return: The number of deleted documents.
+        """
+        result = self.travel_requests_collection.delete_many({'travel_request_id': {'$in': travel_request_ids}})
+        return result.deleted_count == 1
+
     def delete_way(self, osm_id):
         """
         Delete a way document based on the osm_id.
+        way_document: {'_id', 'osm_id', 'tags', 'references'}
 
         :type osm_id: integer
         :return: True if the way exists in the database, otherwise False.
@@ -308,19 +346,6 @@ class MongoConnection(object):
         document = self.edges_collection.find_one({'_id': ObjectId(edge_object_id)})
         return document
 
-    def find_edges_from_starting_node_osm_id(self, starting_node_osm_id):
-        """
-        Retrieve the edge documents based on the osm_id of the starting node.
-
-        :param starting_node_osm_id: osm_id
-        :type starting_node_osm_id: integer
-        :return: Cursor -> {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                            'max_speed', 'road_type', 'way_id', 'traffic_density'}
-        """
-        cursor = self.edges_collection.find({'starting_node.osm_id': starting_node_osm_id})
-        return cursor
-
     def find_node(self, osm_id):
         """
         Retrieve a node document based on the osm_id.
@@ -339,6 +364,17 @@ class MongoConnection(object):
         :return: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
         """
         document = self.points_collection.find_one({'osm_id': osm_id})
+        return document
+
+    def find_travel_request(self, travel_request_id):
+        """
+        Retrieve a document of the TravelRequests collection, based on the travel_request_id entry.
+
+        :param travel_request_id: integer
+        :return: {'_id', 'travel_request_id, 'client_id', 'line_id', 'starting_bus_stop_id',
+                  'ending_bus_stop_id', 'departure_datetime', 'arrival_datetime'}
+        """
+        document = self.travel_requests_collection.find_one({'travel_request_id': travel_request_id})
         return document
 
     def find_way(self, osm_id):
@@ -451,8 +487,10 @@ class MongoConnection(object):
                                   'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
                                   'max_speed', 'road_type', 'way_id', 'traffic_density'}]]}
         """
-        bus_stop_waypoints = self.get_bus_stop_waypoints(starting_bus_stop_name=starting_bus_stop_name,
-                                                         ending_bus_stop_name=ending_bus_stop_name)
+        bus_stop_waypoints = self.get_bus_stop_waypoints(
+            starting_bus_stop_name=starting_bus_stop_name,
+            ending_bus_stop_name=ending_bus_stop_name
+        )
         # {'_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         #  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         #  'waypoints': [[edge_object_id]]}
@@ -513,6 +551,19 @@ class MongoConnection(object):
         """
         edges_list = list(self.get_edges())
         return edges_list
+
+    def get_edges_from_starting_node_osm_id(self, starting_node_osm_id):
+        """
+        Retrieve the edge documents based on the osm_id of the starting node.
+
+        :param starting_node_osm_id: osm_id
+        :type starting_node_osm_id: integer
+        :return: Cursor -> {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                            'max_speed', 'road_type', 'way_id', 'traffic_density'}
+        """
+        cursor = self.edges_collection.find({'starting_node.osm_id': starting_node_osm_id})
+        return cursor
 
     def get_ending_nodes_of_edges_dictionary(self):
         """
@@ -581,8 +632,10 @@ class MongoConnection(object):
                   'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                   'waypoints': [[{'edge_object_id', 'traffic_density'}]]}
         """
-        bus_stop_waypoints = self.get_bus_stop_waypoints(starting_bus_stop_name=starting_bus_stop_name,
-                                                         ending_bus_stop_name=ending_bus_stop_name)
+        bus_stop_waypoints = self.get_bus_stop_waypoints(
+            starting_bus_stop_name=starting_bus_stop_name,
+            ending_bus_stop_name=ending_bus_stop_name
+        )
         # {'_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         #  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         #  'waypoints': [[edge_object_id]]}
@@ -599,6 +652,26 @@ class MongoConnection(object):
 
         bus_stop_waypoints['waypoints'] = lists_of_edge_traffic
         return bus_stop_waypoints
+
+    def get_travel_requests_cursor(self):
+        """
+        Retrieve a cursor of all the documents of the TravelRequests collection.
+
+        :return: Cursor -> {'_id', 'travel_request_id, 'client_id', 'line_id', 'starting_bus_stop_id',
+                            'ending_bus_stop_id', 'departure_datetime', 'arrival_datetime'}
+        """
+        cursor = self.travel_requests_collection.find({})
+        return cursor
+
+    def get_travel_requests_list(self):
+        """
+        Retrieve a list containing all the documents of the TravelRequests collection.
+
+        :return: [{'_id', 'travel_request_id, 'client_id', 'line_id', 'starting_bus_stop_id',
+                   'ending_bus_stop_id', 'departure_datetime', 'arrival_datetime'}]
+        """
+        travel_requests_list = list(self.get_travel_requests_cursor())
+        return travel_requests_list
 
     def has_edges(self, node_osm_id):
         """
@@ -679,7 +752,8 @@ class MongoConnection(object):
         :type point: Point
         :return: The ObjectId of the inserted document.
         """
-        document = {'osm_id': osm_id, 'name': name, 'point': {'longitude': point.longitude, 'latitude': point.latitude}}
+        document = {'osm_id': osm_id, 'name': name,
+                    'point': {'longitude': point.longitude, 'latitude': point.latitude}}
         result = self.bus_stops_collection.insert_one(document)
         return result.inserted_id
 
@@ -746,7 +820,8 @@ class MongoConnection(object):
         :type point: Point
         :return: The ObjectId of the inserted document.
         """
-        document = {'osm_id': osm_id, 'tags': tags, 'point': {'longitude': point.longitude, 'latitude': point.latitude}}
+        document = {'osm_id': osm_id, 'tags': tags,
+                    'point': {'longitude': point.longitude, 'latitude': point.latitude}}
         result = self.nodes_collection.insert_one(document)
         return result.inserted_id
 
@@ -821,11 +896,19 @@ class MongoConnection(object):
         self.edges_collection.update_one(key, data, upsert=False)
 
     def clear_traffic_density(self):
+        """
+        Set the traffic_density values of all edge documents to 0.
+        """
         key = {}
         data = {'$set': {'traffic_density': 0}}
         self.edges_collection.update_many(key, data, upsert=False)
 
     def print_bus_stops(self, counter):
+        """
+        Print up to a specific number of bus_stop documents.
+
+        :param counter: integer
+        """
         documents_cursor = self.get_bus_stops()
         i = 0
 
@@ -840,6 +923,11 @@ class MongoConnection(object):
         print 'Total number of bus_stop documents: ' + str(documents_cursor.count())
 
     def print_edges(self, counter):
+        """
+        Print up to a specific number of edge documents.
+
+        :param counter: integer
+        """
         documents_cursor = self.get_edges()
         i = 0
 
@@ -856,6 +944,11 @@ class MongoConnection(object):
         print 'Total number of edge documents: ' + str(documents_cursor.count())
 
     def print_nodes(self, counter):
+        """
+        Print up to a specific number of node documents.
+
+        :param counter: integer
+        """
         documents_cursor = self.get_nodes()
         i = 0
 
@@ -871,15 +964,23 @@ class MongoConnection(object):
 
     def print_bus_line(self, line_id):
         """
+        Print a bus_line document based on the line_id.
+
         :param line_id: integer
         """
         document = self.find_bus_line(line_id=line_id)
         print document
+
         bus_stops = document.get('bus_stops')
         for bus_stop in bus_stops:
             print bus_stop
 
     def print_bus_lines(self, counter):
+        """
+        Print up to a specific number of bus_line documents.
+
+        :param counter: integer
+        """
         documents_cursor = self.get_bus_lines()
         i = 0
 
@@ -919,8 +1020,10 @@ class MongoConnection(object):
         :param starting_bus_stop_name: string
         :param ending_bus_stop_name: string
         """
-        bus_stop_waypoints = self.get_bus_stop_waypoints(starting_bus_stop_name=starting_bus_stop_name,
-                                                         ending_bus_stop_name=ending_bus_stop_name)
+        bus_stop_waypoints = self.get_bus_stop_waypoints(
+            starting_bus_stop_name=starting_bus_stop_name,
+            ending_bus_stop_name=ending_bus_stop_name
+        )
         # {'_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         #  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         #  'waypoints': [[edge_object_id]]}
@@ -940,8 +1043,10 @@ class MongoConnection(object):
         :param starting_bus_stop_name: string
         :param ending_bus_stop_name: string
         """
-        bus_stop_waypoints = self.get_bus_stop_waypoints_detailed_edges(starting_bus_stop_name=starting_bus_stop_name,
-                                                                        ending_bus_stop_name=ending_bus_stop_name)
+        bus_stop_waypoints = self.get_bus_stop_waypoints_detailed_edges(
+            starting_bus_stop_name=starting_bus_stop_name,
+            ending_bus_stop_name=ending_bus_stop_name
+        )
         # {'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         #  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         #  'waypoints': [[{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
@@ -965,8 +1070,11 @@ class MongoConnection(object):
         for i in range(0, len(bus_stop_names) - 1):
             starting_bus_stop_name = bus_stop_names[i]
             ending_bus_stop_name = bus_stop_names[i + 1]
-            self.print_waypoints_between_two_bus_stops(starting_bus_stop_name=starting_bus_stop_name,
-                                                       ending_bus_stop_name=ending_bus_stop_name)
+
+            self.print_waypoints_between_two_bus_stops(
+                starting_bus_stop_name=starting_bus_stop_name,
+                ending_bus_stop_name=ending_bus_stop_name
+            )
 
     def print_detailed_waypoints_between_multiple_bus_stops(self, bus_stop_names):
         """
@@ -975,8 +1083,11 @@ class MongoConnection(object):
         for i in range(0, len(bus_stop_names) - 1):
             starting_bus_stop_name = bus_stop_names[i]
             ending_bus_stop_name = bus_stop_names[i + 1]
-            self.print_detailed_waypoints_between_two_bus_stops(starting_bus_stop_name=starting_bus_stop_name,
-                                                                ending_bus_stop_name=ending_bus_stop_name)
+
+            self.print_detailed_waypoints_between_two_bus_stops(
+                starting_bus_stop_name=starting_bus_stop_name,
+                ending_bus_stop_name=ending_bus_stop_name
+            )
 
     def print_traffic_density_between_two_bus_stops(self, starting_bus_stop_name, ending_bus_stop_name):
         """

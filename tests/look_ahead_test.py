@@ -39,12 +39,12 @@ if __name__ == '__main__':
     # log(module_name='look_ahead_handler_test', log_type='INFO',
     #     log_message='generate_bus_line: finished - elapsed_time = ' + str(elapsed_time) + ' sec')
 
-    # log(module_name='look_ahead_handler_test', log_type='INFO', log_message='generate_bus_line_timetable: starting')
-    # start_time = time.time()
-    # look_ahead_handler.generate_bus_line_timetable(line_id=1)
-    # elapsed_time = time.time() - start_time
-    # log(module_name='look_ahead_handler_test', log_type='INFO',
-    #     log_message='generate_bus_line_timetable: finished - elapsed_time = ' + str(elapsed_time) + ' sec')
+    log(module_name='look_ahead_handler_test', log_type='INFO', log_message='generate_bus_line_timetable: starting')
+    start_time = time.time()
+    look_ahead_handler.generate_bus_line_timetable(line_id=1)
+    elapsed_time = time.time() - start_time
+    log(module_name='look_ahead_handler_test', log_type='INFO',
+        log_message='generate_bus_line_timetable: finished - elapsed_time = ' + str(elapsed_time) + ' sec')
 
 
 
