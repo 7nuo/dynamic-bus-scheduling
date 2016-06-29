@@ -28,12 +28,12 @@ if __name__ == '__main__':
     log(module_name='mongodb_database_test', log_type='INFO',
         log_message='initialize_database_connection: finished - elapsed_time = ' + str(elapsed_time) + ' sec')
 
-    log(module_name='mongodb_database_test', log_type='INFO', log_message='clear_all_collections: starting')
-    start_time = time.time()
-    mongo.clear_all_collections()
-    elapsed_time = time.time() - start_time
-    log(module_name='mongodb_database_test', log_type='INFO',
-        log_message='clear_all_collections: finished - elapsed_time = ' + str(elapsed_time) + ' sec')
+    # log(module_name='mongodb_database_test', log_type='INFO', log_message='clear_all_collections: starting')
+    # start_time = time.time()
+    # mongo.clear_all_collections()
+    # elapsed_time = time.time() - start_time
+    # log(module_name='mongodb_database_test', log_type='INFO',
+    #     log_message='clear_all_collections: finished - elapsed_time = ' + str(elapsed_time) + ' sec')
 
     # log(module_name='mongodb_database_test', log_type='INFO', log_message='print_nodes')
     # mongo.print_nodes(counter=200)
@@ -52,3 +52,6 @@ if __name__ == '__main__':
 
     # log(module_name='mongodb_database_test', log_type='INFO', log_message='print_detailed_bus_line_waypoints')
     # mongo.print_detailed_bus_line_waypoints(line_id=1)
+
+    log(module_name='mongodb_database_test', log_type='INFO', log_message='print_travel_request_documents')
+    mongo.print_travel_request_documents(counter=1000)

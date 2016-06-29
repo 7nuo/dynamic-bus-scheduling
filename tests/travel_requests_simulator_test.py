@@ -28,6 +28,8 @@ if __name__ == '__main__':
     log(module_name='travel_requests_simulator_test', log_type='INFO',
         log_message='initialize_travel_requests_simulator: finished - elapsed_time = ' + str(elapsed_time) + ' sec')
 
+    travel_requests_simulator.clear_travel_requests()
+
     log(module_name='travel_requests_simulator_test', log_type='INFO',
         log_message='generate_travel_requests: starting')
     start_time = time.time()

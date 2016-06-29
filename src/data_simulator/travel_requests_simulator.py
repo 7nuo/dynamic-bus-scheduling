@@ -18,6 +18,7 @@ from src.mongodb_database.mongo_connection import MongoConnection
 from src.common.logger import log
 from src.common.variables import mongodb_host, mongodb_port
 import random
+from datetime import datetime, timedelta
 
 
 class TravelRequestsSimulator(object):
@@ -25,17 +26,64 @@ class TravelRequestsSimulator(object):
         self.connection = MongoConnection(host=mongodb_host, port=mongodb_port)
         log(module_name='travel_requests_simulator', log_type='DEBUG', log_message='mongodb_database connection ok')
 
+    def clear_travel_requests(self):
+        self.connection.clear_travel_requests()
+        log(module_name='travel_requests_simulator', log_type='DEBUG', log_message='clear_travel_requests ok')
+
     def generate_travel_requests(self):
-        weighted_choices = [('Red', 1), ('Blue', 2)]
-        population = [val for val, cnt in weighted_choices for i in range(cnt)]
-        rc = 0
-        bc = 0
+        bus_line_id = 1
+        initial_datetime = datetime(2016, 6, 29, 0, 0, 0, 00000)
 
-        for i in range(0, 100000):
-            x = random.choice(population)
-            if x == 'Red':
-                rc += 1
-            else:
-                bc += 1
+        # bus_line: {'_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
+        bus_line = self.connection.find_bus_line(line_id=bus_line_id)
+        bus_stops = bus_line.get('bus_stops')
+        number_of_bus_stops = len(bus_stops)
 
-        print rc, bc
+        weighted_datetimes = [
+            (initial_datetime + timedelta(hours=0), 1),
+            (initial_datetime + timedelta(hours=1), 1),
+            (initial_datetime + timedelta(hours=2), 1),
+            (initial_datetime + timedelta(hours=3), 1),
+            (initial_datetime + timedelta(hours=4), 1),
+            (initial_datetime + timedelta(hours=5), 1),
+            (initial_datetime + timedelta(hours=6), 1),
+            (initial_datetime + timedelta(hours=7), 1),
+            (initial_datetime + timedelta(hours=8), 1),
+            (initial_datetime + timedelta(hours=9), 1),
+            (initial_datetime + timedelta(hours=10), 1),
+            (initial_datetime + timedelta(hours=11), 1),
+            (initial_datetime + timedelta(hours=12), 1),
+            (initial_datetime + timedelta(hours=13), 1),
+            (initial_datetime + timedelta(hours=14), 1),
+            (initial_datetime + timedelta(hours=15), 1),
+            (initial_datetime + timedelta(hours=16), 1),
+            (initial_datetime + timedelta(hours=17), 1),
+            (initial_datetime + timedelta(hours=18), 1),
+            (initial_datetime + timedelta(hours=19), 1),
+            (initial_datetime + timedelta(hours=20), 1),
+            (initial_datetime + timedelta(hours=21), 1),
+            (initial_datetime + timedelta(hours=22), 1),
+            (initial_datetime + timedelta(hours=23), 1)
+        ]
+        datetime_population = [val for val, cnt in weighted_datetimes for i in range(cnt)]
+        travel_request_documents = []
+
+        for i in range(0, 10):
+            client_id = i
+            line_id = bus_line_id
+            starting_bus_stop_index = random.randint(0, number_of_bus_stops - 2)
+            starting_bus_stop = bus_stops[starting_bus_stop_index]
+            ending_bus_stop_index = random.randint(starting_bus_stop_index, number_of_bus_stops - 1)
+            ending_bus_stop = bus_stops[ending_bus_stop_index]
+            additional_departure_time_interval = random.randint(0, 59)
+            departure_datetime = random.choice(datetime_population) + timedelta(
+                minutes=additional_departure_time_interval)
+
+            travel_request_document = {'client_id': client_id, 'line_id': line_id,
+                                       'starting_bus_stop': starting_bus_stop, 'ending_bus_stop': ending_bus_stop,
+                                       'departure_datetime': departure_datetime, 'arrival_datetime': None}
+
+            travel_request_documents.append(travel_request_document)
+
+        self.connection.insert_travel_request_documents(travel_request_documents=travel_request_documents)
+
