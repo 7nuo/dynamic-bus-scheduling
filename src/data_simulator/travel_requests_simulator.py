@@ -18,7 +18,7 @@ from src.mongodb_database.mongo_connection import MongoConnection
 from src.common.logger import log
 from src.common.variables import mongodb_host, mongodb_port
 import random
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 
 class TravelRequestsSimulator(object):
@@ -28,12 +28,22 @@ class TravelRequestsSimulator(object):
 
     def clear_travel_requests(self):
         self.connection.clear_travel_requests()
-        log(module_name='travel_requests_simulator', log_type='DEBUG', log_message='clear_travel_requests ok')
+        # log(module_name='travel_requests_simulator', log_type='DEBUG', log_message='clear_travel_requests ok')
 
-    def generate_travel_requests(self):
-        bus_line_id = 1
-        initial_datetime = datetime(2016, 6, 29, 0, 0, 0, 00000)
+    def delete_travel_requests_based_on_bus_line_id(self, bus_line_id):
+        self.connection.delete_travel_requests_based_on_bus_line_id(bus_line_id=bus_line_id)
+        # log(module_name='travel_requests_simulator', log_type='DEBUG',
+        #     log_message='delete_travel_requests_based_on_bus_line_id ok')
 
+    def delete_travel_requests_based_on_departure_datetime(self, min_departure_datetime, max_departure_datetime):
+        self.connection.delete_travel_requests_based_on_departure_datetime(
+            min_departure_datetime=min_departure_datetime,
+            max_departure_datetime=max_departure_datetime
+        )
+        # log(module_name='travel_requests_simulator', log_type='DEBUG',
+        #     log_message='delete_travel_requests_based_on_departure_datetime ok')
+
+    def generate_travel_requests(self, bus_line_id, initial_datetime, number_of_requests):
         # bus_line: {'_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
         bus_line = self.connection.find_bus_line(line_id=bus_line_id)
         bus_stops = bus_line.get('bus_stops')
@@ -68,9 +78,8 @@ class TravelRequestsSimulator(object):
         datetime_population = [val for val, cnt in weighted_datetimes for i in range(cnt)]
         travel_request_documents = []
 
-        for i in range(0, 10):
+        for i in range(0, number_of_requests - 1):
             client_id = i
-            line_id = bus_line_id
             starting_bus_stop_index = random.randint(0, number_of_bus_stops - 2)
             starting_bus_stop = bus_stops[starting_bus_stop_index]
             ending_bus_stop_index = random.randint(starting_bus_stop_index, number_of_bus_stops - 1)
@@ -79,7 +88,7 @@ class TravelRequestsSimulator(object):
             departure_datetime = random.choice(datetime_population) + timedelta(
                 minutes=additional_departure_time_interval)
 
-            travel_request_document = {'client_id': client_id, 'line_id': line_id,
+            travel_request_document = {'client_id': client_id, 'bus_line_id': bus_line_id,
                                        'starting_bus_stop': starting_bus_stop, 'ending_bus_stop': ending_bus_stop,
                                        'departure_datetime': departure_datetime, 'arrival_datetime': None}
 
