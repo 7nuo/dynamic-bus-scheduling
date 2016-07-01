@@ -140,3 +140,21 @@ class LookAheadHandler(object):
                   ' - departure_datetime: ' + departure_datetime + \
                   ' - ending_bus_stop: ' + ending_bus_stop + \
                   ' - arrival_datetime: ' + arrival_datetime
+
+    def test_look_ahead(self, line_id, timetable_starting_datetime,
+                        requests_min_departure_datetime, requests_max_departure_datetime):
+
+        # {'_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
+        bus_line = self.connection.find_bus_line(line_id=line_id)
+        bus_stops = bus_line.get('bus_stops')
+
+        # Cursor -> {'_id', 'travel_request_id, 'client_id', 'bus_line_id', 'starting_bus_stop',
+        #            'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
+        travel_requests_cursor = self.connection.get_travel_requests_cursor_based_on_bus_line_id_and_departure_datetime(
+            bus_line_id=line_id,
+            min_departure_datetime=requests_min_departure_datetime,
+            max_departure_datetime=requests_max_departure_datetime
+        )
+
+        for travel_request in travel_requests_cursor:
+            print travel_request

@@ -17,6 +17,7 @@ specific language governing permissions and limitations under the License.
 import time
 from src.common.logger import log
 from src.look_ahead.look_ahead_handler import LookAheadHandler
+from datetime import datetime
 
 
 class LookAheadHandlerTester(object):
@@ -46,6 +47,14 @@ class LookAheadHandlerTester(object):
         log(module_name='look_ahead_handler_test', log_type='INFO',
             log_message='generate_bus_line_timetable: finished - elapsed_time = ' + str(self.elapsed_time) + ' sec')
 
+    def test_look_ahead(self):
+        self.look_ahead_handler.test_look_ahead(
+            line_id=1,
+            timetable_starting_datetime=datetime(2016, 7, 3, 0, 0, 0, 00000),
+            requests_min_departure_datetime=datetime(2016, 7, 1, 0, 0, 0, 00000),
+            requests_max_departure_datetime=datetime(2016, 7, 2, 0, 0, 0, 00000)
+        )
+
 
 if __name__ == '__main__':
     bus_stop_names = ['Centralstationen', 'Stadshuset', 'Skolgatan', 'Ekonomikum', 'Studentstaden', 'Rickomberga',
@@ -54,8 +63,9 @@ if __name__ == '__main__':
                       'Skolgatan', 'Stadshuset', 'Centralstationen']
 
     tester = LookAheadHandlerTester()
-    tester.generate_bus_line(line_id=1, bus_stop_names=bus_stop_names)
-    tester.generate_bus_line_timetable(line_id=1)
+    # tester.generate_bus_line(line_id=1, bus_stop_names=bus_stop_names)
+    # tester.generate_bus_line_timetable(line_id=1)
+    tester.test_look_ahead()
 
 
 

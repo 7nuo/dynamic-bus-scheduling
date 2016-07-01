@@ -20,38 +20,63 @@ from src.common.logger import log
 from src.common.variables import mongodb_host, mongodb_port
 
 
+class MongodbDatabaseTester(object):
+    def __init__(self):
+        log(module_name='mongodb_database_test', log_type='INFO',
+            log_message='initialize_database_connection: starting')
+        self.start_time = time.time()
+        self.mongo = MongoConnection(host=mongodb_host, port=mongodb_port)
+        self.elapsed_time = time.time() - self.start_time
+        log(module_name='mongodb_database_test', log_type='INFO',
+            log_message='initialize_database_connection: finished - elapsed_time = ' +
+                        str(self.elapsed_time) + ' sec')
+
+    def clear_all_collections(self):
+        log(module_name='mongodb_database_test', log_type='INFO',
+            log_message='clear_all_collections: starting')
+        self.start_time = time.time()
+        self.mongo.clear_all_collections()
+        self.elapsed_time = time.time() - self.start_time
+        log(module_name='mongodb_database_test', log_type='INFO',
+            log_message='clear_all_collections: finished - elapsed_time = ' +
+                        str(self.elapsed_time) + ' sec')
+
+    def print_bus_line(self, line_id):
+        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_line')
+        self.mongo.print_bus_line(line_id=line_id)
+
+    def print_bus_line_waypoints(self, line_id):
+        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_line_waypoints')
+        self.mongo.print_bus_line_waypoints(line_id=line_id)
+
+    def print_detailed_bus_line_waypoints(self, line_id):
+        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_detailed_bus_line_waypoints')
+        self.mongo.print_detailed_bus_line_waypoints(line_id=line_id)
+
+    def print_bus_stops(self, counter):
+        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_stops')
+        self.mongo.print_bus_stops(counter=counter)
+
+    def print_edges(self, counter):
+        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_edges')
+        self.mongo.print_edges(counter=counter)
+
+    def print_nodes(self, counter):
+        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_nodes')
+        self.mongo.print_nodes(counter=counter)
+
+    def print_travel_request_documents(self, counter):
+        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_travel_request_documents')
+        self.mongo.print_travel_request_documents(counter=counter)
+
+
 if __name__ == '__main__':
-    log(module_name='mongodb_database_test', log_type='INFO', log_message='initialize_database_connection: starting')
-    start_time = time.time()
-    mongo = MongoConnection(host=mongodb_host, port=mongodb_port)
-    elapsed_time = time.time() - start_time
-    log(module_name='mongodb_database_test', log_type='INFO',
-        log_message='initialize_database_connection: finished - elapsed_time = ' + str(elapsed_time) + ' sec')
-
-    # log(module_name='mongodb_database_test', log_type='INFO', log_message='clear_all_collections: starting')
-    # start_time = time.time()
-    # mongo.clear_all_collections()
-    # elapsed_time = time.time() - start_time
-    # log(module_name='mongodb_database_test', log_type='INFO',
-    #     log_message='clear_all_collections: finished - elapsed_time = ' + str(elapsed_time) + ' sec')
-
-    # log(module_name='mongodb_database_test', log_type='INFO', log_message='print_nodes')
-    # mongo.print_nodes(counter=200)
-
-    # log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_stops')
-    # mongo.print_bus_stops(counter=200)
-
-    # log(module_name='mongodb_database_test', log_type='INFO', log_message='print_edges')
-    # mongo.print_edges(counter=200)
-
-    # log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_line')
-    # mongo.print_bus_line(line_id=1)
-
-    # log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_line_waypoints')
-    # mongo.print_bus_line_waypoints(line_id=1)
-
-    # log(module_name='mongodb_database_test', log_type='INFO', log_message='print_detailed_bus_line_waypoints')
-    # mongo.print_detailed_bus_line_waypoints(line_id=1)
-
-    log(module_name='mongodb_database_test', log_type='INFO', log_message='print_travel_request_documents')
-    mongo.print_travel_request_documents(counter=1000)
+    tester = MongodbDatabaseTester()
+    # tester.clear_all_collections()
+    # tester.print_nodes(counter=200)
+    # tester.print_bus_stops(counter=200)
+    # tester.print_edges(counter=200)
+    # tester.print_bus_line(line_id=1)
+    # tester.print_bus_line_waypoints(line_id=1)
+    # tester.print_detailed_bus_line_waypoints(line_id=1)
+    # tester.print_travel_request_documents(counter=1000)

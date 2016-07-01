@@ -270,11 +270,15 @@ class MongoConnection(object):
         :param max_departure_datetime: datetime
         :return: The number of deleted documents.
         """
-        result = self.travel_requests_collection.delete_many(
-            {'departure_datetime': {'$and': [
-                {'$gt': min_departure_datetime},
-                {'$lt': max_departure_datetime}
-            ]}})
+        # result = self.travel_requests_collection.delete_many(
+        #     {'departure_datetime': {'$and': [
+        #         {'$gt': min_departure_datetime},
+        #         {'$lt': max_departure_datetime}
+        #     ]}})
+        result = self.travel_requests_collection.delete_many({
+            'departure_time': {'$gt': min_departure_datetime},
+            'departure_time': {'$lt': max_departure_datetime}
+        })
         return result.deleted_count
 
     def delete_way(self, osm_id):
@@ -736,11 +740,15 @@ class MongoConnection(object):
         :return: Cursor -> {'_id', 'travel_request_id, 'client_id', 'bus_line_id', 'starting_bus_stop',
                             'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
         """
-        cursor = self.travel_requests_collection.find(
-            {'departure_datetime': {'$and': [
-                {'$gt': min_departure_datetime},
-                {'$lt': max_departure_datetime}
-            ]}})
+        # cursor = self.travel_requests_collection.find(
+        #     {'departure_datetime': {'$and': [
+        #         {'$gt': min_departure_datetime},
+        #         {'$lt': max_departure_datetime}
+        #     ]}})
+        cursor = self.travel_requests_collection.find({
+            'departure_time': {'$gt': min_departure_datetime},
+            'departure_time': {'$lt': max_departure_datetime}
+        })
         return cursor
 
     def get_travel_requests_cursor_based_on_bus_line_id_and_departure_datetime(
@@ -755,13 +763,18 @@ class MongoConnection(object):
         :return: Cursor -> {'_id', 'travel_request_id, 'client_id', 'bus_line_id', 'starting_bus_stop',
                             'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
         """
-        cursor = self.travel_requests_collection.find({'$and': [
-            {'bus_line_id': bus_line_id},
-            {'departure_datetime': {'$and': [
-                {'$gt': min_departure_datetime},
-                {'$lt': max_departure_datetime}
-            ]}}
-        ]})
+        # cursor = self.travel_requests_collection.find({'$and': [
+        #     {'bus_line_id': bus_line_id},
+        #     {'departure_datetime': {'$and': [
+        #         {'$gt': min_departure_datetime},
+        #         {'$lt': max_departure_datetime}
+        #     ]}}
+        # ]})
+        cursor = self.travel_requests_collection.find({
+            'bus_line_id': bus_line_id,
+            'departure_datetime': {'$gt': min_departure_datetime},
+            'departure_datetime': {'$lt': max_departure_datetime}
+        })
         return cursor
 
     def has_edges(self, node_osm_id):
@@ -780,7 +793,7 @@ class MongoConnection(object):
         :type node_osm_id: integer
         :return: True if exists, otherwise False.
         """
-        return self.edges_collection.find_one({"$or": [{'starting_node.osm_id': node_osm_id},
+        return self.edges_collection.find_one({'$or': [{'starting_node.osm_id': node_osm_id},
                                                        {'ending_node.osm_id': node_osm_id}]}) is not None
 
     def insert_address(self, name, node_id, point):

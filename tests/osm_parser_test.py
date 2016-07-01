@@ -20,20 +20,35 @@ from src.osm_parser.parser import Parser
 from src.common.logger import log
 
 
+class OSMParserTester(object):
+    def __init__(self, osm_filename):
+        log(module_name='osm_parser', log_type='INFO', log_message='init: starting')
+        self.start_time = time.time()
+        self.parser = Parser(osm_filename=osm_filename)
+        self.elapsed_time = time.time() - self.start_time
+        log(module_name='osm_parser', log_type='INFO',
+            log_message='init: finished - elapsed time = ' + str(self.elapsed_time) + ' sec')
+
+    def parse(self):
+        log(module_name='osm_parser', log_type='INFO', log_message='parse: starting')
+        self.start_time = time.time()
+        self.parser.parse()
+        self.elapsed_time = time.time() - self.start_time
+        log(module_name='osm_parser', log_type='INFO',
+            log_message='parse: finished - elapsed time = ' + str(self.elapsed_time) + ' sec')
+
+    def populate_all_collections(self):
+        log(module_name='osm_parser', log_type='INFO', log_message='populate_all_collections: starting')
+        self.start_time = time.time()
+        self.parser.populate_all_collections()
+        self.elapsed_time = time.time() - self.start_time
+        log(module_name='osm_parser', log_type='INFO',
+            log_message='populate_all_collections: finished - elapsed time = ' +
+                        str(self.elapsed_time) + ' sec')
+
+
 if __name__ == '__main__':
-    osm_filename = os.path.join(os.path.dirname(__file__), '../resources/osm_files/uppsala.osm')
-    parser = Parser(osm_filename=osm_filename)
-
-    log(module_name='osm_parser', log_type='INFO', log_message='parse: starting')
-    start_time = time.time()
-    parser.parse()
-    elapsed_time = time.time() - start_time
-    log(module_name='osm_parser', log_type='INFO',
-        log_message='parse: finished - elapsed time = ' + str(elapsed_time) + ' sec')
-
-    log(module_name='osm_parser', log_type='INFO', log_message='populate_all_collections: starting')
-    start_time = time.time()
-    parser.populate_all_collections()
-    elapsed_time = time.time() - start_time
-    log(module_name='osm_parser', log_type='INFO',
-        log_message='populate_all_collections: finished - elapsed time = ' + str(elapsed_time) + ' sec')
+    tester = OSMParserTester(osm_filename=os.path.join(os.path.dirname(__file__),
+                                                       '../resources/osm_files/uppsala.osm'))
+    # tester.parse()
+    # tester.populate_all_collections()
