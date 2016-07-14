@@ -777,6 +777,25 @@ class MongoConnection(object):
         })
         return cursor
 
+    def get_travel_requests_list_based_on_bus_line_id_and_departure_datetime(
+            self, bus_line_id, min_departure_datetime, max_departure_datetime):
+        """
+        Retrieve a list containing all the documents of the TravelRequests collection,
+        based on the bus_line_id and departure_datetime entries.
+
+        :param bus_line_id: integer
+        :param min_departure_datetime: datetime
+        :param max_departure_datetime: datetime
+        :return: [{'_id', 'travel_request_id, 'client_id', 'bus_line_id', 'starting_bus_stop',
+                   'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}]
+        """
+        cursor = self.get_travel_requests_cursor_based_on_bus_line_id_and_departure_datetime(
+            bus_line_id=bus_line_id,
+            min_departure_datetime=min_departure_datetime,
+            max_departure_datetime=max_departure_datetime
+        )
+        return list(cursor)
+
     def has_edges(self, node_osm_id):
         """
         Check if a node exists in the Edges collection as a starting node.

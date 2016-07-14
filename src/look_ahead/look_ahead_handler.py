@@ -103,7 +103,7 @@ class LookAheadHandler(object):
         :param line_id: integer
         :return:
         """
-        starting_datetime = datetime(2016, 6, 23, 12, 0, 0, 00000)
+        starting_datetime = datetime(2016, 7, 11, 0, 0, 0, 00000)
         current_datetime = starting_datetime
         timetable = []
 
@@ -141,20 +141,148 @@ class LookAheadHandler(object):
                   ' - ending_bus_stop: ' + ending_bus_stop + \
                   ' - arrival_datetime: ' + arrival_datetime
 
-    def test_look_ahead(self, line_id, timetable_starting_datetime,
-                        requests_min_departure_datetime, requests_max_departure_datetime):
+    def generate_bus_line_timetables(self, line_id, timetable_starting_datetime, timetable_ending_datetime):
+        """
 
-        # {'_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
+        :param line_id:
+        :param timetable_starting_datetime:
+        :param timetable_ending_datetime:
+        :return: [[{'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                    'departure_datetime', 'arrival_datetime', 'total_time',
+                    'travel_requests', 'average_waiting_time'}]]
+        """
+        timetables = []
+
+        # 1: The list of bus stops corresponding to the provided bus_line_id is retrieved from the database.
+        # bus_line: {'_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
         bus_line = self.connection.find_bus_line(line_id=line_id)
         bus_stops = bus_line.get('bus_stops')
 
-        # Cursor -> {'_id', 'travel_request_id, 'client_id', 'bus_line_id', 'starting_bus_stop',
-        #            'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
-        travel_requests_cursor = self.connection.get_travel_requests_cursor_based_on_bus_line_id_and_departure_datetime(
+        # [{'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        #   'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        #   'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+        #             'distances_from_starting_node', 'times_from_starting_node',
+        #             'distances_from_previous_node', 'times_from_previous_node'}}]
+        route_generator_response = get_route_between_multiple_bus_stops(bus_stops=bus_stops)
+
+        current_datetime = timetable_starting_datetime
+
+        while current_datetime < timetable_ending_datetime:
+            timetable = []
+
+            for intermediate_response in route_generator_response:
+                starting_bus_stop = intermediate_response.get('starting_bus_stop')
+                ending_bus_stop = intermediate_response.get('ending_bus_stop')
+                intermediate_route = intermediate_response.get('route')
+                total_time = intermediate_route.get('total_time')
+
+                timetable_entry = {'starting_bus_stop': starting_bus_stop,
+                                   'ending_bus_stop': ending_bus_stop,
+                                   'departure_datetime': current_datetime,
+                                   'arrival_datetime': current_datetime + timedelta(minutes=total_time/60),
+                                   'total_time': total_time,
+                                   'travel_requests': [],
+                                   'average_waiting_time': 0}
+
+                timetable.append(timetable_entry)
+                current_datetime += timedelta(minutes=total_time//60+1)
+
+            timetables.append(timetable)
+
+        # for timetable in timetables:
+        #     print timetable
+        return timetables
+
+    def test_look_ahead(self, line_id, timetable_starting_datetime, timetable_ending_datetime,
+                        requests_min_departure_datetime, requests_max_departure_datetime, bus_capacity,
+                        minimum_number_of_passengers):
+
+        # 1: The list of bus stops corresponding to the provided bus_line_id is retrieved from the database.
+        #
+        # bus_line: {'_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
+        bus_line = self.connection.find_bus_line(line_id=line_id)
+        bus_stops = bus_line.get('bus_stops')
+
+        # 2: The list of travel requests with departure datetime between the requests_min_departure_datetime
+        #    and requests_max_departure_datetime is retrieved from the database.
+        #
+        # travel_requests_list: [{'_id', 'travel_request_id, 'client_id', 'bus_line_id', 'starting_bus_stop',
+        #                         'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}]
+        travel_requests_list = self.connection.get_travel_requests_list_based_on_bus_line_id_and_departure_datetime(
             bus_line_id=line_id,
             min_departure_datetime=requests_min_departure_datetime,
             max_departure_datetime=requests_max_departure_datetime
         )
+        self.correspond_travel_requests_to_bus_stops(
+            travel_requests=travel_requests_list,
+            bus_stop_osm_ids=[bus_stop.get('osm_id') for bus_stop in bus_stops]
+        )
 
-        for travel_request in travel_requests_cursor:
-            print travel_request
+        # 3:
+        #
+        # timetables: [[{'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        #                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        #                'departure_datetime', 'arrival_datetime', 'total_time',
+        #                'travel_requests', 'average_waiting_time'}]]
+        timetables = self.generate_bus_line_timetables(
+            line_id=line_id,
+            timetable_starting_datetime=timetable_starting_datetime,
+            timetable_ending_datetime=timetable_ending_datetime
+        )
+
+        # for timetable in timetables:
+        #     print timetable
+
+        # 4:
+        #
+        for travel_request in travel_requests_list:
+            starting_bus_stop_index = travel_request.get('starting_bus_stop_index')
+            # print starting_bus_stop_index
+
+            for timetable in timetables:
+                corresponding_timetable_entry = timetable[starting_bus_stop_index]
+                print corresponding_timetable_entry
+                # print travel_request.get('starting_bus_stop').get('name'), \
+                #     corresponding_timetable_entry.get('starting_bus_stop').get('name')
+
+    def correspond_travel_requests_to_bus_stops(self, travel_requests, bus_stop_osm_ids):
+        """
+
+        :param travel_requests: [{'_id', 'travel_request_id, 'client_id', 'bus_line_id',
+                                  'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                                  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                                  'departure_datetime', 'arrival_datetime'}]
+        :param bus_stop_osm_ids: [osm_id]
+        :return:
+        """
+        for travel_request in travel_requests:
+            starting_bus_stop_osm_id = travel_request.get('starting_bus_stop').get('osm_id')
+            starting_bus_stop_index = self.get_bus_stop_index(
+                bus_stop_osm_id=starting_bus_stop_osm_id,
+                bus_stop_osm_ids=bus_stop_osm_ids,
+                start=0
+            )
+            travel_request['starting_bus_stop_index'] = starting_bus_stop_index
+
+            ending_bus_stop_osm_id = travel_request.get('ending_bus_stop').get('osm_id')
+            ending_bus_stop_index = self.get_bus_stop_index(
+                bus_stop_osm_id=ending_bus_stop_osm_id,
+                bus_stop_osm_ids=bus_stop_osm_ids,
+                start=starting_bus_stop_index + 1
+            )
+            travel_request['ending_bus_stop_index'] = ending_bus_stop_index
+
+    @staticmethod
+    def get_bus_stop_index(bus_stop_osm_id, bus_stop_osm_ids, start):
+        bus_stop_index = -1
+
+        for i in range(start, len(bus_stop_osm_ids)):
+            if bus_stop_osm_id == bus_stop_osm_ids[i]:
+                bus_stop_index = i
+                break
+
+        return bus_stop_index
+
+
+

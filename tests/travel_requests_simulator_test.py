@@ -85,7 +85,7 @@ if __name__ == '__main__':
 
     tester.generate_travel_requests(
         bus_line_id=1,
-        initial_datetime=datetime(2016, 7, 1, 0, 0, 0, 00000),
+        initial_datetime=datetime(2016, 7, 14, 0, 0, 0, 00000),
         number_of_requests=100
     )
 

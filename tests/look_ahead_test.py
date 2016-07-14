@@ -50,9 +50,12 @@ class LookAheadHandlerTester(object):
     def test_look_ahead(self):
         self.look_ahead_handler.test_look_ahead(
             line_id=1,
-            timetable_starting_datetime=datetime(2016, 7, 3, 0, 0, 0, 00000),
-            requests_min_departure_datetime=datetime(2016, 7, 1, 0, 0, 0, 00000),
-            requests_max_departure_datetime=datetime(2016, 7, 2, 0, 0, 0, 00000)
+            timetable_starting_datetime=datetime(2016, 7, 14, 0, 0, 0, 00000),
+            timetable_ending_datetime=datetime(2016, 7, 15, 0, 0, 0, 00000),
+            requests_min_departure_datetime=datetime(2016, 7, 14, 0, 0, 0, 00000),
+            requests_max_departure_datetime=datetime(2016, 7, 15, 0, 0, 0, 00000),
+            bus_capacity=100,
+            minimum_number_of_passengers=10
         )
 
 
