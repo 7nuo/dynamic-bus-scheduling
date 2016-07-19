@@ -78,7 +78,7 @@ class TravelRequestsSimulator(object):
         datetime_population = [val for val, cnt in weighted_datetimes for i in range(cnt)]
         travel_request_documents = []
 
-        for i in range(0, number_of_requests - 1):
+        for i in range(0, number_of_requests):
             client_id = i
             starting_bus_stop_index = random.randint(0, number_of_bus_stops - 2)
             starting_bus_stop = bus_stops[starting_bus_stop_index]

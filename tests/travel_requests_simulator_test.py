@@ -81,12 +81,12 @@ class TravelRequestsSimulatorTester(object):
 if __name__ == '__main__':
     tester = TravelRequestsSimulatorTester()
 
-    # tester.clear_travel_requests()
+    tester.clear_travel_requests()
 
     tester.generate_travel_requests(
         bus_line_id=1,
-        initial_datetime=datetime(2016, 7, 14, 0, 0, 0, 00000),
-        number_of_requests=100
+        initial_datetime=datetime(2016, 7, 18, 0, 0, 0, 00000),
+        number_of_requests=10000
     )
 
     # tester.delete_travel_requests_based_on_bus_line_id(bus_line_id=1)
