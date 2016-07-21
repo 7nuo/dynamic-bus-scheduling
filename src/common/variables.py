@@ -14,15 +14,17 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-# Maximum amount of speed for roads without a predefined value
-standard_speed = 50
-# Road types that can be accessed by a bus
-bus_road_types = ('motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary',
-                  'secondary_link', 'tertiary', 'tertiary_link', 'unclassified', 'residential', 'bus_road')
-
 mongodb_host = '127.0.0.1'
 mongodb_port = 27017
 
 route_generator_host = '127.0.0.1'
 route_generator_port = '2000'
 route_generator_request_timeout = 30
+
+# Maximum amount of speed for roads without a predefined value
+standard_speed = 50
+# Road types that can be accessed by a bus
+bus_road_types = ('motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary',
+                  'secondary_link', 'tertiary', 'tertiary_link', 'unclassified', 'residential', 'bus_road')
+
+bus_capacity = 50

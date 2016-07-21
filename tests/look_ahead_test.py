@@ -69,7 +69,3 @@ if __name__ == '__main__':
     # tester.generate_bus_line(line_id=1, bus_stop_names=bus_stop_names)
     # tester.generate_bus_line_timetable(line_id=1)
     tester.test_look_ahead()
-
-
-
-
