@@ -555,6 +555,45 @@ class TimetableGenerator(object):
 
         return returned_value
 
+    def check_number_of_passengers_of_timetables(self, timetables):
+        """
+
+        :param timetables: {
+                   'timetable_entries': [{
+                       'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                       'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                       'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
+                       'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+                   'travel_requests': [{
+                       '_id', 'travel_request_id, 'client_id', 'bus_line_id',
+                       'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                       'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                       'departure_datetime', 'arrival_datetime',
+                       'starting_timetable_entry_index', 'ending_timetable_entry_index'}],
+                   'starting_datetime', 'ending_datetime', 'average_waiting_time'}
+
+        :return: overcrowded_timetables: [{
+                     'timetable_entries': [{
+                         'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                         'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                         'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
+                         'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+                     'travel_requests': [{
+                         '_id', 'travel_request_id, 'client_id', 'bus_line_id',
+                         'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                         'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                         'departure_datetime', 'arrival_datetime',
+                         'starting_timetable_entry_index', 'ending_timetable_entry_index'}],
+                     'starting_datetime', 'ending_datetime', 'average_waiting_time'}]
+        """
+        overcrowded_timetables = []
+
+        for timetable in timetables:
+            if not self.check_number_of_passengers_of_timetable(timetable=timetable):
+                overcrowded_timetables.append(timetable)
+
+        return overcrowded_timetables
+
     def correspond_travel_requests_to_bus_stops(self):
         """
         The list of bus stops of a bus line might contain the same bus_stop_osm_ids more than once.
@@ -721,6 +760,35 @@ class TimetableGenerator(object):
         timetable['ending_datetime'] = last_timetable_entry.get('arrival_datetime')
 
         return timetable
+
+    def handle_overcrowded_timetables(self):
+        """
+
+        timetables: [{
+            'timetable_entries': [{
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
+                'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'travel_requests': [{
+                '_id', 'travel_request_id, 'client_id', 'bus_line_id',
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime',
+                'starting_timetable_entry_index', 'ending_timetable_entry_index'}],
+            'starting_datetime', 'ending_datetime', 'average_waiting_time'}]
+
+        :return:
+        """
+        overcrowded_timetables = self.check_number_of_passengers_of_timetables(timetables=self.timetables)
+
+        while len(overcrowded_timetables) > 0:
+
+            for overcrowded_timetable in overcrowded_timetables:
+                additional_timetable = self.split_timetable(timetable=overcrowded_timetable)
+                self.add_timetable(timetable=additional_timetable)
+
+            overcrowded_timetables = self.check_number_of_passengers_of_timetables(timetables=self.timetables)
 
     def initialize_timetables(self, timetables_starting_datetime, timetables_ending_datetime):
         """
