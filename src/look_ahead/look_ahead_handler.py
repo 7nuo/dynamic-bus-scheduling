@@ -441,6 +441,82 @@ class TimetableGenerator(object):
         self.adjust_departure_datetimes_of_timetables(timetables=self.timetables)
 
     @staticmethod
+    def calculate_average_waiting_time_of_timetable(timetable):
+        """
+
+        :param timetable: {
+                   'timetable_entries': [{
+                       'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                       'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                       'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
+                       'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+                   'travel_requests': [{
+                       '_id', 'travel_request_id, 'client_id', 'bus_line_id',
+                       'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                       'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                       'departure_datetime', 'arrival_datetime',
+                       'starting_timetable_entry_index', 'ending_timetable_entry_index'}],
+                   'starting_datetime', 'ending_datetime', 'average_waiting_time'}
+        :return:
+        """
+        timetable_entries = timetable.get('timetable_entries')
+        travel_requests = timetable.get('travel_requests')
+        number_of_passengers = len(travel_requests)
+        total_waiting_time = 0
+
+        for travel_request in travel_requests:
+            departure_datetime = travel_request.get('departure_datetime')
+            starting_timetable_entry = timetable_entries.get('starting_timetable_entry_index')
+            timetable_departure_datetime = starting_timetable_entry.get('departure_datetime')
+            waiting_time = abs(departure_datetime - timetable_departure_datetime)
+            total_waiting_time += waiting_time
+
+        timetable_departure_datetime['waiting_time'] = total_waiting_time / number_of_passengers
+
+    def calculate_average_waiting_time_of_timetables(self, timetables):
+        """
+
+        :param timetables: [{
+                   'timetable_entries': [{
+                       'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                       'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                       'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
+                       'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+                   'travel_requests': [{
+                       '_id', 'travel_request_id, 'client_id', 'bus_line_id',
+                       'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                       'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                       'departure_datetime', 'arrival_datetime',
+                       'starting_timetable_entry_index', 'ending_timetable_entry_index'}],
+                   'starting_datetime', 'ending_datetime', 'average_waiting_time'}]
+
+        :return:
+        """
+        for timetable in timetables:
+            self.calculate_average_waiting_time_of_timetable(timetable=timetable)
+
+    def calculate_average_waiting_time_of_timetables_local(self):
+        """
+
+        timetables: [{
+            'timetable_entries': [{
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
+                'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'travel_requests': [{
+                '_id', 'travel_request_id, 'client_id', 'bus_line_id',
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime',
+                'starting_timetable_entry_index', 'ending_timetable_entry_index'}],
+            'starting_datetime', 'ending_datetime', 'average_waiting_time'}]
+
+        :return:
+        """
+        self.calculate_average_waiting_time_of_timetables(timetables=self.timetables)
+
+    @staticmethod
     def calculate_number_of_passengers_of_timetable(timetable):
         """
 
