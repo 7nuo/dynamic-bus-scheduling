@@ -97,106 +97,106 @@ class LookAheadHandler(object):
         log(module_name='look_ahead_handler', log_type='DEBUG',
             log_message='bus_line (mongodb_database): ok')
 
-    def generate_bus_line_timetable(self, line_id):
-        """
+    # def generate_bus_line_timetable(self, line_id):
+    #     """
+    #
+    #     :param line_id: integer
+    #     :return:
+    #     """
+    #     starting_datetime = datetime(2016, 7, 11, 0, 0, 0, 00000)
+    #     current_datetime = starting_datetime
+    #     timetable = []
+    #
+    #     # {'_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
+    #     bus_line = self.connection.find_bus_line(line_id=line_id)
+    #     bus_stops = bus_line.get('bus_stops')
+    #
+    #     # [{'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #     #   'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #     #   'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+    #     #             'distances_from_starting_node', 'times_from_starting_node',
+    #     #             'distances_from_previous_node', 'times_from_previous_node'}}]
+    #     route_generator_response = get_route_between_multiple_bus_stops(bus_stops=bus_stops)
+    #
+    #     for intermediate_response in route_generator_response:
+    #         starting_bus_stop = unicode(intermediate_response.get('starting_bus_stop').get('name')).encode('utf-8')
+    #         ending_bus_stop = unicode(intermediate_response.get('ending_bus_stop').get('name')).encode('utf-8')
+    #         intermediate_route = intermediate_response.get('route')
+    #         total_time = intermediate_route.get('total_time')
+    #
+    #         timetable.append({'starting_bus_stop': starting_bus_stop,
+    #                           'ending_bus_stop': ending_bus_stop,
+    #                           'departure_datetime': current_datetime,
+    #                           'arrival_datetime': current_datetime + timedelta(minutes=total_time / 60)})
+    #
+    #         current_datetime += timedelta(minutes=total_time // 60 + 1)
+    #
+    #     for timetable_entry in timetable:
+    #         starting_bus_stop = str(timetable_entry.get('starting_bus_stop'))
+    #         departure_datetime = str(timetable_entry.get('departure_datetime'))
+    #         ending_bus_stop = str(timetable_entry.get('ending_bus_stop'))
+    #         arrival_datetime = str(timetable_entry.get('arrival_datetime'))
+    #         print 'starting_bus_stop: ' + starting_bus_stop + \
+    #               ' - departure_datetime: ' + departure_datetime + \
+    #               ' - ending_bus_stop: ' + ending_bus_stop + \
+    #               ' - arrival_datetime: ' + arrival_datetime
 
-        :param line_id: integer
-        :return:
-        """
-        starting_datetime = datetime(2016, 7, 11, 0, 0, 0, 00000)
-        current_datetime = starting_datetime
-        timetable = []
+    # def generate_bus_line_timetables(self, line_id, timetable_starting_datetime, timetable_ending_datetime):
+    #     """
+    #
+    #     :param line_id:
+    #     :param timetable_starting_datetime:
+    #     :param timetable_ending_datetime:
+    #     :return: timetables: [[{'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #                             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #                             'departure_datetime', 'arrival_datetime', 'total_time', 'travel_requests',
+    #                             'average_waiting_time', 'number_of_onboarding_passengers',
+    #                             'number_of_deboarding_passengers', 'number_of_current_passengers'}]]
+    #     """
+    #     timetables = []
+    #
+    #     # 1: The list of bus stops corresponding to the provided bus_line_id is retrieved from the database.
+    #     # bus_line: {'_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
+    #     bus_line = self.connection.find_bus_line(line_id=line_id)
+    #     bus_stops = bus_line.get('bus_stops')
+    #
+    #     # [{'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #     #   'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #     #   'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+    #     #             'distances_from_starting_node', 'times_from_starting_node',
+    #     #             'distances_from_previous_node', 'times_from_previous_node'}}]
+    #     route_generator_response = get_route_between_multiple_bus_stops(bus_stops=bus_stops)
+    #     current_datetime = timetable_starting_datetime
+    #
+    #     while current_datetime < timetable_ending_datetime:
+    #         timetable = []
+    #
+    #         for intermediate_response in route_generator_response:
+    #             starting_bus_stop = intermediate_response.get('starting_bus_stop')
+    #             ending_bus_stop = intermediate_response.get('ending_bus_stop')
+    #             intermediate_route = intermediate_response.get('route')
+    #             total_time = intermediate_route.get('total_time')
+    #
+    #             timetable_entry = {'starting_bus_stop': starting_bus_stop,
+    #                                'ending_bus_stop': ending_bus_stop,
+    #                                'departure_datetime': current_datetime,
+    #                                'arrival_datetime': current_datetime + timedelta(minutes=total_time / 60),
+    #                                'total_time': total_time,
+    #                                'travel_requests': [],
+    #                                'average_waiting_time': 0,
+    #                                'number_of_onboarding_passengers': 0,
+    #                                'number_of_deboarding_passengers': 0,
+    #                                'number_of_current_passengers': 0}
+    #
+    #             timetable.append(timetable_entry)
+    #             current_datetime += timedelta(minutes=total_time // 60 + 1)
+    #
+    #         timetables.append(timetable)
+    #
+    #     return timetables
 
-        # {'_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
-        bus_line = self.connection.find_bus_line(line_id=line_id)
-        bus_stops = bus_line.get('bus_stops')
-
-        # [{'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        #   'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        #   'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-        #             'distances_from_starting_node', 'times_from_starting_node',
-        #             'distances_from_previous_node', 'times_from_previous_node'}}]
-        route_generator_response = get_route_between_multiple_bus_stops(bus_stops=bus_stops)
-
-        for intermediate_response in route_generator_response:
-            starting_bus_stop = unicode(intermediate_response.get('starting_bus_stop').get('name')).encode('utf-8')
-            ending_bus_stop = unicode(intermediate_response.get('ending_bus_stop').get('name')).encode('utf-8')
-            intermediate_route = intermediate_response.get('route')
-            total_time = intermediate_route.get('total_time')
-
-            timetable.append({'starting_bus_stop': starting_bus_stop,
-                              'ending_bus_stop': ending_bus_stop,
-                              'departure_datetime': current_datetime,
-                              'arrival_datetime': current_datetime + timedelta(minutes=total_time / 60)})
-
-            current_datetime += timedelta(minutes=total_time // 60 + 1)
-
-        for timetable_entry in timetable:
-            starting_bus_stop = str(timetable_entry.get('starting_bus_stop'))
-            departure_datetime = str(timetable_entry.get('departure_datetime'))
-            ending_bus_stop = str(timetable_entry.get('ending_bus_stop'))
-            arrival_datetime = str(timetable_entry.get('arrival_datetime'))
-            print 'starting_bus_stop: ' + starting_bus_stop + \
-                  ' - departure_datetime: ' + departure_datetime + \
-                  ' - ending_bus_stop: ' + ending_bus_stop + \
-                  ' - arrival_datetime: ' + arrival_datetime
-
-    def generate_bus_line_timetables(self, line_id, timetable_starting_datetime, timetable_ending_datetime):
-        """
-
-        :param line_id:
-        :param timetable_starting_datetime:
-        :param timetable_ending_datetime:
-        :return: timetables: [[{'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                                'departure_datetime', 'arrival_datetime', 'total_time', 'travel_requests',
-                                'average_waiting_time', 'number_of_onboarding_passengers',
-                                'number_of_deboarding_passengers', 'number_of_current_passengers'}]]
-        """
-        timetables = []
-
-        # 1: The list of bus stops corresponding to the provided bus_line_id is retrieved from the database.
-        # bus_line: {'_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
-        bus_line = self.connection.find_bus_line(line_id=line_id)
-        bus_stops = bus_line.get('bus_stops')
-
-        # [{'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        #   'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        #   'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-        #             'distances_from_starting_node', 'times_from_starting_node',
-        #             'distances_from_previous_node', 'times_from_previous_node'}}]
-        route_generator_response = get_route_between_multiple_bus_stops(bus_stops=bus_stops)
-        current_datetime = timetable_starting_datetime
-
-        while current_datetime < timetable_ending_datetime:
-            timetable = []
-
-            for intermediate_response in route_generator_response:
-                starting_bus_stop = intermediate_response.get('starting_bus_stop')
-                ending_bus_stop = intermediate_response.get('ending_bus_stop')
-                intermediate_route = intermediate_response.get('route')
-                total_time = intermediate_route.get('total_time')
-
-                timetable_entry = {'starting_bus_stop': starting_bus_stop,
-                                   'ending_bus_stop': ending_bus_stop,
-                                   'departure_datetime': current_datetime,
-                                   'arrival_datetime': current_datetime + timedelta(minutes=total_time / 60),
-                                   'total_time': total_time,
-                                   'travel_requests': [],
-                                   'average_waiting_time': 0,
-                                   'number_of_onboarding_passengers': 0,
-                                   'number_of_deboarding_passengers': 0,
-                                   'number_of_current_passengers': 0}
-
-                timetable.append(timetable_entry)
-                current_datetime += timedelta(minutes=total_time // 60 + 1)
-
-            timetables.append(timetable)
-
-        return timetables
-
-    def test_look_ahead(self, line_id, timetables_starting_datetime, timetables_ending_datetime,
-                        requests_min_departure_datetime, requests_max_departure_datetime):
+    def generate_bus_line_timetables(self, line_id, timetables_starting_datetime, timetables_ending_datetime,
+                                     requests_min_departure_datetime, requests_max_departure_datetime):
 
         # 1: The list of bus stops corresponding to the provided bus_line_id is retrieved from the database.
         #
@@ -279,6 +279,7 @@ class TimetableGenerator(object):
         """
 
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
+
         :param travel_requests: [{'_id', 'travel_request_id, 'client_id', 'bus_line_id',
                                   'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                                   'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -308,9 +309,9 @@ class TimetableGenerator(object):
 
         :return: None
         """
+        self.timetables = []
         self.bus_stops = bus_stops
         self.travel_requests = travel_requests
-        self.timetables = []
         self.route_generator_response = get_route_between_multiple_bus_stops(bus_stops=self.bus_stops)
 
     @staticmethod
@@ -570,43 +571,6 @@ class TimetableGenerator(object):
         timetable['average_waiting_time'] = average_waiting_time_in_seconds
         return average_waiting_time_in_seconds
 
-    def calculate_waiting_time_of_travel_request(self, timetable_entries, travel_request):
-        """
-        Calculate the waiting time of a travel request in seconds.
-
-        :param timetable_entries: [{
-                   'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                   'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                   'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-                   'number_of_deboarding_passengers', 'number_of_current_passengers'}]
-        :param travel_request: [{
-                   '_id', 'travel_request_id, 'client_id', 'bus_line_id',
-                   'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                   'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                   'departure_datetime', 'arrival_datetime',
-                   'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-        :return: waiting_time_in_seconds (float)
-        """
-        departure_datetime_of_travel_request = travel_request.get('departure_datetime')
-        corresponding_timetable_entry = timetable_entries.get('starting_timetable_entry_index')
-        departure_datetime_of_timetable = corresponding_timetable_entry.get('departure_datetime')
-        waiting_time_in_datetime = abs(departure_datetime_of_timetable - departure_datetime_of_travel_request)
-        waiting_time_in_seconds = self.datetime_to_seconds(provided_datetime=waiting_time_in_datetime)
-        return waiting_time_in_seconds
-
-    @staticmethod
-    def datetime_to_seconds(provided_datetime):
-        """
-        Convert a datetime to seconds.
-
-        :param provided_datetime: datetime
-        :return: seconds: float
-        """
-        seconds = provided_datetime.year * 31556926 + provided_datetime.month * 2629743.83 + \
-                  provided_datetime.day * 86400 + provided_datetime.hour * 3600 + provided_datetime.minute * 60 + \
-                  provided_datetime.second
-        return seconds
-
     def calculate_average_waiting_time_of_timetables(self, timetables):
         """
 
@@ -754,6 +718,71 @@ class TimetableGenerator(object):
         :return: None (Updates self.timetables)
         """
         self.calculate_number_of_passengers_of_timetables(timetables=self.timetables)
+
+    def calculate_waiting_time_of_travel_request(self, timetable_entries, travel_request):
+        """
+        Calculate the waiting time of a travel request in seconds.
+
+        :param timetable_entries: [{
+                   'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                   'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                   'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
+                   'number_of_deboarding_passengers', 'number_of_current_passengers'}]
+        :param travel_request: [{
+                   '_id', 'travel_request_id, 'client_id', 'bus_line_id',
+                   'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                   'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                   'departure_datetime', 'arrival_datetime',
+                   'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
+        :return: waiting_time_in_seconds (float)
+        """
+        departure_datetime_of_travel_request = travel_request.get('departure_datetime')
+        corresponding_timetable_entry = timetable_entries.get('starting_timetable_entry_index')
+        departure_datetime_of_timetable = corresponding_timetable_entry.get('departure_datetime')
+        waiting_time_in_datetime = abs(departure_datetime_of_timetable - departure_datetime_of_travel_request)
+        waiting_time_in_seconds = self.datetime_to_seconds(provided_datetime=waiting_time_in_datetime)
+        return waiting_time_in_seconds
+
+    def calculate_waiting_time_of_travel_requests_of_timetable(self, timetable):
+        """
+        Calculate the waiting time (in seconds) of each travel request of a timetable.
+
+        :param timetable: {
+                   'timetable_entries': [{
+                       'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                       'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                       'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
+                       'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+                   'travel_requests': [{
+                       '_id', 'travel_request_id, 'client_id', 'bus_line_id',
+                       'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                       'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                       'departure_datetime', 'arrival_datetime',
+                       'starting_timetable_entry_index', 'ending_timetable_entry_index'}],
+                   'starting_datetime', 'ending_datetime', 'average_waiting_time'}
+
+        :return: waiting_time_of_travel_requests: [{
+                     'travel_request': {
+                         '_id', 'travel_request_id, 'client_id', 'bus_line_id',
+                         'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                         'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                         'departure_datetime', 'arrival_datetime',
+                         'starting_timetable_entry_index', 'ending_timetable_entry_index'},
+                     'waiting_time'}]
+        """
+        timetable_entries = timetable.get('timetable_entries')
+        travel_requests = timetable.get('travel_requests')
+        waiting_time_of_travel_requests = []
+
+        for travel_request in travel_requests:
+            waiting_time = self.calculate_waiting_time_of_travel_request(
+                timetable_entries=timetable_entries,
+                travel_request=travel_request
+            )
+            dictionary_entry = {'travel_request': travel_request, 'waiting_time': waiting_time}
+            waiting_time_of_travel_requests.append(dictionary_entry)
+
+        return waiting_time_of_travel_requests
 
     @staticmethod
     def ceil_datetime_minutes(starting_datetime):
@@ -933,6 +962,19 @@ class TimetableGenerator(object):
             travel_requests=self.travel_requests,
             timetables=self.timetables
         )
+
+    @staticmethod
+    def datetime_to_seconds(provided_datetime):
+        """
+        Convert a datetime to seconds.
+
+        :param provided_datetime: datetime
+        :return: seconds: float
+        """
+        seconds = provided_datetime.year * 31556926 + provided_datetime.month * 2629743.83 + \
+                  provided_datetime.day * 86400 + provided_datetime.hour * 3600 + provided_datetime.minute * 60 + \
+                  provided_datetime.second
+        return seconds
 
     def estimate_ideal_departure_datetimes(self, ideal_departure_datetimes_of_travel_requests):
         """
@@ -1119,6 +1161,56 @@ class TimetableGenerator(object):
                 self.add_timetable(timetable=additional_timetable)
 
             overcrowded_timetables = self.check_number_of_passengers_of_timetables(timetables=self.timetables)
+
+    def retrieve_travel_requests_with_waiting_time_above_time_limit(self, timetable, waiting_time_limit):
+        """
+
+        :param timetable: {
+                   'timetable_entries': [{
+                       'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                       'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                       'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
+                       'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+                   'travel_requests': [{
+                       '_id', 'travel_request_id, 'client_id', 'bus_line_id',
+                       'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                       'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                       'departure_datetime', 'arrival_datetime',
+                       'starting_timetable_entry_index', 'ending_timetable_entry_index'}],
+                   'starting_datetime', 'ending_datetime', 'average_waiting_time'}
+
+        :param waiting_time_limit: float (in seconds)
+
+        waiting_time_of_travel_requests: [{
+            'travel_request': {
+                '_id', 'travel_request_id, 'client_id', 'bus_line_id',
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime',
+                'starting_timetable_entry_index', 'ending_timetable_entry_index'},
+            'waiting_time'}]
+
+        :return: travel_requests_with_waiting_time_above_time_limit: [{
+            'travel_request': {
+                '_id', 'travel_request_id, 'client_id', 'bus_line_id',
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime',
+                'starting_timetable_entry_index', 'ending_timetable_entry_index'},
+            'waiting_time'}]
+        """
+        travel_requests_with_waiting_time_above_time_limit = []
+        waiting_time_of_travel_requests = self.calculate_waiting_time_of_travel_requests_of_timetable(
+            timetable=timetable
+        )
+
+        for dictionary_entry in waiting_time_of_travel_requests:
+            waiting_time = dictionary_entry.get('waiting_time')
+
+            if waiting_time > waiting_time_limit:
+                travel_requests_with_waiting_time_above_time_limit.append(dictionary_entry)
+
+        return travel_requests_with_waiting_time_above_time_limit
 
     def split_timetable(self, timetable):
         """
