@@ -27,4 +27,7 @@ standard_speed = 50
 bus_road_types = ('motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary',
                   'secondary_link', 'tertiary', 'tertiary_link', 'unclassified', 'residential', 'bus_road')
 
-bus_capacity = 50
+maximum_bus_capacity = 50
+average_waiting_time_threshold = 0
+individual_waiting_time_threshold = 0
+minimum_number_of_passengers_in_timetable = 0
