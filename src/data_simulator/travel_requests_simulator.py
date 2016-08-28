@@ -82,7 +82,7 @@ class TravelRequestsSimulator(object):
             client_id = i
             starting_bus_stop_index = random.randint(0, number_of_bus_stops - 2)
             starting_bus_stop = bus_stops[starting_bus_stop_index]
-            ending_bus_stop_index = random.randint(starting_bus_stop_index, number_of_bus_stops - 1)
+            ending_bus_stop_index = random.randint(starting_bus_stop_index + 1, number_of_bus_stops - 1)
             ending_bus_stop = bus_stops[ending_bus_stop_index]
             additional_departure_time_interval = random.randint(0, 59)
             departure_datetime = random.choice(datetime_population) + timedelta(

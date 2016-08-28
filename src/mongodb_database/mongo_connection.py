@@ -31,6 +31,7 @@ class MongoConnection(object):
         self.bus_lines_collection = self.db.BusLines
         self.bus_stop_waypoints_collection = self.db.BusStopWaypoints
         self.travel_requests_collection = self.db.TravelRequests
+        self.timetables_collection = self.db.Timetables
 
     def clear_all_collections(self):
         self.clear_nodes()
@@ -42,6 +43,7 @@ class MongoConnection(object):
         self.clear_bus_lines()
         self.clear_bus_stop_waypoints()
         self.clear_travel_requests()
+        self.clear_timetables()
 
     def clear_address_book(self):
         """
@@ -90,20 +92,29 @@ class MongoConnection(object):
 
     def clear_nodes(self):
         """
-        Clear the Nodes collection.
+        Delete all the documents of the Nodes collection.
 
-        :return: Number of deleted documents.
+        :return: The number of deleted documents.
         """
         result = self.nodes_collection.delete_many({})
         return result.deleted_count
 
     def clear_points(self):
         """
-        Clear the Points collection.
+        Delete all the documents of the Points collection.
 
         :return: The number of deleted documents.
         """
         result = self.points_collection.delete_many({})
+        return result.deleted_count
+
+    def clear_timetables(self):
+        """
+        Delete all the documents of the Timetables collection.
+
+        :return: The number of deleted documents.
+        """
+        result = self.timetables_collection.delete_many({})
         return result.deleted_count
 
     def clear_travel_requests(self):
@@ -141,7 +152,7 @@ class MongoConnection(object):
         bus_line_document: {'_id', 'line_id',
                             'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
 
-        :type line_id: integer
+        :type line_id: int
         :return: True if the bus_line exists in the database, otherwise False.
         """
         result = self.bus_lines_collection.delete_one({'line_id': line_id})
@@ -152,7 +163,7 @@ class MongoConnection(object):
         Delete a bus_stop document based on the osm_id.
         bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
 
-        :type osm_id: integer
+        :type osm_id: int
         :return: True if the bus_stop exists in the database, otherwise False.
         """
         result = self.bus_stops_collection.delete_one({'osm_id': osm_id})
@@ -181,8 +192,8 @@ class MongoConnection(object):
                         'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
                         'max_speed', 'road_type', 'way_id', 'traffic_density'}
 
-        :type starting_node_osm_id: integer
-        :type ending_node_osm_id: integer
+        :type starting_node_osm_id: int
+        :type ending_node_osm_id: int
         :return: True if the document exists, otherwise False.
         """
         result = self.edges_collection.delete_one({'starting_node.osm_id': starting_node_osm_id,
@@ -196,7 +207,7 @@ class MongoConnection(object):
                         'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
                         'max_speed', 'road_type', 'way_id', 'traffic_density'}
 
-        :type starting_node_osm_id: integer
+        :type starting_node_osm_id: int
         :return: The number of deleted documents.
         """
         result = self.edges_collection.delete_many({'starting_node.osm_id': starting_node_osm_id})
@@ -207,7 +218,7 @@ class MongoConnection(object):
         Delete a node document based on the osm_id.
         node_document: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
 
-        :type osm_id: integer
+        :type osm_id: int
         :return: True if node exists in database, otherwise False.
         """
         result = self.nodes_collection.delete_one({'osm_id': osm_id})
@@ -218,43 +229,91 @@ class MongoConnection(object):
         Delete a point document based on the osm_id.
         point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
 
-        :type osm_id: integer
+        :type osm_id: int
         :return: True if the point exists in the database, otherwise False.
         """
         result = self.points_collection.delete_one({'osm_id': osm_id})
         return result.deleted_count == 1
 
-    def delete_travel_request(self, travel_request_id):
+    def delete_timetable(self, timetable_id):
         """
-        Delete a document of the TravelRequests collection, based on the travel_request_id entry.
-        travel_request_document: {'_id', 'travel_request_id, 'client_id', 'bus_line_id', 'starting_bus_stop_id',
-                                  'ending_bus_stop_id', 'departure_datetime', 'arrival_datetime'}
+        Delete a document of the Timetables collection, based on the '_id' entry.
 
-        :param travel_request_id: integer
+        timetable_document: {
+            '_id', 'line_id',
+            'timetable_entries': [{
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
+                'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'travel_requests': [{
+                '_id', 'client_id', 'bus_line_id',
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime',
+                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]}
+
+        :param timetable_id: ObjectId
         :return: True if the document exists, otherwise False.
         """
-        result = self.travel_requests_collection.delete_one({'travel_request_id': travel_request_id})
+        result = self.timetables_collection.delete_one({'_id': timetable_id})
+        return result.deleted_count == 1
+
+    def delete_timetables(self, timetable_ids):
+        """
+        Delete multiple documents of the Timetables collection, based on the '_id' entry.
+
+        timetable_document: {
+            '_id', 'line_id',
+            'timetable_entries': [{
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
+                'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'travel_requests': [{
+                '_id', 'client_id', 'bus_line_id',
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime',
+                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]}
+
+        :param timetable_ids: [ObjectId]
+        :return: The number of deleted documents.
+        """
+        result = self.timetables_collection.delete_one({'_id': {'$in': timetable_ids}})
+        return result.deleted_count
+
+    def delete_travel_request(self, travel_request_id):
+        """
+        Delete a document of the TravelRequests collection, based on the '_id' entry.
+        travel_request_document: {'_id', 'client_id', 'bus_line_id', 'starting_bus_stop_id',
+                                  'ending_bus_stop_id', 'departure_datetime', 'arrival_datetime'}
+
+        :param travel_request_id: ObjectId
+        :return: True if the document exists, otherwise False.
+        """
+        result = self.travel_requests_collection.delete_one({'_id': travel_request_id})
         return result.deleted_count == 1
 
     def delete_travel_requests(self, travel_request_ids):
         """
-        Delete multiple documents of the TravelRequests collection, based on the travel_request_id entry.
-        travel_request_document: {'_id', 'travel_request_id, 'client_id', 'bus_line_id', 'starting_bus_stop',
+        Delete multiple documents of the TravelRequests collection, based on the '_id' entry.
+        travel_request_document: {'_id', 'client_id', 'bus_line_id', 'starting_bus_stop',
                                   'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
 
-        :param travel_request_ids: [integer]
+        :param travel_request_ids: [ObjectId]
         :return: The number of deleted documents.
         """
-        result = self.travel_requests_collection.delete_many({'travel_request_id': {'$in': travel_request_ids}})
+        result = self.travel_requests_collection.delete_many({'_id': {'$in': travel_request_ids}})
         return result.deleted_count
 
     def delete_travel_requests_based_on_bus_line_id(self, bus_line_id):
         """
         Delete multiple documents of the TravelRequests collection, based on the bus_line_id entry.
-        travel_request_document: {'_id', 'travel_request_id, 'client_id', 'bus_line_id', 'starting_bus_stop',
+        travel_request_document: {'_id', 'client_id', 'bus_line_id', 'starting_bus_stop',
                                   'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
 
-        :param bus_line_id: integer
+        :param bus_line_id: int
         :return: The number of deleted documents.
         """
         result = self.travel_requests_collection.delete_many({'bus_line_id': bus_line_id})
@@ -263,7 +322,7 @@ class MongoConnection(object):
     def delete_travel_requests_based_on_departure_datetime(self, min_departure_datetime, max_departure_datetime):
         """
         Delete multiple documents from the TravelRequests collection, based on the departure_datetime entry.
-        travel_request_document: {'_id', 'travel_request_id, 'client_id', 'bus_line_id', 'starting_bus_stop',
+        travel_request_document: {'_id', 'client_id', 'bus_line_id', 'starting_bus_stop',
                                   'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
 
         :param min_departure_datetime: datetime
@@ -286,7 +345,7 @@ class MongoConnection(object):
         Delete a way document based on the osm_id.
         way_document: {'_id', 'osm_id', 'tags', 'references'}
 
-        :type osm_id: integer
+        :type osm_id: int
         :return: True if the way exists in the database, otherwise False.
         """
         result = self.ways_collection.delete_one({'osm_id': osm_id})
@@ -306,7 +365,7 @@ class MongoConnection(object):
         """
         Retrieve a bus_line based on the line_id.
 
-        :type line_id: integer
+        :type line_id: int
         :return: {'_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
         """
         document = self.bus_lines_collection.find_one({'line_id': line_id})
@@ -316,7 +375,7 @@ class MongoConnection(object):
         """
         Retrieve a bus_stop based on the osm_id.
 
-        :type osm_id: integer
+        :type osm_id: int
         :return: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
         """
         document = self.bus_stops_collection.find_one({'osm_id': osm_id})
@@ -357,8 +416,8 @@ class MongoConnection(object):
         """
         Retrieve an edge document based on the osm_ids of the starting and ending nodes.
 
-        :type starting_node_osm_id: integer
-        :type ending_node_oms_id: integer
+        :type starting_node_osm_id: int
+        :type ending_node_oms_id: int
         :return: {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
                   'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
                   'max_speed', 'road_type', 'way_id', 'traffic_density'}
@@ -383,7 +442,7 @@ class MongoConnection(object):
         """
         Retrieve a node document based on the osm_id.
 
-        :type osm_id: integer
+        :type osm_id: int
         :return: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
         """
         document = self.nodes_collection.find_one({'osm_id': osm_id})
@@ -393,28 +452,52 @@ class MongoConnection(object):
         """
         Retrieve a point document based on the osm_id.
 
-        :type osm_id: integer
+        :type osm_id: int
         :return: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
         """
         document = self.points_collection.find_one({'osm_id': osm_id})
         return document
 
+    def find_timetable(self, timetable_id):
+        """
+        Retrieve a document of the Timetables collection, based on the '_id' entry.
+
+        timetable_document: {
+            '_id', 'line_id',
+            'timetable_entries': [{
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
+                'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'travel_requests': [{
+                '_id', 'client_id', 'bus_line_id',
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime',
+                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]}
+
+        :param timetable_id: ObjectId
+        :return: timetable_document
+        """
+        document = self.timetables_collection.find_one({'_id': timetable_id})
+        return document
+
     def find_travel_request(self, travel_request_id):
         """
-        Retrieve a document of the TravelRequests collection, based on the travel_request_id entry.
+        Retrieve a document of the TravelRequests collection, based on the '_id' entry.
 
-        :param travel_request_id: integer
-        :return: {'_id', 'travel_request_id, 'client_id', 'bus_line_id', 'starting_bus_stop',
+        :param travel_request_id: ObjectId
+        :return: {'_id', 'client_id', 'bus_line_id', 'starting_bus_stop',
                   'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
         """
-        document = self.travel_requests_collection.find_one({'travel_request_id': travel_request_id})
+        document = self.travel_requests_collection.find_one({'_id': travel_request_id})
         return document
 
     def find_way(self, osm_id):
         """
         Retrieve a way document based on the osm_id.
 
-        :type osm_id: integer
+        :type osm_id: int
         :return: {'_id', 'osm_id', 'tags', 'references'}
         """
         document = self.ways_collection.find_one({'osm_id': osm_id})
@@ -590,7 +673,7 @@ class MongoConnection(object):
         Retrieve the edge documents based on the osm_id of the starting node.
 
         :param starting_node_osm_id: osm_id
-        :type starting_node_osm_id: integer
+        :type starting_node_osm_id: int
         :return: Cursor -> {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
                             'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
                             'max_speed', 'road_type', 'way_id', 'traffic_density'}
@@ -621,19 +704,6 @@ class MongoConnection(object):
                 ending_nodes_dictionary[ending_node_osm_id] = [edges_document]
 
         return ending_nodes_dictionary
-
-    def get_max_travel_request_id(self):
-        """
-        Retrieve the maximum travel_request_id entry of the TravelRequests collection.
-        :return: max_travel_request_id: integer
-        """
-        max_travel_request_id = 1
-
-        document = self.travel_requests_collection.find_one(sort=[('travel_request_id', -1)])
-        if document is not None:
-            max_travel_request_id = document.get('travel_request_id')
-
-        return max_travel_request_id
 
     def get_nodes(self):
         """
@@ -669,6 +739,31 @@ class MongoConnection(object):
 
         return points_dictionary
 
+    def get_timetables_of_bus_line(self, bus_line_id):
+        """
+        Retrieve a cursor containing all the documents of the Timetables collection,
+        with a specific 'bus_line_id' entry.
+
+        timetable_document: {
+            '_id', 'line_id',
+            'timetable_entries': [{
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
+                'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'travel_requests': [{
+                '_id', 'client_id', 'bus_line_id',
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime',
+                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]}
+
+        :param bus_line_id: int
+        :return: Cursor -> timetable document
+        """
+        timetables_cursor = self.timetables_collection.find({'line_id': bus_line_id})
+        return timetables_cursor
+
     def get_traffic_density_between_two_bus_stop_names(self, starting_bus_stop_name, ending_bus_stop_name):
         """
 
@@ -703,7 +798,7 @@ class MongoConnection(object):
         """
         Retrieve a cursor of all the documents of the TravelRequests collection.
 
-        :return: Cursor -> {'_id', 'travel_request_id, 'client_id', 'bus_line_id', 'starting_bus_stop',
+        :return: Cursor -> {'_id', 'client_id', 'bus_line_id', 'starting_bus_stop',
                             'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
         """
         cursor = self.travel_requests_collection.find({})
@@ -713,7 +808,7 @@ class MongoConnection(object):
         """
         Retrieve a list containing all the documents of the TravelRequests collection.
 
-        :return: [{'_id', 'travel_request_id, 'client_id', 'bus_line_id', 'starting_bus_stop',
+        :return: [{'_id', 'client_id', 'bus_line_id', 'starting_bus_stop',
                    'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}]
         """
         travel_requests_list = list(self.get_travel_requests_cursor())
@@ -723,8 +818,8 @@ class MongoConnection(object):
         """
         Retrieve a cursor of all the documents of the TravelRequests collection, based on the bus_line_id entry.
 
-        :param bus_line_id: integer
-        :return: Cursor -> {'_id', 'travel_request_id, 'client_id', 'bus_line_id', 'starting_bus_stop',
+        :param bus_line_id: int
+        :return: Cursor -> {'_id', 'client_id', 'bus_line_id', 'starting_bus_stop',
                             'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
         """
         cursor = self.travel_requests_collection.find({'bus_line_id': bus_line_id})
@@ -737,7 +832,7 @@ class MongoConnection(object):
 
         :param min_departure_datetime: datetime
         :param max_departure_datetime: datetime
-        :return: Cursor -> {'_id', 'travel_request_id, 'client_id', 'bus_line_id', 'starting_bus_stop',
+        :return: Cursor -> {'_id', 'client_id', 'bus_line_id', 'starting_bus_stop',
                             'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
         """
         # cursor = self.travel_requests_collection.find(
@@ -757,10 +852,10 @@ class MongoConnection(object):
         Retrieve a cursor of all the documents of the TravelRequests collection,
         based on the bus_line_id and departure_datetime entries.
 
-        :param bus_line_id: integer
+        :param bus_line_id: int
         :param min_departure_datetime: datetime
         :param max_departure_datetime: datetime
-        :return: Cursor -> {'_id', 'travel_request_id, 'client_id', 'bus_line_id', 'starting_bus_stop',
+        :return: Cursor -> {'_id', 'client_id', 'bus_line_id', 'starting_bus_stop',
                             'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
         """
         # cursor = self.travel_requests_collection.find({'$and': [
@@ -783,10 +878,10 @@ class MongoConnection(object):
         Retrieve a list containing all the documents of the TravelRequests collection,
         based on the bus_line_id and departure_datetime entries.
 
-        :param bus_line_id: integer
+        :param bus_line_id: int
         :param min_departure_datetime: datetime
         :param max_departure_datetime: datetime
-        :return: [{'_id', 'travel_request_id, 'client_id', 'bus_line_id', 'starting_bus_stop',
+        :return: [{'_id', 'client_id', 'bus_line_id', 'starting_bus_stop',
                    'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}]
         """
         cursor = self.get_travel_requests_cursor_based_on_bus_line_id_and_departure_datetime(
@@ -800,7 +895,7 @@ class MongoConnection(object):
         """
         Check if a node exists in the Edges collection as a starting node.
 
-        :type node_osm_id: integer
+        :type node_osm_id: int
         :return: True if exists, otherwise False.
         """
         return self.edges_collection.find_one({'starting_node.osm_id': node_osm_id}) is not None
@@ -809,7 +904,7 @@ class MongoConnection(object):
         """
         Check if a node exists in the Edges collection, either as a starting or an ending node.
 
-        :type node_osm_id: integer
+        :type node_osm_id: int
         :return: True if exists, otherwise False.
         """
         return self.edges_collection.find_one({'$or': [{'starting_node.osm_id': node_osm_id},
@@ -820,7 +915,7 @@ class MongoConnection(object):
         Insert an address document to the AddressBook collection.
 
         :type name: string
-        :type node_id: integer
+        :type node_id: int
         :type point: Point
         :return: The ObjectId of the inserted document.
         """
@@ -845,7 +940,7 @@ class MongoConnection(object):
         Insert a bus_line document to the BusLines collection, or update the bus_stops
         if the document already exists in the database.
 
-        :type line_id: integer
+        :type line_id: int
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         :return: The ObjectId if a new document was inserted.
         """
@@ -870,7 +965,7 @@ class MongoConnection(object):
         """
         Insert a bus_stop document to the BusStops collection.
 
-        :type osm_id: integer
+        :type osm_id: int
         :type name: string
         :type point: Point
         :return: The ObjectId of the inserted document.
@@ -911,9 +1006,9 @@ class MongoConnection(object):
 
         :param starting_node: {'osm_id', 'point': {'longitude', 'latitude'}}
         :param ending_node: {'osm_id', 'point': {'longitude', 'latitude'}}
-        :type max_speed: float or integer
+        :type max_speed: float or int
         :type road_type: string
-        :param way_id: osm_id: integer
+        :param way_id: osm_id: int
         :param traffic_density: A value between 0 and 1 indicating the density of traffic: float
         :return: The Object Id of the inserted document.
         """
@@ -938,7 +1033,7 @@ class MongoConnection(object):
         """
         Insert a node document to the Nodes collection.
 
-        :type osm_id: integer
+        :type osm_id: int
         :type tags: {}
         :type point: Point
         :return: The ObjectId of the inserted document.
@@ -962,7 +1057,7 @@ class MongoConnection(object):
         """
         Insert a point document to the Points collection.
 
-        :type osm_id: integer
+        :type osm_id: int
         :type point: Point
         :return: The ObjectId of the inserted document.
         """
@@ -980,23 +1075,78 @@ class MongoConnection(object):
         result = self.points_collection.insert_many(point_documents)
         return result.inserted_ids
 
+    def insert_timetable(self, timetable):
+        """
+        Insert a new document to the Timetables collection, or update the
+        corresponding document if it already exists in the database.
+
+        timetable_document: {
+            '_id', 'line_id',
+            'timetable_entries': [{
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
+                'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'travel_requests': [{
+                '_id', 'client_id', 'bus_line_id',
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime',
+                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]}
+
+        :param timetable: timetable_document
+        :return: The ObjectId, if a new document was inserted.
+        """
+        key = {'_id': timetable.get('_id')}
+        data = {'$set': {
+            'line_id': timetable.get('line_id'),
+            'timetable_entries': timetable.get('timetable_entries'),
+            'travel_requests': timetable.get('travel_requests')
+        }}
+        result = self.timetables_collection.update_one(key, data, upsert=True)
+        return result.upserted_id
+
+    def insert_timetables(self, timetables):
+        """
+        Insert multiple new documents to the Timetables collection, or update the
+        corresponding documents if they already exist in the database.
+
+        timetable_document: {
+            '_id', 'line_id',
+            'timetable_entries': [{
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
+                'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'travel_requests': [{
+                '_id', 'client_id', 'bus_line_id',
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime',
+                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]}
+
+        :param timetables: [timetable_document]
+        :return: None
+        """
+        for timetable in timetables:
+            self.insert_timetable(timetable=timetable)
+
     def insert_travel_request(self, client_id, bus_line_id, starting_bus_stop, ending_bus_stop,
                               departure_datetime, arrival_datetime):
         """
         Insert a new document to the TravelRequests collection.
-        travel_request_document: {'_id', 'travel_request_id, 'client_id', 'bus_line_id', 'starting_bus_stop',
+        travel_request_document: {'_id', 'client_id', 'bus_line_id', 'starting_bus_stop',
                                   'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
 
-        :param client_id: integer
-        :param bus_line_id: integer
+        :param client_id: int
+        :param bus_line_id: int
         :param starting_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
         :param ending_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
         :param departure_datetime: datetime
         :param arrival_datetime: datetime
         :return: The ObjectId of the inserted document.
         """
-        travel_request_id = self.get_max_travel_request_id() + 1
-        document = {'travel_request_id': travel_request_id, 'client_id': client_id, 'bus_line_id': bus_line_id,
+        document = {'client_id': client_id, 'bus_line_id': bus_line_id,
                     'starting_bus_stop': starting_bus_stop, 'ending_bus_stop': ending_bus_stop,
                     'departure_datetime': departure_datetime, 'arrival_datetime': arrival_datetime}
         result = self.travel_requests_collection.insert_one(document)
@@ -1005,19 +1155,13 @@ class MongoConnection(object):
     def insert_travel_request_documents(self, travel_request_documents):
         """
         Insert multiple documents to the TravelRequests collection.
-        travel_request_document: {'_id', 'travel_request_id, 'client_id', 'bus_line_id', 'starting_bus_stop',
+        travel_request_document: {'_id', 'client_id', 'bus_line_id', 'starting_bus_stop',
                                   'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
 
         :param travel_request_documents: [{'client_id', 'bus_line_id', 'starting_bus_stop', 'ending_bus_stop',
                                            'departure_datetime', 'arrival_datetime'}]
         :return: [ObjectId]
         """
-        travel_request_id = self.get_max_travel_request_id() + 1
-
-        for travel_request_document in travel_request_documents:
-            travel_request_document['travel_request_id'] = travel_request_id
-            travel_request_id += 1
-
         result = self.travel_requests_collection.insert_many(travel_request_documents)
         return result.inserted_ids
 
@@ -1025,7 +1169,7 @@ class MongoConnection(object):
         """
         Insert a way document to the Ways collection.
 
-        :type osm_id: integer
+        :type osm_id: int
         :type tags: {}
         :param references: [osm_id]
         :return: The ObjectId of the inserted document.
@@ -1071,7 +1215,7 @@ class MongoConnection(object):
         """
         Print up to a specific number of bus_stop documents.
 
-        :param counter: integer
+        :param counter: int
         """
         documents_cursor = self.get_bus_stops()
         i = 0
@@ -1090,7 +1234,7 @@ class MongoConnection(object):
         """
         Print up to a specific number of edge documents.
 
-        :param counter: integer
+        :param counter: int
         """
         documents_cursor = self.get_edges()
         i = 0
@@ -1111,7 +1255,7 @@ class MongoConnection(object):
         """
         Print up to a specific number of node documents.
 
-        :param counter: integer
+        :param counter: int
         """
         documents_cursor = self.get_nodes()
         i = 0
@@ -1130,7 +1274,7 @@ class MongoConnection(object):
         """
         Print a bus_line document based on the line_id.
 
-        :param line_id: integer
+        :param line_id: int
         """
         document = self.find_bus_line(line_id=line_id)
         print document
@@ -1143,7 +1287,7 @@ class MongoConnection(object):
         """
         Print up to a specific number of bus_line documents.
 
-        :param counter: integer
+        :param counter: int
         """
         documents_cursor = self.get_bus_lines()
         i = 0
@@ -1160,7 +1304,7 @@ class MongoConnection(object):
 
     def print_bus_line_waypoints(self, line_id):
         """
-        :param line_id: integer
+        :param line_id: int
         """
         # {'_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
         bus_line_document = self.find_bus_line(line_id=line_id)
@@ -1171,7 +1315,7 @@ class MongoConnection(object):
 
     def print_detailed_bus_line_waypoints(self, line_id):
         """
-        :param line_id: integer
+        :param line_id: int
         """
         # {'_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
         bus_line_document = self.find_bus_line(line_id=line_id)
@@ -1281,12 +1425,12 @@ class MongoConnection(object):
 
     def print_travel_request_documents(self, counter):
         """
-        :param counter: integer
+        :param counter: int
         """
         documents_cursor = self.get_travel_requests_cursor()
         i = 0
 
-        # Cursor -> {'_id', 'travel_request_id, 'client_id', 'bus_line_id', 'starting_bus_stop',
+        # Cursor -> {'_id', 'client_id', 'bus_line_id', 'starting_bus_stop',
         #            'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
         for document in documents_cursor:
             if i < counter:

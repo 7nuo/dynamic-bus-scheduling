@@ -17,7 +17,7 @@ specific language governing permissions and limitations under the License.
 import time
 from src.common.logger import log
 from src.look_ahead.look_ahead_handler import LookAheadHandler
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 class LookAheadHandlerTester(object):
@@ -48,14 +48,12 @@ class LookAheadHandlerTester(object):
             log_message='generate_bus_line_timetable: finished - elapsed_time = ' + str(self.elapsed_time) + ' sec')
 
     def test_look_ahead(self):
-        self.look_ahead_handler.test_look_ahead(
+        self.look_ahead_handler.generate_bus_line_timetables(
             line_id=1,
-            timetable_starting_datetime=datetime(2016, 7, 18, 0, 0, 0, 00000),
-            timetable_ending_datetime=datetime(2016, 7, 19, 0, 0, 0, 00000),
-            requests_min_departure_datetime=datetime(2016, 7, 18, 0, 0, 0, 00000),
-            requests_max_departure_datetime=datetime(2016, 7, 19, 0, 0, 0, 00000),
-            bus_capacity=100,
-            minimum_number_of_passengers=10
+            timetables_starting_datetime=datetime(2016, 8, 26, 0, 0, 0, 00000),
+            timetables_ending_datetime=datetime(2016, 8, 27, 0, 0, 0, 00000),
+            requests_min_departure_datetime=datetime(2016, 8, 26, 0, 0, 0, 00000),
+            requests_max_departure_datetime=datetime(2016, 8, 27, 0, 0, 0, 00000),
         )
 
 
@@ -65,7 +63,35 @@ if __name__ == '__main__':
                       'Ekebyhus', 'Reykjaviksgatan', 'Oslogatan', 'Rickomberga', 'Studentstaden', 'Ekonomikum',
                       'Skolgatan', 'Stadshuset', 'Centralstationen']
 
+    # l1 = [1, 2, 3]
+    # l2 = l1
+    # l2[0] = 0
+    # print l1
+    # print l2
+
     tester = LookAheadHandlerTester()
+    tester.test_look_ahead()
     # tester.generate_bus_line(line_id=1, bus_stop_names=bus_stop_names)
     # tester.generate_bus_line_timetable(line_id=1)
-    tester.test_look_ahead()
+    # tester.generate_bus_line_timetables()
+
+    # starting_datetime = datetime(2016, 8, 14, 10, 5, 36, 00000)
+    # ending_datetime = datetime(2016, 8, 14, 12, 5, 36, 00000)
+    # diff = ending_datetime - starting_datetime
+    #
+    #
+    #
+    # starting_datetime -= timedelta(microseconds=starting_datetime.microsecond)
+    # starting_datetime -= timedelta(seconds=starting_datetime.second)
+    # starting_datetime += timedelta(minutes=1)
+    #
+    # # starting_datetime.second = 0
+    # # starting_datetime.minute += 1
+    #
+    # # starting_datetime.replace(minute=50, second=0, microsecond=0)
+    # print starting_datetime
+    #
+    # # avg = total / number_of_departure_datetimes
+    # # minutes, seconds = divmod(int(avg), 60)
+    # # hours, minutes = divmod(minutes, 60)
+    # # mean_departure_datetime = datetime.combine(departure_datetimes[0].date(), time(hours, minutes, seconds))
