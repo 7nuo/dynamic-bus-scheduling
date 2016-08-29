@@ -251,6 +251,7 @@ class LookAheadHandler(object):
         # 3: Timetables are initialized, starting from the starting_datetime and ending at the ending_datetime.
         #
         timetable_generator.timetables = generate_initial_timetables(
+            line_id=line_id,
             timetables_starting_datetime=timetables_starting_datetime,
             timetables_ending_datetime=timetables_ending_datetime,
             route_generator_response=timetable_generator.route_generator_response
@@ -266,6 +267,12 @@ class LookAheadHandler(object):
             timetables=timetable_generator.timetables
         )
 
+        handle_overcrowded_timetables(timetables=timetable_generator.timetables)
+
+        adjust_departure_datetimes_of_timetables(timetables=timetable_generator.timetables)
+
+        # split_timetable(timetable=timetable_generator.timetables[4])
+
         print_timetables(timetables=timetable_generator.timetables)
 
         # 5: Timetables are being re-calculated, based on their corresponding travel requests.
@@ -276,97 +283,6 @@ class LookAheadHandler(object):
         # timetable_generator.adjust_departure_datetimes_of_timetable()
 
         # self.adjust_departure_datetimes(timetables=timetables)
-
-
-def print_timetable(timetable):
-    """
-
-    :param timetable: {
-               '_id', 'line_id',
-               'timetable_entries': [{
-                   'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                   'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                   'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-                   'number_of_deboarding_passengers', 'number_of_current_passengers'}],
-               'travel_requests': [{
-                   '_id', 'travel_request_id, 'client_id', 'bus_line_id',
-                   'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                   'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                   'departure_datetime', 'arrival_datetime',
-                   'starting_timetable_entry_index', 'ending_timetable_entry_index'}]}
-    :return: None
-    """
-    timetable_entries = timetable.get('timetable_entries')
-    travel_requests = timetable.get('travel_requests')
-    starting_datetime = get_starting_datetime_of_timetable(timetable=timetable)
-    ending_datetime = get_ending_datetime_of_timetable(timetable=timetable)
-
-    print '\n-- Printing Timetable--'
-    print 'starting_datetime:', starting_datetime, \
-        '- ending_datetime:', ending_datetime
-    print '- Timetable Entries:'
-
-    for timetable_entry in timetable_entries:
-        # starting_bus_stop = timetable_entry.get('starting_bus_stop')
-        # starting_bus_stop_name = starting_bus_stop.get('name')
-        #
-        # ending_bus_stop = timetable_entry.get('ending_bus_stop')
-        # ending_bus_stop_name = ending_bus_stop.get('name')
-        #
-        # departure_datetime = timetable_entry.get('departure_datetime')
-        # arrival_datetime = timetable_entry.get('arrival_datetime')
-        # total_time = timetable_entry.get('total_time')
-
-        print 'starting_bus_stop:', timetable_entry.get('starting_bus_stop').get('name'), \
-            '- ending_bus_stop:', timetable_entry.get('ending_bus_stop').get('name'), \
-            '- departure_datetime:', timetable_entry.get('departure_datetime'), \
-            '- arrival_datetime:', timetable_entry.get('arrival_datetime'), \
-            '- total_time:', timetable_entry.get('total_time'), \
-            '- number_of_onboarding_passengers:', timetable_entry.get('number_of_onboarding_passengers'), \
-            '- number_of_deboarding_passengers:', timetable_entry.get('number_of_deboarding_passengers'), \
-            '- number_of_current_passengers:', timetable_entry.get('number_of_current_passengers')
-
-    print '- Travel Requests:'
-
-    for travel_request in travel_requests:
-        # starting_bus_stop = travel_request.get('starting_bus_stop')
-        # starting_bus_stop_name = starting_bus_stop.get('name')
-        #
-        # ending_bus_stop = travel_request.get('ending_bus_stop')
-        # ending_bus_stop_name = ending_bus_stop.get('name')
-        #
-        # departure_datetime = travel_request.get('departure_datetime')
-        #
-        # starting_timetable_entry_index = travel_request.get('starting_timetable_entry_index')
-        # ending_timetable_entry_index = travel_request.get('ending_timetable_entry_index')
-
-        print 'starting_bus_stop:', travel_request.get('starting_bus_stop').get('name'), \
-            '- ending_bus_stop:', travel_request.get('ending_bus_stop').get('name'), \
-            '- departure_datetime:', travel_request.get('departure_datetime'), \
-            '- starting_timetable_entry_index:', travel_request.get('starting_timetable_entry_index'), \
-            '- ending_timetable_entry_index:', travel_request.get('ending_timetable_entry_index')
-
-
-def print_timetables(timetables):
-    """
-
-    :param timetables: [{
-               '_id', 'line_id',
-               'timetable_entries': [{
-                   'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                   'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                   'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-                   'number_of_deboarding_passengers', 'number_of_current_passengers'}],
-               'travel_requests': [{
-                   '_id', 'travel_request_id, 'client_id', 'bus_line_id',
-                   'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                   'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                   'departure_datetime', 'arrival_datetime',
-                   'starting_timetable_entry_index', 'ending_timetable_entry_index'}]}]
-    :return: None
-    """
-    for timetable in timetables:
-        print_timetable(timetable=timetable)
 
 
 # class TimetableGenerator(object):
