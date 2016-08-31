@@ -175,6 +175,12 @@ class LookAheadHandler(object):
 
         handle_timetables_with_average_waiting_time_above_threshold(timetables=timetable_generator.timetables)
 
+        handle_travel_requests_of_timetables_with_waiting_time_above_threshold(
+            timetables=timetable_generator.timetables
+        )
+
+        calculate_number_of_passengers_of_timetables(timetables=timetable_generator.timetables)
+
         adjust_departure_datetimes_of_timetables(timetables=timetable_generator.timetables)
 
         # divide_timetable(timetable=timetable_generator.timetables[4])
