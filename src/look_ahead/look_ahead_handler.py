@@ -14,13 +14,6 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from src.mongodb_database.mongo_connection import MongoConnection
-from src.common.logger import log
-from src.common.variables import mongodb_host, mongodb_port, maximum_bus_capacity, average_waiting_time_threshold, \
-    individual_waiting_time_threshold, minimum_number_of_passengers_in_timetable
-from src.route_generator.route_generator_client import get_route_between_multiple_bus_stops, \
-    get_waypoints_between_multiple_bus_stops
-from datetime import datetime, timedelta, time
 from src.look_ahead.timetable_generator import *
 
 
@@ -101,14 +94,13 @@ class LookAheadHandler(object):
 
     def generate_bus_line_timetables(self, line_id, timetables_starting_datetime, timetables_ending_datetime,
                                      requests_min_departure_datetime, requests_max_departure_datetime):
-
         """
 
-        :param line_id:
-        :param timetables_starting_datetime:
-        :param timetables_ending_datetime:
-        :param requests_min_departure_datetime:
-        :param requests_max_departure_datetime:
+        :param line_id: int
+        :param timetables_starting_datetime: datetime
+        :param timetables_ending_datetime: datetime
+        :param requests_min_departure_datetime: datetime
+        :param requests_max_departure_datetime: datetime
         :return:
         """
 
@@ -122,13 +114,19 @@ class LookAheadHandler(object):
         bus_line = self.connection.find_bus_line(line_id=line_id)
         bus_stops = bus_line.get('bus_stops')
 
-        # 2: The inputs: requests_min_departure_datetime and requests_max_departure_datetime are provided
+        # 2: The inputs: timetable_starting_datetime and timetable_ending_datetime are provided to the function,
+        #    so as timetables to be generated for the specific datetime period.
+
+        # 3: The inputs: requests_min_departure_datetime and requests_max_departure_datetime are provided
         #    to the function, so as to evaluate travel_requests for the specific datetime period.
         #    The Look Ahead retrieves from the System Database the requests with
         #    departure_datetime between these values.
         #
-        # travel_requests: [{'_id', 'travel_request_id, 'client_id', 'bus_line_id', 'starting_bus_stop',
-        #                    'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}]
+        # travel_requests: [{'_id', 'client_id', 'bus_line_id',
+        #                    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        #                    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        #                    'departure_datetime', 'arrival_datetime',
+        #                    'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
         #
         travel_requests = self.connection.get_travel_requests_list_based_on_bus_line_id_and_departure_datetime(
             bus_line_id=line_id,
@@ -136,21 +134,31 @@ class LookAheadHandler(object):
             max_departure_datetime=requests_max_departure_datetime
         )
 
-        # Initialize TimetableGenerator
+        # 4: (TimetableGenerator is initialized) The Look Ahead sends a request to the Route Generator so as
+        #    to identify the less time-consuming bus_route between the the bus_stops of the bus_line,
+        #    while taking into consideration the current levels of traffic density.
+        #
         timetable_generator = TimetableGenerator(
             line_id=line_id,
             bus_stops=bus_stops,
             travel_requests=travel_requests
         )
 
-        # The list of bus stops of a bus line might contain the same bus_stop_osm_ids more than once.
+        # The list of bus_stops of a bus_line might contain the same bus_stop_osm_ids more than once.
         # For this reason, each travel_request needs to be related with the correct index in the bus_stops list.
+        # So, the values 'starting_timetable_entry_index' and 'ending_timetable_entry_index' are estimated.
         correspond_travel_requests_to_bus_stops(
             travel_requests=timetable_generator.travel_requests,
             bus_stops=timetable_generator.bus_stops
         )
 
-        # 3: Timetables are initialized, starting from the starting_datetime and ending at the ending_datetime.
+        # 5: Based on the response of the Route Generator, which includes details about the followed bus_route,
+        #    and using only one bus vehicle, the Look Ahead generates some initial timetables which cover the
+        #    whole datetime period from timetables_starting_datetime to timetables_ending_datetime.
+        #    Initially, the list of travel requests of these timetables is empty, and the departure_datetime and
+        #    arrival_datetime values of the timetable_entries are based exclusively on the details of the bus_route.
+        #    In the next steps of the algorithm, these timetables are used in the initial clustering
+        #    of the travel requests.
         #
         timetable_generator.timetables = generate_initial_timetables(
             line_id=line_id,
@@ -159,39 +167,76 @@ class LookAheadHandler(object):
             route_generator_response=timetable_generator.route_generator_response
         )
 
-        # 4: Initial Clustering:
-        #    Correspond each travel request to a timetable, so as to produce the
-        #    minimum waiting time for each passenger.
+        # 6: (Initial Clustering) Each one of the retrieved travel_requests is corresponded to the timetable
+        #    which produces the minimum_individual_waiting_time for the passenger. The waiting time is calculated
+        #    as the difference between the departure_datetime of the travel_request and the departure_datetime of
+        #    the timetable_entry from where the passenger departs from (identified by the
+        #    'starting_timetable_entry_index' value).
         #
-        # timetable_generator.correspond_travel_requests_to_timetables_local()
         correspond_travel_requests_to_timetables(
             travel_requests=timetable_generator.travel_requests,
             timetables=timetable_generator.timetables
         )
 
+        # 7: (Handling of Undercrowded Timetables) After the initial clustering step, there might be timetables
+        #    where the number of travel_requests is lower than the input: minimum_number_of_passengers_in_timetable.
+        #    This is usual during night hours, where transportation demand is not so high. These timetables are
+        #    removed from the list of generated timetables and each one of their travel_requests is corresponded
+        #    to one of the remaining timetables, based on the individual_waiting_time of the passenger.
+        #
+        handle_undercrowded_timetables(timetables=timetable_generator.timetables)
+
+        # 8: (Handling of Overcrowded Timetables) In addition, there might be timetables where the
+        #    number_of_current_passengers is higher than the input: maximum_bus_capacity, which indicates that
+        #    each one of these timetables cannot be served by one bus vehicle. For this reason, each one of these
+        #    timetables should be divided into two timetables, and the corresponding travel_requests are partitioned.
+        #    The whole procedure is repeated until there is no timetable where the number_of_current_passengers
+        #    exceeds the maximum_bus_capacity.
+        #
+        #    The first step is to calculate the number_of_current_passengers in each one of the timetable_entries.
+        #
+        calculate_number_of_passengers_of_timetables(timetables=timetable_generator.timetables)
         handle_overcrowded_timetables(timetables=timetable_generator.timetables)
 
+        # 9: (Adjust Departure Datetimes) At this point of processing, the number of travel_requests in each timetable
+        #    is higher than the minimum_number_of_passengers_in_timetable and lower than the maximum_bus_capacity.
+        #    So, the departure_datetime and arrival_datetime values of each timetable_entry are re-estimated,
+        #    taking into consideration the departure_datetime values of the corresponding travel_requests.
+        #    In each timetable and for each travel_request, the ideal departure_datetimes from all bus_stops
+        #    (not only the bus stop from where the passenger desires to depart) are estimated. Then, the ideal
+        #    departure_datetimes of the timetable, for each bus stop, correspond to the mean values of the ideal
+        #    departure_datetimes of the corresponding travel_requests. Finally, starting from the initial bus_stop
+        #    and combining the ideal departure_datetimes of each bus_stop and the required traveling time between
+        #    bus_stops, included in the response of the Route Generator, the departure_datetimes of the
+        #    timetable_entries are finalized.
         adjust_departure_datetimes_of_timetables(timetables=timetable_generator.timetables)
 
-        handle_timetables_with_average_waiting_time_above_threshold(timetables=timetable_generator.timetables)
-
+        # 10: (Individual Waiting Time) For each timetable, the individual_waiting_time of each passenger is calculated.
+        #     For each one of the travel_requests where individual_waiting_time is higher than the
+        #     input: individual_waiting_time_threshold, alternative existing timetables are investigated, based on the
+        #     new individual_waiting_time, the average_waiting_time and the number_of_current_passengers of each
+        #     timetable. For the travel_requests which cannot be served by the other existing timetables, if their
+        #     number is greater or equal than the mini_number_of_passengers_in_timetable, then a new timetable is
+        #     generated with departure_datetimes based on the ideal departure_datetimes of the
+        #     aforementioned passengers.
+        #
         handle_travel_requests_of_timetables_with_waiting_time_above_threshold(
             timetables=timetable_generator.timetables
         )
-
         calculate_number_of_passengers_of_timetables(timetables=timetable_generator.timetables)
-
         adjust_departure_datetimes_of_timetables(timetables=timetable_generator.timetables)
 
-        # divide_timetable(timetable=timetable_generator.timetables[4])
+        # 11: (Average Waiting Time) For each timetable, the average_waiting_time of passengers is calculated.
+        #     If the average waiting time is higher than the input: average-waiting-time-threshold, then the
+        #     possibility of dividing the timetable is investigated. If the two new timetables have lower
+        #     average_waiting_time than the initial one and both have more travel_requests than the
+        #     minimum_number_of_passengers_in_timetable, then the initial timetable is divided, its travel_requests
+        #     are partitioned, and the departure_datetime and arrival_datetime values of the timetable_entries of
+        #     the new timetables, are estimated based on the departure_datetime values of the partitioned requests.
+        #
+        handle_timetables_with_average_waiting_time_above_threshold(timetables=timetable_generator.timetables)
+        calculate_number_of_passengers_of_timetables(timetables=timetable_generator.timetables)
+        adjust_departure_datetimes_of_timetables(timetables=timetable_generator.timetables)
 
         print_timetables(timetables=timetable_generator.timetables)
 
-        # 5: Timetables are being re-calculated, based on their corresponding travel requests.
-        #    For a set of travel requests, related to a specific bus stop of a timetable,
-        #    the new departure datetime corresponds to the mean value of the departure datetimes of the requests.
-        #    (New Cluster Centroids)
-
-        # timetable_generator.adjust_departure_datetimes_of_timetable()
-
-        # self.adjust_departure_datetimes(timetables=timetables)
