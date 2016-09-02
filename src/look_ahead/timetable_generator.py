@@ -26,7 +26,7 @@ from datetime import datetime, timedelta, time
 class TimetableGenerator(object):
     def __init__(self, line_id, bus_stops, travel_requests):
         """
-        Initialize the TimetableGenerator, send a request to the RouteGenerator, and receive the less time-consuming
+        Initialize the TimetableGenerator, send a request to the RouteGenerator and receive the less time-consuming
         route which connects the provided bus stops.
 
         :param line_id: int

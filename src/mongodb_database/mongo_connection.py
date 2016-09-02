@@ -14,6 +14,7 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+# from __future__ import print_function
 from bson import ObjectId
 from pymongo import MongoClient
 
@@ -1427,6 +1428,7 @@ class MongoConnection(object):
         """
         :param counter: int
         """
+        file_writer = open('../src/travel_requests.txt', 'w')
         documents_cursor = self.get_travel_requests_cursor()
         i = 0
 
@@ -1434,9 +1436,12 @@ class MongoConnection(object):
         #            'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
         for document in documents_cursor:
             if i < counter:
-                print document
+                # print document
+                file_writer.write(str(document) + '\n')
                 i += 1
             else:
                 break
 
-        print 'Total number of travel_request documents: ' + str(documents_cursor.count())
+        # print 'Total number of travel_request documents: ' + str(documents_cursor.count())
+        file_writer.write('Total number of travel_request documents: ' + str(documents_cursor.count()))
+        file_writer.close()
