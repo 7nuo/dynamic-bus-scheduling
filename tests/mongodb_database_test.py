@@ -18,6 +18,7 @@ import time
 from src.mongodb_database.mongo_connection import MongoConnection
 from src.common.logger import log
 from src.common.variables import mongodb_host, mongodb_port
+import os
 
 
 class MongodbDatabaseTester(object):
@@ -79,4 +80,4 @@ if __name__ == '__main__':
     # tester.print_bus_line(line_id=1)
     # tester.print_bus_line_waypoints(line_id=1)
     # tester.print_detailed_bus_line_waypoints(line_id=1)
-    # tester.print_travel_request_documents(counter=1000)
+    tester.print_travel_request_documents(counter=10000)

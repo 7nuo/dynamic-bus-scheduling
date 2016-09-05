@@ -20,12 +20,11 @@ from datetime import timedelta
 
 
 class TimetableUpdater(object):
-    def __init__(self, line_id, bus_stops, timetables):
+    def __init__(self, bus_stops, timetables):
         """
         Initialize the TimetableUpdater, send a request to the RouteGenerator and receive the less time-consuming
         route which connects the provided bus stops.
 
-        :param line_id: int
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
 
         :param timetables: [{
@@ -51,7 +50,6 @@ class TimetableUpdater(object):
 
         :return: None
         """
-        self.line_id = line_id
         self.bus_stops = bus_stops
         self.timetables = timetables
         self.route_generator_response = get_route_between_multiple_bus_stops(bus_stops=bus_stops)
@@ -59,6 +57,7 @@ class TimetableUpdater(object):
 
 def update_timetable(timetable, route_generator_response):
     """
+    Update the timetable_entries of the timetable, taking into consideration the route_generator_response.
 
     :param timetable: {
                '_id', 'line_id',
@@ -80,11 +79,11 @@ def update_timetable(timetable, route_generator_response):
                'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
                          'distances_from_starting_node', 'times_from_starting_node',
                          'distances_from_previous_node', 'times_from_previous_node'}}]
-    :return:
+
+    :return: None (Updates timetable)
     """
     timetable_entries = timetable.get('timetable_entries')
     number_of_timetable_entries = len(timetable_entries)
-    starting_datetime = timetable_entries[0].get('departure_datetime')
     total_times = []
 
     for intermediate_response in route_generator_response:
@@ -97,22 +96,18 @@ def update_timetable(timetable, route_generator_response):
         total_time = total_times[i]
         departure_datetime = timetable_entry.get('departure_datetime')
 
-        if i == 0:
-            arrival_datetime = departure_datetime + timedelta(seconds=total_time)
-            timetable_entry['arrival_datetime'] = arrival_datetime
-        else:
+        if i > 0:
             previous_timetable_entry = timetable_entries[i - 1]
             previous_arrival_datetime = previous_timetable_entry.get('arrival_datetime')
             departure_datetime_based_on_previous_arrival_datetime = ceil_datetime_minutes(
                 starting_datetime=previous_arrival_datetime
             )
-
             if departure_datetime_based_on_previous_arrival_datetime > departure_datetime:
                 departure_datetime = departure_datetime_based_on_previous_arrival_datetime
                 timetable_entry['departure_datetime'] = departure_datetime
 
-            arrival_datetime = departure_datetime + timedelta(seconds=total_time)
-            timetable_entry['arrival_datetime'] = arrival_datetime
+        arrival_datetime = departure_datetime + timedelta(seconds=total_time)
+        timetable_entry['arrival_datetime'] = arrival_datetime
 
 
 def update_timetables(timetables, route_generator_response):

@@ -765,6 +765,32 @@ class MongoConnection(object):
         timetables_cursor = self.timetables_collection.find({'line_id': bus_line_id})
         return timetables_cursor
 
+    def get_timetables_of_bus_line_list(self, bus_line_id):
+        """
+        Retrieve a list containing all the documents of the Timetables collection,
+        with a specific 'bus_line_id' entry.
+
+        timetable_document: {
+            '_id', 'line_id',
+            'timetable_entries': [{
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
+                'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'travel_requests': [{
+                '_id', 'client_id', 'bus_line_id',
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime',
+                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]}
+
+        :param bus_line_id: int
+        :return: timetables_list: [timetable document]
+        """
+        timetables_cursor = self.get_timetables_of_bus_line(bus_line_id=bus_line_id)
+        timetables_list = list(timetables_cursor)
+        return timetables_list
+
     def get_traffic_density_between_two_bus_stop_names(self, starting_bus_stop_name, ending_bus_stop_name):
         """
 
@@ -1198,11 +1224,12 @@ class MongoConnection(object):
 
         :param edge_object_id: ObjectId of edge document
         :param new_traffic_density: float [0, 1]
-        :return:
+        :return: True if an edge_document was updated, otherwise False.
         """
         key = {'_id': ObjectId(edge_object_id)}
         data = {'$set': {'traffic_density': new_traffic_density}}
-        self.edges_collection.update_one(key, data, upsert=False)
+        result = self.edges_collection.update_one(key, data, upsert=False)
+        return result.modified_count == 1
 
     def clear_traffic_density(self):
         """

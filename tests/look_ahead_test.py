@@ -30,68 +30,38 @@ class LookAheadHandlerTester(object):
         log(module_name='look_ahead_handler_test', log_type='INFO',
             log_message='initialize_look_ahead_handler: finished - elapsed_time = ' + str(self.elapsed_time) + ' sec')
 
-    def generate_bus_line(self, line_id, bus_stop_names):
-        log(module_name='look_ahead_handler_test', log_type='INFO', log_message='generate_bus_line: starting')
+    def test_generate_bus_line(self, line_id, bus_stop_names):
+        log(module_name='look_ahead_handler_test', log_type='INFO', log_message='test_generate_bus_line: starting')
         self.start_time = time.time()
         self.look_ahead_handler.generate_bus_line(line_id=line_id, bus_stop_names=bus_stop_names)
         elapsed_time = time.time() - self.start_time
         log(module_name='look_ahead_handler_test', log_type='INFO',
-            log_message='generate_bus_line: finished - elapsed_time = ' + str(elapsed_time) + ' sec')
+            log_message='test_generate_bus_line: finished - elapsed_time = ' + str(elapsed_time) + ' sec')
 
-    def generate_bus_line_timetable(self, line_id):
+    def test_generate_timetables_for_bus_line_id(self, line_id):
         log(module_name='look_ahead_handler_test', log_type='INFO',
-            log_message='generate_bus_line_timetable: starting')
+            log_message='generate_timetables_for_bus_line_id: starting')
         self.start_time = time.time()
-        self.look_ahead_handler.generate_bus_line_timetable(line_id=line_id)
-        self.elapsed_time = time.time() - self.start_time
-        log(module_name='look_ahead_handler_test', log_type='INFO',
-            log_message='generate_bus_line_timetable: finished - elapsed_time = ' + str(self.elapsed_time) + ' sec')
-
-    def test_look_ahead(self):
-        self.look_ahead_handler.generate_bus_line_timetables(
-            line_id=1,
+        self.look_ahead_handler.generate_timetables_for_bus_line_id(
+            line_id=line_id,
             timetables_starting_datetime=datetime(2016, 8, 26, 0, 0, 0, 00000),
             timetables_ending_datetime=datetime(2016, 8, 27, 0, 0, 0, 00000),
             requests_min_departure_datetime=datetime(2016, 8, 26, 0, 0, 0, 00000),
             requests_max_departure_datetime=datetime(2016, 8, 27, 0, 0, 0, 00000),
         )
+        self.elapsed_time = time.time() - self.start_time
+        log(module_name='look_ahead_handler_test', log_type='INFO',
+            log_message='generate_timetables_for_bus_line_id: finished - elapsed_time = ' + str(self.elapsed_time) + ' sec')
 
 
 if __name__ == '__main__':
-    bus_stop_names = ['Centralstationen', 'Stadshuset', 'Skolgatan', 'Ekonomikum', 'Studentstaden', 'Rickomberga',
-                      'Oslogatan', 'Reykjaviksgatan', 'Ekebyhus', 'Sernanders väg', 'Flogsta centrum', 'Sernanders väg',
-                      'Ekebyhus', 'Reykjaviksgatan', 'Oslogatan', 'Rickomberga', 'Studentstaden', 'Ekonomikum',
-                      'Skolgatan', 'Stadshuset', 'Centralstationen']
-
-    # l1 = [1, 2, 3]
-    # l2 = l1
-    # l2[0] = 0
-    # print l1
-    # print l2
+    bus_stop_names = [
+        'Centralstationen', 'Stadshuset', 'Skolgatan', 'Ekonomikum', 'Studentstaden', 'Rickomberga',
+        'Oslogatan', 'Reykjaviksgatan', 'Ekebyhus', 'Sernanders väg', 'Flogsta centrum', 'Sernanders väg',
+        'Ekebyhus', 'Reykjaviksgatan', 'Oslogatan', 'Rickomberga', 'Studentstaden', 'Ekonomikum',
+        'Skolgatan', 'Stadshuset', 'Centralstationen'
+    ]
 
     tester = LookAheadHandlerTester()
-    tester.test_look_ahead()
-    # tester.generate_bus_line(line_id=1, bus_stop_names=bus_stop_names)
-    # tester.generate_bus_line_timetable(line_id=1)
-    # tester.generate_bus_line_timetables()
-
-    # starting_datetime = datetime(2016, 8, 14, 10, 5, 36, 00000)
-    # ending_datetime = datetime(2016, 8, 14, 12, 5, 36, 00000)
-    # diff = ending_datetime - starting_datetime
-    #
-    #
-    #
-    # starting_datetime -= timedelta(microseconds=starting_datetime.microsecond)
-    # starting_datetime -= timedelta(seconds=starting_datetime.second)
-    # starting_datetime += timedelta(minutes=1)
-    #
-    # # starting_datetime.second = 0
-    # # starting_datetime.minute += 1
-    #
-    # # starting_datetime.replace(minute=50, second=0, microsecond=0)
-    # print starting_datetime
-    #
-    # # avg = total / number_of_departure_datetimes
-    # # minutes, seconds = divmod(int(avg), 60)
-    # # hours, minutes = divmod(minutes, 60)
-    # # mean_departure_datetime = datetime.combine(departure_datetimes[0].date(), time(hours, minutes, seconds))
+    tester.test_generate_timetables_for_bus_line_id(line_id=1)
+    # tester.test_generate_bus_line(line_id=1, bus_stop_names=bus_stop_names)
