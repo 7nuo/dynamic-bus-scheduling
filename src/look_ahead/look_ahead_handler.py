@@ -93,7 +93,7 @@ class LookAheadHandler(object):
         :param timetables_ending_datetime: datetime
         :param requests_min_departure_datetime: datetime
         :param requests_max_departure_datetime: datetime
-        :return:
+        :return: None
         """
 
         # 1: The input: bus_line is provided to the function, so as timetables for the corresponding bus_line
@@ -243,7 +243,7 @@ class LookAheadHandler(object):
         :param timetables_ending_datetime: datetime
         :param requests_min_departure_datetime: datetime
         :param requests_max_departure_datetime: datetime
-        :return:
+        :return: None
         """
 
         # 1: The input: line_id is provided to the function, so as timetables for the corresponding
@@ -305,23 +305,23 @@ class LookAheadHandler(object):
         )
         # self.connection.insert_timetables(timetables=timetable_updater.timetables)
 
-    def update_timetables_of_bus_line_id(self, bus_line_id):
+    def update_timetables_of_bus_line_id(self, line_id):
         """
         Update the timetables of a bus_line, taking into consideration the current levels of traffic_density.
 
-        :param bus_line_id: int
+        :param line_id: int
         :return: None
         """
-        bus_line = self.connection.find_bus_line(line_id=bus_line_id)
+        bus_line = self.connection.find_bus_line(line_id=line_id)
         self.update_timetables_of_bus_line(bus_line=bus_line)
 
-    def update_timetables_of_bus_lines(self, bus_lines):
+    def update_timetables_of_bus_lines(self):
         """
-        Update the timetables of a list of bus_lines, taking into consideration the current levels of traffic_density.
+        Update the timetables of all bus_lines, taking into consideration the current levels of traffic_density.
 
-        :param bus_lines: [{
-                   '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}]
         :return: None
         """
+        bus_lines = self.connection.get_bus_lines_list()
+
         for bus_line in bus_lines:
             self.update_timetables_of_bus_line(bus_line=bus_line)

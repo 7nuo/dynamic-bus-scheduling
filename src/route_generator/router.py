@@ -17,9 +17,12 @@ specific language governing permissions and limitations under the License.
 from path_finder import find_path
 from multiple_paths_finder import find_waypoints_between_two_nodes
 from src.common.logger import log
-from src.common.variables import mongodb_host, mongodb_port
+from src.common.variables import mongodb_host, mongodb_port, route_generator_edges_updater_timeout, \
+    route_generator_edges_updater_max_operation_timeout
 from src.geospatial_data.point import distance, Point
 from src.mongodb_database.mongo_connection import MongoConnection
+from multiprocessing import Process
+import time
 
 
 class Router(object):
@@ -30,7 +33,21 @@ class Router(object):
         self.edges_dictionary = {}
         self.points_dictionary = {}
         self.initialize_dictionaries()
+        self.edges_updater_process = Process(target=self.update_edges_dictionary, args=())
+        self.edges_updater_process.start()
         log(module_name='Router', log_type='DEBUG', log_message='initialize_dictionaries ok')
+
+    def update_edges_dictionary(self):
+        time_difference = 0
+        initial_time = time.time()
+
+        while time_difference < route_generator_edges_updater_max_operation_timeout:
+            self.edges_dictionary = self.get_edges_dictionary()
+            log(module_name='Router', log_type='DEBUG', log_message='edges_dictionary updated')
+            time.sleep(route_generator_edges_updater_timeout)
+            time_difference = time.time() - initial_time
+
+        self.edges_updater_process.join()
 
     def initialize_dictionaries(self):
         self.bus_stops_dictionary = self.get_bus_stops_dictionary()

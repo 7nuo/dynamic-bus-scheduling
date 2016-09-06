@@ -80,4 +80,4 @@ if __name__ == '__main__':
     # tester.print_bus_line(line_id=1)
     # tester.print_bus_line_waypoints(line_id=1)
     # tester.print_detailed_bus_line_waypoints(line_id=1)
-    tester.print_travel_request_documents(counter=10000)
+    # tester.print_travel_request_documents(counter=10000)
