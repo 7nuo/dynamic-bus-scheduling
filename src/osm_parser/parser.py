@@ -42,12 +42,7 @@ class Parser(object):
         self.edges = {}
         self.address_book = {}
         self.connection = MongoConnection(host=mongodb_host, port=mongodb_port)
-        log(module_name='osm_parser', log_type='DEBUG', log_message='connection ok')
-
-        self.st_full = 0
-        self.st_empty = 0
-        self.en_full = 0
-        self.en_empty = 0
+        log(module_name='osm_parser', log_type='DEBUG', log_message='mongo_db_connection ok')
 
     def add_address(self, name, node_id, point):
         """
@@ -391,27 +386,33 @@ class Parser(object):
 
     def populate_address_book(self):
         self.connection.insert_addresses(address_book=self.get_list_of_addresses())
-        log(module_name='Parser', log_type='DEBUG', log_message='address_book collection ok')
+        log(module_name='Parser', log_type='DEBUG',
+            log_message='populate_address_book collection (mongodb_database) ok')
 
     def populate_edges(self):
         self.connection.insert_edges(edge_documents=self.get_list_of_edges())
-        log(module_name='Parser', log_type='DEBUG', log_message='edges collection ok')
+        log(module_name='Parser', log_type='DEBUG',
+            log_message='populate_edges collection (mongodb_database) ok')
 
     def populate_nodes(self):
         self.connection.insert_nodes(node_documents=self.get_list_of_nodes())
-        log(module_name='Parser', log_type='DEBUG', log_message='nodes collection ok')
+        log(module_name='Parser', log_type='DEBUG',
+            log_message='populate_nodes collection (mongodb_database) ok')
 
     def populate_points(self):
         self.connection.insert_points(point_documents=self.get_list_of_points())
-        log(module_name='Parser', log_type='DEBUG', log_message='points collection ok')
+        log(module_name='Parser', log_type='DEBUG',
+            log_message='populate_points collection (mongodb_database) ok')
 
     def populate_bus_stops(self):
         self.connection.insert_bus_stops(bus_stops=self.get_list_of_bus_stops())
-        log(module_name='Parser', log_type='DEBUG', log_message='bus_stops collection ok')
+        log(module_name='Parser', log_type='DEBUG',
+            log_message='populate_bus_stops collection (mongodb_database) ok')
 
     def populate_ways(self):
         self.connection.insert_ways(way_documents=self.get_list_of_ways())
-        log(module_name='Parser', log_type='DEBUG', log_message='ways collection ok')
+        log(module_name='Parser', log_type='DEBUG',
+            log_message='populate_ways collection (mongodb_database) ok')
 
     def populate_all_collections(self):
         self.populate_points()
@@ -420,30 +421,3 @@ class Parser(object):
         self.populate_bus_stops()
         self.populate_edges()
         self.populate_address_book()
-
-    # def check_coordinates_list(self, coordinates_list):
-    #     """
-    #
-    #     :param coordinates_list: [(longitude, latitude)]
-    #     :return:
-    #     """
-    #     for index, coordinates in enumerate(coordinates_list):
-    #
-    #         if not self.coordinates_in_edges(longitude=coordinates[0], latitude=coordinates[1]):
-    #             coordinates_list[index] = self.closest_coordinates_in_edges(coordinates)
-    #
-    #     return coordinates_list
-
-    # def get_center_point_from_address_name(self, address_name):
-    #     """
-    #     Retrieve the point which corresponds to the center of a registered address.
-    #
-    #     :type address_name: string
-    #     :return: Point
-    #     """
-    #     retrieved_center = None
-    #
-    #     if address_name in self.address_book:
-    #         retrieved_center = self.address_book[address_name].get_center()
-    #
-    #     return retrieved_center

@@ -148,7 +148,7 @@ class LookAheadHandler(object):
         #                    'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
         #
         travel_requests = self.connection.get_travel_requests_list_based_on_bus_line_id_and_departure_datetime(
-            bus_line_id=line_id,
+            line_id=line_id,
             min_departure_datetime=requests_min_departure_datetime,
             max_departure_datetime=requests_max_departure_datetime
         )
@@ -324,7 +324,7 @@ class LookAheadHandler(object):
         """
         line_id = bus_line.get('line_id')
         bus_stops = bus_line.get('bus_stops')
-        timetables = self.connection.get_timetables_of_bus_line_list(bus_line_id=line_id)
+        timetables = self.connection.get_timetables_of_bus_line_list(line_id=line_id)
 
         timetable_updater = TimetableUpdater(bus_stops=bus_stops, timetables=timetables)
 
