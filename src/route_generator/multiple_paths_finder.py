@@ -81,18 +81,20 @@ class MultiplePathsSet(object):
         return node
 
 
-def find_waypoints_between_two_nodes(starting_node_osm_id, ending_node_osm_id, edges):
+def find_waypoints_between_two_nodes(starting_node_osm_id, ending_node_osm_id, edges_dictionary):
     """
     Find all the possible list of edges which connect two nodes.
 
     :param starting_node_osm_id: integer
     :param ending_node_osm_id: integer
-    :param edges: {starting_node_osm_id -> [{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                             'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                             'max_speed', 'road_type', 'way_id', 'traffic_density'}]}
-    :return: waypoints: [[{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                           'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                           'max_speed', 'road_type', 'way_id', 'traffic_density'}]]
+
+    edge_document: {
+        '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'max_speed', 'road_type', 'way_id', 'traffic_density'}
+
+    :param edges_dictionary: {starting_node_osm_id -> [edge_document]}
+    :return: waypoints: [[edge_document]]
     """
     waypoints = []
     closed_set = {}
@@ -108,15 +110,15 @@ def find_waypoints_between_two_nodes(starting_node_osm_id, ending_node_osm_id, e
         if current_node.osm_id == ending_node_osm_id:
 
             for followed_path in current_node.get_followed_paths():
-                waypoints.append(process_followed_path(followed_path=followed_path, edges=edges))
+                waypoints.append(process_followed_path(followed_path=followed_path, edges_dictionary=edges_dictionary))
 
             current_node.followed_paths = []
             continue
 
-        if current_node.osm_id not in edges or current_node.osm_id in closed_set:
+        if current_node.osm_id not in edges_dictionary or current_node.osm_id in closed_set:
             continue
 
-        for edge in edges.get(current_node.osm_id):
+        for edge in edges_dictionary.get(current_node.osm_id):
             next_node_osm_id = edge.get('ending_node').get('osm_id')
 
             if next_node_osm_id in closed_set:
@@ -131,30 +133,49 @@ def find_waypoints_between_two_nodes(starting_node_osm_id, ending_node_osm_id, e
     return waypoints
 
 
-def process_followed_path(followed_path, edges):
+def process_followed_path(followed_path, edges_dictionary):
     """
+    Get the edges which are included in the followed_path.
 
     :param followed_path: [osm_id]
-    :param edges: {starting_node_osm_id -> [{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                             'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                             'max_speed', 'road_type', 'way_id', 'traffic_density'}]}
-    :return:
+
+    edge_document: {
+        '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'max_speed', 'road_type', 'way_id', 'traffic_density'}
+
+    :param edges_dictionary: {starting_node_osm_id -> [edge_document]}
+    :return: detailed_followed_path: [edge_document]
     """
-    updated_path = []
+    detailed_followed_path = []
 
     for i in range(0, len(followed_path) - 1):
         starting_node = followed_path[i]
         ending_node = followed_path[i + 1]
-        edge = get_edge(edges=edges, starting_node=starting_node, ending_node=ending_node)
+        edge = get_edge(starting_node=starting_node, ending_node=ending_node, edges_dictionary=edges_dictionary)
         # path_entry = {'edge_id': edge.get('_id'), 'starting_node': starting_node, 'ending_node': ending_node}
-        updated_path.append(edge)
+        detailed_followed_path.append(edge)
 
-    return updated_path
+    return detailed_followed_path
 
 
-def get_edge(edges, starting_node, ending_node):
+def get_edge(starting_node, ending_node, edges_dictionary):
+    """
+    Get the edge which connects the selected nodes.
+
+    :param starting_node: osm_id
+    :param ending_node: osm_id
+
+    edge_document: {
+        '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'max_speed', 'road_type', 'way_id', 'traffic_density'}
+
+    :param edges_dictionary: {starting_node_osm_id -> [edge_document]}
+    :return: edge
+    """
     edge = None
-    starting_node_edges = edges[starting_node]
+    starting_node_edges = edges_dictionary[starting_node]
 
     for starting_node_edge in starting_node_edges:
         if starting_node_edge.get('ending_node').get('osm_id') == ending_node:

@@ -21,26 +21,47 @@ from src.look_ahead.timetable_updater import *
 class LookAheadHandler(object):
     def __init__(self):
         self.connection = MongoConnection(host=mongodb_host, port=mongodb_port)
-        log(module_name='look_ahead_handler', log_type='DEBUG', log_message='connection ok')
+        log(module_name='look_ahead_handler', log_type='DEBUG',
+            log_message='mongodb_database_connection: established')
 
     def generate_bus_line(self, line_id, bus_stop_names):
         """
+        Generate a bus_line, consisted of a line_id and a list of bus_stops, and store it to the corresponding
+        collection of the System Database. Moreover, identify all the possible waypoints between the bus_stops
+        of the bus_line, and populate the BusStopWaypoints collection.
 
         :param line_id: int
         :param bus_stop_names: [string]
-        :return:
+        :return: None
         """
+        # 1: The inputs: line_id and bus_stop_names are provided to the function, so as as a bus_line
+        #    with the corresponding line_id and bus_stops to be generated.
+
         log(module_name='look_ahead_handler', log_type='DEBUG',
             log_message='get_waypoints_between_multiple_bus_stops (route_generator): starting')
+
+        # 2: The Look Ahead sends a request to the Route Generator so as to select the corresponding bus_stops
+        #    for the provided bus_stop_names, as well as to identify all the possible combinations
+        #    of intermediate waypoints which connect these bus stops.
+        #
+        # route_generator_response: [{
+        #     'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        #     'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        #     'waypoints': [[{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        #                     'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        #                     'max_speed', 'road_type', 'way_id', 'traffic_density'}]]}]
+        #
         route_generator_response = get_waypoints_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
+
         log(module_name='look_ahead_handler', log_type='DEBUG',
             log_message='get_waypoints_between_multiple_bus_stops (route_generator): finished')
-        # [{'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        #   'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        #   'waypoints': [[{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-        #                   'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-        #                   'max_speed', 'road_type', 'way_id', 'traffic_density'}]]}]
 
+        # 3: The Look Ahead processes the response of the Route Generator, extracting the bus_stops
+        #    and all the possible combinations of their intermediate waypoints which connect them.
+        #    These waypoints correspond to the edges which connect the geographic nodes of the
+        #    operation area. So, a bus_route is represented as a list of edges. Multiple possible
+        #    routes between bus_stops are represented as multiple lists of edges.
+        #
         bus_stops = []
         starting_bus_stop_controller = True
 
@@ -60,7 +81,12 @@ class LookAheadHandler(object):
                 lists_of_edge_object_ids.append(list_of_edge_object_ids)
 
             # waypoints: [[edge_object_id]]
+            #
             waypoints = lists_of_edge_object_ids
+
+            # 4: The Look Ahead populates the BusStopWaypoints collection, by storing all the possible waypoints
+            #    for each combination of starting_bus_stop and ending_bus_stop oh the bus_line.
+            #
             self.connection.insert_bus_stop_waypoints(
                 starting_bus_stop=starting_bus_stop,
                 ending_bus_stop=ending_bus_stop,
@@ -74,12 +100,15 @@ class LookAheadHandler(object):
             bus_stops.append(ending_bus_stop)
 
         log(module_name='look_ahead_handler', log_type='DEBUG',
-            log_message='bus_stop_waypoints (mongodb_database): ok')
+            log_message='insert_bus_stop_waypoints (mongodb_database): ok')
 
+        # 5: The Look Ahead stores the generated bus_line, which is consisted of the line_id and
+        #    the list of its bus_stops, to the corresponding collection of the System Database.
+        #
         self.connection.insert_bus_line(line_id=line_id, bus_stops=bus_stops)
 
         log(module_name='look_ahead_handler', log_type='DEBUG',
-            log_message='bus_line (mongodb_database): ok')
+            log_message='insert_bus_line (mongodb_database): ok')
 
     def generate_timetables_for_bus_line(self, bus_line, timetables_starting_datetime, timetables_ending_datetime,
                                          requests_min_departure_datetime, requests_max_departure_datetime):

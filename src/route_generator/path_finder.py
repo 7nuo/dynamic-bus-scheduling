@@ -68,7 +68,7 @@ class OrderedSet(object):
         """
         Check if a node exists in the nodes list.
 
-        :type node_osm_id: integer
+        :type node_osm_id: int
         :return: boolean
         """
         returned_value = False
@@ -85,7 +85,7 @@ class OrderedSet(object):
         Retrieve the index in which a new node should be inserted, according to the corresponding f_score value.
 
         :param new_node: Node
-        :return index: integer
+        :return index: int
         """
         index = 0
 
@@ -118,24 +118,34 @@ class OrderedSet(object):
         """
         Remove node at index.
 
-        :type index: integer
+        :type index: int
         """
         self.nodes.pop(index)
 
 
-def find_path(starting_node_osm_id, ending_node_osm_id, edges, points):
+def find_path_between_two_nodes(starting_node_osm_id, ending_node_osm_id, edges_dictionary, points_dictionary):
     """
     Implement the A* search algorithm in order to find the less time-consuming path
     between the starting and the ending node.
 
-    :param starting_node_osm_id: integer
-    :param ending_node_osm_id: integer
-    :param edges: {starting_node_osm_id -> [{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                             'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                             'max_speed', 'road_type', 'way_id', 'traffic_density'}]}
-    :param points: {osm_id -> {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}}
-    :return: {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges', 'distances_from_starting_node',
-              'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}
+    :param starting_node_osm_id: int
+    :param ending_node_osm_id: int
+
+    edge_document: {
+        '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'max_speed', 'road_type', 'way_id', 'traffic_density'}
+
+    :param edges_dictionary: {starting_node_osm_id -> [edge_document]}
+
+    :param points_dictionary: {
+               osm_id -> {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}}
+
+    :return: path_between_two_nodes: {
+                 'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges', 'distances_from_starting_node',
+                 'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}
+
+            (None if there is no path between the provided nodes)
     """
     # A dictionary with the nodes that have already been evaluated: {node_osm_id -> node}
     closed_set = {}
@@ -144,14 +154,14 @@ def find_path(starting_node_osm_id, ending_node_osm_id, edges, points):
     open_set = OrderedSet()
 
     # Initialize starting_node.
-    starting_node = Node(osm_id=starting_node_osm_id, point=points.get(starting_node_osm_id))
+    starting_node = Node(osm_id=starting_node_osm_id, point=points_dictionary.get(starting_node_osm_id))
 
     # Distance and time from starting_node equal to zero.
     starting_node.set_g_score(g_score_distance=0.0, g_score_time_on_road=0.0)
 
     # Distance and time to ending node is estimated heuristically.
     starting_node_f_score_distance, starting_node_f_score_time_on_road = heuristic_cost_estimate(
-        starting_point_document=starting_node.point, ending_point_document=points.get(ending_node_osm_id))
+        starting_point_document=starting_node.point, ending_point_document=points_dictionary.get(ending_node_osm_id))
 
     starting_node.set_f_score(f_score_distance=starting_node_f_score_distance,
                               f_score_time_on_road=starting_node_f_score_time_on_road)
@@ -162,24 +172,24 @@ def find_path(starting_node_osm_id, ending_node_osm_id, edges, points):
     # Add the starting_node to the closed_set, since it has already been evaluated.
     closed_set[starting_node_osm_id] = starting_node
 
-    # Add the starting_node to the open_set, since its edges should be evaluated.
+    # Add the starting_node to the open_set, since its edges_dictionary should be evaluated.
     open_set.insert(new_node=starting_node)
 
-    # While there are more nodes, whose edges have not been evaluated.
+    # While there are more nodes, whose edges_dictionary have not been evaluated.
     while len(open_set) > 0:
 
         # During the first iteration of this loop, current_node will be equal to starting_node.
         current_node = open_set.pop()
 
-        # ending_node has been discovered.
+        # ending_node has been discovered: path should be reconstructed.
         if current_node.osm_id == ending_node_osm_id:
-            return reconstruct_path(list_of_nodes=current_node.get_previous_nodes(), edges=edges)
+            return reconstruct_path(list_of_nodes=current_node.get_previous_nodes(), edges_dictionary=edges_dictionary)
 
-        # current_node does not have any edges.
-        if current_node.osm_id not in edges:
+        # current_node does not have any edges_dictionary.
+        if current_node.osm_id not in edges_dictionary:
             continue
 
-        for edge in edges.get(current_node.osm_id):
+        for edge in edges_dictionary.get(current_node.osm_id):
             next_node_osm_id = edge.get('ending_node').get('osm_id')
 
             # Check whether the next_node has already been evaluated.
@@ -187,10 +197,10 @@ def find_path(starting_node_osm_id, ending_node_osm_id, edges, points):
                 next_node = closed_set.get(next_node_osm_id)
                 # continue
             else:
-                next_node = Node(osm_id=next_node_osm_id, point=points.get(next_node_osm_id))
+                next_node = Node(osm_id=next_node_osm_id, point=points_dictionary.get(next_node_osm_id))
                 next_node.heuristic_estimated_distance, next_node.heuristic_estimated_time_on_road = \
                     heuristic_cost_estimate(starting_point_document=next_node.point,
-                                            ending_point_document=points.get(ending_node_osm_id))
+                                            ending_point_document=points_dictionary.get(ending_node_osm_id))
 
             max_speed = edge.get('max_speed')
             road_type = edge.get('road_type')
@@ -225,143 +235,29 @@ def find_path(starting_node_osm_id, ending_node_osm_id, edges, points):
             # next_node has been evaluated.
             closed_set[next_node_osm_id] = next_node
 
-            # Add next_node to the open_set, so as to allow its edges to be evaluated.
+            # Add next_node to the open_set, so as to allow its edges_dictionary to be evaluated.
             if not open_set.exists(next_node_osm_id):
                 open_set.insert(new_node=next_node)
 
     return None
 
 
-# def find_multiple_paths(starting_node_osm_id, ending_node_osm_id, edges, points, number_of_paths):
-#     """
-#
-#     :param starting_node_osm_id: osm_id: integer
-#     :param ending_node_osm_id: osm_id: integer
-#     :param edges: {starting_node_osm_id -> [{ending_node_osm_id, max_speed, road_type, way_id, traffic_density}]
-#     :param points: {osm_id -> point}
-#     :param number_of_paths: integer
-#     :return: [{'total_distance', 'total_time', 'node_osm_ids', 'points', 'distances_from_starting_node',
-#                'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}]
-#     """
-#     paths = []
-#
-#     # A dictionary with the nodes that have already been evaluated: {node_osm_id -> node}
-#     closed_set = {}
-#
-#     # The set of currently discovered nodes still to be evaluated. Initially, only the starting node is known.
-#     open_set = OrderedSet()
-#
-#     # Initialize starting_node.
-#     starting_node = Node(osm_id=starting_node_osm_id, point=points.get(starting_node_osm_id))
-#
-#     # Distance and time from starting_node equal to zero.
-#     starting_node.set_g_score(g_score_distance=0.0, g_score_time_on_road=0.0)
-#
-#     # Distance and time to ending node is estimated heuristically.
-#     starting_node_f_score_distance, starting_node_f_score_time_on_road = heuristic_cost_estimate(
-#         starting_point=starting_node.point, ending_point=points.get(ending_node_osm_id))
-#
-#     starting_node.set_f_score(f_score_distance=starting_node_f_score_distance,
-#                               f_score_time_on_road=starting_node_f_score_time_on_road)
-#
-#     # Add the starting_node to the list of previous nodes.
-#     starting_node.add_previous_node(node=starting_node)
-#
-#     # Add the starting_node to the closed_set, since it has already been evaluated.
-#     closed_set[starting_node_osm_id] = starting_node
-#
-#     # Add the starting_node to the open_set, since its edges should be evaluated.
-#     open_set.insert(new_node=starting_node)
-#
-#     # While there are more nodes, whose edges have not been evaluated.
-#     while len(open_set) > 0:
-#
-#         # During the first iteration of this loop, current_node will be equal to starting_node.
-#         current_node = open_set.pop()
-#
-#         # ending_node has been discovered.
-#         if current_node.osm_id == ending_node_osm_id:
-#             paths.append(reconstruct_path(list_of_nodes=current_node.get_previous_nodes()))
-#
-#             if len(paths) > number_of_paths - 1:
-#                 return paths
-#             else:
-#                 continue
-#
-#         # current_node does not have any edges.
-#         if current_node.osm_id not in edges:
-#             continue
-#
-#         for edge in edges.get(current_node.osm_id):
-#             next_node_osm_id = edge.get('ending_node')
-#
-#             # Check whether the next_node has already been evaluated.
-#             if next_node_osm_id in closed_set:
-#                 next_node = closed_set.get(next_node_osm_id)
-#                 # continue
-#             else:
-#                 next_node = Node(osm_id=next_node_osm_id, point=points.get(next_node_osm_id))
-#                 next_node.heuristic_estimated_distance, next_node.heuristic_estimated_time_on_road = \
-#                     heuristic_cost_estimate(starting_point=next_node.point,
-#                                             ending_point=points.get(ending_node_osm_id))
-#
-#             # next_node = Node(osm_id=next_node_osm_id, point=points.get(next_node_osm_id))
-#             # next_node.heuristic_estimated_distance, next_node.heuristic_estimated_time_on_road = \
-#             #     heuristic_cost_estimate(starting_point=next_node.point,
-#             #                             ending_point=points.get(ending_node_osm_id))
-#
-#             max_speed = edge.get('max_speed')
-#             road_type = edge.get('road_type')
-#             traffic_density = edge.get('traffic_density')
-#
-#             # Calculate the difference in values between current_node and next_node.
-#             additional_g_score_distance, additional_g_score_time_on_road = g_score_estimate(
-#                 starting_point=current_node.point,
-#                 ending_point=next_node.point,
-#                 max_speed=max_speed,
-#                 road_type=road_type,
-#                 traffic_density=traffic_density
-#             )
-#
-#             # Calculate new g_score values
-#             new_g_score_distance = current_node.g_score_distance + additional_g_score_distance
-#             new_g_score_time_on_road = current_node.g_score_time_on_road + additional_g_score_time_on_road
-#
-#             if next_node.g_score_time_on_road < new_g_score_time_on_road:
-#                 continue
-#
-#             next_node.g_score_distance = new_g_score_distance
-#             next_node.g_score_time_on_road = new_g_score_time_on_road
-#
-#             # Calculate new f_score values
-#             next_node.f_score_distance = new_g_score_distance + next_node.heuristic_estimated_distance
-#             next_node.f_score_time_on_road = new_g_score_time_on_road + next_node.heuristic_estimated_time_on_road
-#
-#             # Add next_node to the list of previous nodes.
-#             next_node.set_previous_nodes(previous_nodes=current_node.get_previous_nodes() + [next_node])
-#
-#             # next_node has been evaluated.
-#             closed_set[next_node_osm_id] = next_node
-#
-#             # Add next_node to the open_set, so as to allow its edges to be evaluated.
-#             if not open_set.exists(next_node_osm_id):
-#                 open_set.insert(new_node=next_node)
-#
-#             # open_set.insert(new_node=next_node)
-#
-#     return paths
-
-
-def reconstruct_path(list_of_nodes, edges):
+def reconstruct_path(list_of_nodes, edges_dictionary):
     """
     Get a dictionary containing the parameters of the path.
 
     :param list_of_nodes: The list of nodes which consist the optimal path.
-    :param edges: {starting_node_osm_id -> [{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                             'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                             'max_speed', 'road_type', 'way_id', 'traffic_density'}]}
-    :return: {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges', 'distances_from_starting_node',
-              'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}
+    
+    edge_document: {
+        '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'max_speed', 'road_type', 'way_id', 'traffic_density'}
+
+    :param edges_dictionary: {starting_node_osm_id -> [edge_document]}
+    
+    :return: path: {
+                 'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges', 'distances_from_starting_node',
+                 'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}
     """
     node_osm_ids = []
     points = []
@@ -401,7 +297,7 @@ def reconstruct_path(list_of_nodes, edges):
     for i in range(0, len(node_osm_ids) - 1):
         starting_node_osm_id = node_osm_ids[i]
         ending_node_osm_id = node_osm_ids[i + 1]
-        list_of_starting_node_edges = edges.get(starting_node_osm_id)
+        list_of_starting_node_edges = edges_dictionary.get(starting_node_osm_id)
         edge = None
 
         for starting_node_edge in list_of_starting_node_edges:
@@ -411,14 +307,17 @@ def reconstruct_path(list_of_nodes, edges):
 
         followed_edges.append(edge)
 
-    final_path = {'total_distance': total_distance, 'total_time': total_time, 'node_osm_ids': node_osm_ids,
-                  'points': points, 'edges': followed_edges,
-                  'distances_from_starting_node': distances_from_starting_node,
-                  'times_from_starting_node': times_from_starting_node,
-                  'distances_from_previous_node': distances_from_previous_node,
-                  'times_from_previous_node': times_from_previous_node}
+    path = {'total_distance': total_distance,
+            'total_time': total_time,
+            'node_osm_ids': node_osm_ids,
+            'points': points,
+            'edges': followed_edges,
+            'distances_from_starting_node': distances_from_starting_node,
+            'times_from_starting_node': times_from_starting_node,
+            'distances_from_previous_node': distances_from_previous_node,
+            'times_from_previous_node': times_from_previous_node}
 
-    return final_path
+    return path
 
 
 def estimate_road_type_speed_decrease_factor(road_type):

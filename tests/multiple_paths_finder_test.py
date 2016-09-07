@@ -54,6 +54,6 @@ if __name__ == '__main__':
     tester = Tester()
     tester.populate_points()
     tester.populate_edges()
-    paths = find_waypoints_between_two_nodes(starting_node_osm_id=0, ending_node_osm_id=3, edges=tester.edges,
+    paths = find_waypoints_between_two_nodes(starting_node_osm_id=0, ending_node_osm_id=3, edges_dictionary=tester.edges,
                                              points=tester.points, number_of_paths=0)
     print paths
