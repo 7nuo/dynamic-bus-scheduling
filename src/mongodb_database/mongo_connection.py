@@ -117,6 +117,14 @@ class MongoConnection(object):
         result = self.timetables_collection.delete_many({})
         return result.deleted_count
 
+    def clear_traffic_density(self):
+        """
+        Set the traffic_density values of all edge documents to 0.
+        """
+        key = {}
+        data = {'$set': {'traffic_density': 0}}
+        self.edges_collection.update_many(key, data, upsert=False)
+
     def clear_travel_requests(self):
         """
         Delete all the documents of the TravelRequests collection.
@@ -371,7 +379,7 @@ class MongoConnection(object):
         document = self.bus_lines_collection.find_one({'line_id': line_id})
         return document
 
-    def find_bus_stop(self, osm_id):
+    def find_bus_stop_from_osm_id(self, osm_id):
         """
         Retrieve a bus_stop based on the osm_id.
 
@@ -575,85 +583,172 @@ class MongoConnection(object):
         bus_stops_list = list(self.get_bus_stops())
         return bus_stops_list
 
-    def get_bus_stop_waypoints(self, starting_bus_stop_name, ending_bus_stop_name):
+    def get_waypoints_between_two_bus_stop_names(self, starting_bus_stop_name, ending_bus_stop_name):
         """
-        Retrieve the waypoints (ObjectIds of edge documents) between two bus_stops.
+        Retrieve the bus_stop_waypoints_document between two bus_stops, based on their names.
 
+        bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_object_id]]
+        }
         :param starting_bus_stop_name: string
         :param ending_bus_stop_name: string
-        :return: {'_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                  'waypoints': [[edge_object_id]]}
+        :return: bus_stop_waypoints: bus_stop_waypoints_document
         """
         bus_stop_waypoints = self.bus_stop_waypoints_collection.find_one({
             'starting_bus_stop.name': starting_bus_stop_name,
-            'ending_bus_stop.name': ending_bus_stop_name})
-
+            'ending_bus_stop.name': ending_bus_stop_name
+        })
         return bus_stop_waypoints
 
-    def get_bus_stop_waypoints_detailed_edges(self, starting_bus_stop_name, ending_bus_stop_name):
+    def get_waypoints_between_two_bus_stops(self, starting_bus_stop, ending_bus_stop):
         """
-        Retrieve the waypoints (detailed edge documents) between two bus_stops.
+        Retrieve the bus_stop_waypoints_document between two bus_stops.
 
+        bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_object_id]]
+        }
+        :param starting_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+        :param ending_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+        :return: bus_stop_waypoints: bus_stop_waypoints_document
+        """
+        bus_stop_waypoints = self.bus_stop_waypoints_collection.find_one({
+            'starting_bus_stop._id': starting_bus_stop.get('_id'),
+            'ending_bus_stop._id': ending_bus_stop.get('_id')
+        })
+        return bus_stop_waypoints
+
+    def get_detailed_waypoints_between_two_bus_stop_names(self, starting_bus_stop_name, ending_bus_stop_name):
+        """
+        Retrieve the detailed_bus_stop_waypoints_document between two bus_stops, based on their names.
+
+        edge_document: {
+            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'max_speed', 'road_type', 'way_id', 'traffic_density'
+        }
+        bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_object_id]]
+        }
+        detailed_bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_document]]
+        }
         :param starting_bus_stop_name: string
         :param ending_bus_stop_name: string
-        :return: {'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                  'waypoints': [[{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                  'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                  'max_speed', 'road_type', 'way_id', 'traffic_density'}]]}
+        :return: detailed_bus_stop_waypoints: detailed_bus_stop_waypoints_document
         """
-        bus_stop_waypoints = self.get_bus_stop_waypoints(
+        bus_stop_waypoints = self.get_waypoints_between_two_bus_stop_names(
             starting_bus_stop_name=starting_bus_stop_name,
             ending_bus_stop_name=ending_bus_stop_name
         )
-        # {'_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        #  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        #  'waypoints': [[edge_object_id]]}
+        detailed_bus_stop_waypoints = self.get_detailed_waypoints_from_waypoints(
+            bus_stop_waypoints=bus_stop_waypoints
+        )
+        return detailed_bus_stop_waypoints
 
+    def get_detailed_waypoints_between_two_bus_stops(self, starting_bus_stop, ending_bus_stop):
+        """
+        Retrieve the detailed_bus_stop_waypoints_document between two bus_stops.
+
+        edge_document: {
+            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'max_speed', 'road_type', 'way_id', 'traffic_density'
+        }
+        bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_object_id]]
+        }
+        detailed_bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_document]]
+        }
+        :param starting_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+        :param ending_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+        :return: detailed_bus_stop_waypoints: detailed_bus_stop_waypoints_document
+        """
+        bus_stop_waypoints = self.get_waypoints_between_two_bus_stops(
+            starting_bus_stop=starting_bus_stop,
+            ending_bus_stop=ending_bus_stop
+        )
+        detailed_bus_stop_waypoints = self.get_detailed_waypoints_from_waypoints(
+            bus_stop_waypoints=bus_stop_waypoints
+        )
+        return detailed_bus_stop_waypoints
+
+    def get_detailed_waypoints_from_waypoints(self, bus_stop_waypoints):
+        """
+        Convert a bus_stop_waypoints_document to a detailed_bus_stop_waypoints document.
+
+        bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_object_id]]
+        }
+        detailed_bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_document]]
+        }
+        :param bus_stop_waypoints: bus_stop_waypoints_document
+        :return: detailed_bus_stop_waypoints: detailed_bus_stop_waypoints_document
+        """
         lists_of_edge_object_ids = bus_stop_waypoints.get('waypoints')
         lists_of_detailed_edges = []
 
         for list_of_edge_object_ids in lists_of_edge_object_ids:
-            list_of_edge_object_ids = [ObjectId(i) for i in list_of_edge_object_ids]
-            list_of_detailed_edges = [self.edges_collection.find_one({'_id': i}) for i in list_of_edge_object_ids]
+            list_of_detailed_edge_object_ids = [ObjectId(i) for i in list_of_edge_object_ids]
+            list_of_detailed_edges = [
+                self.edges_collection.find_one({'_id': i}) for i in list_of_detailed_edge_object_ids
+                ]
             lists_of_detailed_edges.append(list_of_detailed_edges)
 
-        bus_stop_waypoints['waypoints'] = lists_of_detailed_edges
-        return bus_stop_waypoints
+        detailed_bus_stop_waypoints = bus_stop_waypoints
+        detailed_bus_stop_waypoints['waypoints'] = lists_of_detailed_edges
+        return detailed_bus_stop_waypoints
 
-    def get_edges(self):
+    def get_edges_cursor(self):
         """
-        Retrieve all the documents of the Edges collection.
+        Retrieve a cursor of all the documents of the Edges collection.
 
-        :return: Cursor -> {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                            'max_speed', 'road_type', 'way_id', 'traffic_density'}
+        edge_document: {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                        'max_speed', 'road_type', 'way_id', 'traffic_density'}
+
+        :return: edges_cursor -> edge_document
         """
-        cursor = self.edges_collection.find({})
-        return cursor
+        edges_cursor = self.edges_collection.find({})
+        return edges_cursor
 
     def get_edges_dictionary(self):
         """
         Retrieve a dictionary containing all the documents of the Edges collection.
 
-        :return: {starting_node_osm_id -> [{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                            'max_speed', 'road_type', 'way_id', 'traffic_density'}]}
+        edge_document: {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                        'max_speed', 'road_type', 'way_id', 'traffic_density'}
+
+        :return: edges_dictionary: {starting_node_osm_id -> [edge_document]}
         """
         edges_dictionary = {}
-        edges_cursor = self.get_edges()
+        edges_cursor = self.get_edges_cursor()
 
-        # Cursor -> {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-        #            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-        #            'max_speed', 'road_type', 'way_id', 'traffic_density'}
-        for edges_document in edges_cursor:
-            starting_node_osm_id = edges_document.get('starting_node').get('osm_id')
+        for edge_document in edges_cursor:
+            starting_node_osm_id = edge_document.get('starting_node').get('osm_id')
 
             if starting_node_osm_id in edges_dictionary:
-                edges_dictionary[starting_node_osm_id].append(edges_document)
+                edges_dictionary[starting_node_osm_id].append(edge_document)
             else:
-                edges_dictionary[starting_node_osm_id] = [edges_document]
+                edges_dictionary[starting_node_osm_id] = [edge_document]
 
         return edges_dictionary
 
@@ -661,40 +756,174 @@ class MongoConnection(object):
         """
         Retrieve a list containing all the documents of the Edges collection.
 
-        :return: [{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                   'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                   'max_speed', 'road_type', 'way_id', 'traffic_density'}]
+        edge_document: {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                        'max_speed', 'road_type', 'way_id', 'traffic_density'}
+
+        :return: edges_list: [edge_document]
         """
-        edges_list = list(self.get_edges())
+        edges_list = list(self.get_edges_cursor())
         return edges_list
 
-    def get_edges_from_starting_node_osm_id(self, starting_node_osm_id):
+    def get_edges_cursor_from_starting_node_osm_id(self, starting_node_osm_id):
         """
-        Retrieve the edge documents based on the osm_id of the starting node.
+        Retrieve a cursor of the edge documents, based on the osm_id of the starting node.
 
-        :param starting_node_osm_id: osm_id
-        :type starting_node_osm_id: int
-        :return: Cursor -> {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                            'max_speed', 'road_type', 'way_id', 'traffic_density'}
+        edge_document: {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+                        'max_speed', 'road_type', 'way_id', 'traffic_density'}
+
+        :param starting_node_osm_id: osm_id (int)
+        :return: edges_cursor -> edge_document
         """
-        cursor = self.edges_collection.find({'starting_node.osm_id': starting_node_osm_id})
-        return cursor
+        edges_cursor = self.edges_collection.find({'starting_node.osm_id': starting_node_osm_id})
+        return edges_cursor
+
+    def get_edges_list_from_starting_node_osm_id(self, starting_node_osm_id):
+        """
+        Retrieve a list containing the edge documents, based on the osm_id of the starting node.
+
+        edge_document: {
+            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'max_speed', 'road_type', 'way_id', 'traffic_density'
+        }
+        :param starting_node_osm_id: osm_id (int)
+        :return: edges_list: [edge_document]
+        """
+        edges_cursor = self.edges_collection.find({'starting_node.osm_id': starting_node_osm_id})
+        edges_list = list(edges_cursor)
+        return edges_list
+
+    def get_edges_list_of_bus_line(self, line_id):
+        """
+        Get a list containing all the edge_documents which are contained in the waypoints of a bus_line.
+
+        bus_line_document: {
+            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        }
+        bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_object_id]]
+        }
+        edge_document: {
+            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'max_speed', 'road_type', 'way_id', 'traffic_density'
+        }
+        :param line_id: int
+        :return: edges_list: [edge_document]
+        """
+        edge_object_ids_list = []
+        bus_line = self.find_bus_line(line_id=line_id)
+        bus_stops = bus_line.get('bus_stops')
+        number_of_bus_stops = len(bus_stops)
+
+        for i in range(0, number_of_bus_stops - 1):
+            starting_bus_stop = bus_stops[i]
+            ending_bus_stop = bus_stops[i + 1]
+
+            bus_stop_waypoints = self.get_waypoints_between_two_bus_stops(
+                starting_bus_stop=starting_bus_stop,
+                ending_bus_stop=ending_bus_stop
+            )
+            edge_object_ids = self.get_edge_object_ids_list_of_bus_stop_waypoints(
+                bus_stop_waypoints=bus_stop_waypoints
+            )
+            for edge_object_id in edge_object_ids:
+                if edge_object_id not in edge_object_ids_list:
+                    edge_object_ids_list.append(edge_object_id)
+
+        edges_list = self.get_edges_list_from_edge_object_ids_list(
+            edge_object_ids_list=edge_object_ids_list
+        )
+        return edges_list
+
+    def get_edges_list_of_bus_stop_waypoints(self, bus_stop_waypoints):
+        """
+        Get a list containing all the edge_documents which are included in a bus_stop_waypoints document.
+
+        edge_document: {
+            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'max_speed', 'road_type', 'way_id', 'traffic_density'
+        }
+        bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_object_id]]
+        }
+        :param bus_stop_waypoints: bus_stop_waypoints_document
+        :return: edges_list: [edge_document]
+        """
+
+        list_of_all_edge_object_ids = self.get_edge_object_ids_list_of_bus_stop_waypoints(
+            bus_stop_waypoints=bus_stop_waypoints
+        )
+        edges_list = self.get_edges_list_from_edge_object_ids_list(
+            edge_object_ids_list=list_of_all_edge_object_ids
+        )
+        return edges_list
+
+    def get_edges_list_from_edge_object_ids_list(self, edge_object_ids_list):
+        """
+        Get a list of edge_documents, based on their object_ids.
+
+        edge_document: {
+            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'max_speed', 'road_type', 'way_id', 'traffic_density'
+        }
+        :param edge_object_ids_list: [edge_object_id]
+        :return: edges_list: [edge_document]
+        """
+        edges_list = []
+
+        for edge_object_id in edge_object_ids_list:
+            edge = self.find_edge_from_object_id(edge_object_id=edge_object_id)
+            edges_list.append(edge)
+
+        return edges_list
+
+    @staticmethod
+    def get_edge_object_ids_list_of_bus_stop_waypoints(bus_stop_waypoints):
+        """
+        Get a list containing all the object_ids of the edge_documents,
+        which are included in a bus_stop_waypoints document.
+
+        bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_object_id]]
+        }
+        :param bus_stop_waypoints: bus_stop_waypoints_document
+        :return: list_of_all_edge_object_ids: [edge_object_id]
+        """
+        list_of_all_edge_object_ids = []
+        lists_of_edge_object_ids = bus_stop_waypoints.get('waypoints')
+
+        for list_of_edge_object_ids in lists_of_edge_object_ids:
+            for edge_object_id in list_of_edge_object_ids:
+                if edge_object_id not in list_of_all_edge_object_ids:
+                    list_of_all_edge_object_ids.append(edge_object_id)
+
+        return list_of_all_edge_object_ids
 
     def get_ending_nodes_of_edges_dictionary(self):
         """
         Retrieve a dictionary containing all the ending_nodes which are included in the Edges collection.
 
-        :return: {ending_node_osm_id -> [{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                          'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                          'max_speed', 'road_type', 'way_id', 'traffic_density'}]}
+        edge_document: {
+            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'max_speed', 'road_type', 'way_id', 'traffic_density'
+        }
+        :return: ending_nodes_dictionary: {ending_node_osm_id -> [edge_document]}
         """
         ending_nodes_dictionary = {}
-        edges_cursor = self.get_edges()
+        edges_cursor = self.get_edges_cursor()
 
-        # Cursor -> {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-        #            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-        #            'max_speed', 'road_type', 'way_id', 'traffic_density'}
         for edges_document in edges_cursor:
             ending_node_osm_id = edges_document.get('ending_node').get('osm_id')
 
@@ -799,7 +1028,7 @@ class MongoConnection(object):
                   'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                   'waypoints': [[{'edge_object_id', 'traffic_density'}]]}
         """
-        bus_stop_waypoints = self.get_bus_stop_waypoints(
+        bus_stop_waypoints = self.get_waypoints_between_two_bus_stop_names(
             starting_bus_stop_name=starting_bus_stop_name,
             ending_bus_stop_name=ending_bus_stop_name
         )
@@ -1230,14 +1459,6 @@ class MongoConnection(object):
         result = self.edges_collection.update_one(key, data, upsert=False)
         return result.modified_count == 1
 
-    def clear_traffic_density(self):
-        """
-        Set the traffic_density values of all edge documents to 0.
-        """
-        key = {}
-        data = {'$set': {'traffic_density': 0}}
-        self.edges_collection.update_many(key, data, upsert=False)
-
     def print_bus_stops(self, counter):
         """
         Print up to a specific number of bus_stop documents.
@@ -1263,7 +1484,7 @@ class MongoConnection(object):
 
         :param counter: int
         """
-        documents_cursor = self.get_edges()
+        documents_cursor = self.get_edges_cursor()
         i = 0
 
         # Cursor -> {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
@@ -1356,7 +1577,7 @@ class MongoConnection(object):
         :param starting_bus_stop_name: string
         :param ending_bus_stop_name: string
         """
-        bus_stop_waypoints = self.get_bus_stop_waypoints(
+        bus_stop_waypoints = self.get_waypoints_between_two_bus_stop_names(
             starting_bus_stop_name=starting_bus_stop_name,
             ending_bus_stop_name=ending_bus_stop_name
         )
@@ -1379,7 +1600,7 @@ class MongoConnection(object):
         :param starting_bus_stop_name: string
         :param ending_bus_stop_name: string
         """
-        bus_stop_waypoints = self.get_bus_stop_waypoints_detailed_edges(
+        bus_stop_waypoints = self.get_detailed_waypoints_between_two_bus_stop_names(
             starting_bus_stop_name=starting_bus_stop_name,
             ending_bus_stop_name=ending_bus_stop_name
         )
