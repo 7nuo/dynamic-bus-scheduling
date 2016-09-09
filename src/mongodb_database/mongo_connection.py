@@ -143,109 +143,308 @@ class MongoConnection(object):
         result = self.ways_collection.delete_many({})
         return result.deleted_count
 
-    def delete_address(self, name):
+    def delete_address_document(self, object_id=None, name=None):
         """
-        Delete an address document from the AddressBook collection.
+        Delete an address_document.
+
         address_document: {'_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}}
 
-        :type name: string
-        :return: True if the address exists, otherwise False
+        :param object_id: ObjectId
+        :param name: string
+        :return: True if the address_document was successfully deleted, otherwise False.
         """
-        result = self.address_book_collection.delete({'name': name})
+        if object_id is not None:
+            result = self.address_book_collection.delete_one({'_id': ObjectId(object_id)})
+        elif name is not None:
+            result = self.address_book_collection.delete_one({'name': name})
+        else:
+            return False
+
         return result.deleted_count == 1
 
-    def delete_bus_line(self, line_id):
+    def delete_address_documents(self, object_ids=None, names=None):
         """
-        Delete a bus_line document based on the line_id.
-        bus_line_document: {'_id', 'line_id',
-                            'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
+        Delete multiple address_documents.
 
-        :type line_id: int
-        :return: True if the bus_line exists in the database, otherwise False.
+        address_document: {'_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}}
+
+        :param object_ids: [ObjectId]
+        :param names: [string]
+        :return: The number of deleted documents.
         """
-        result = self.bus_lines_collection.delete_one({'line_id': line_id})
+        if object_ids is not None:
+            processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
+            result = self.address_book_collection.delete_many({'_id': {'$in': processed_object_ids}})
+        elif names is not None:
+            result = self.address_book_collection.delete_many({'name': {'$in': names}})
+        else:
+            return 0
+
+        return result.deleted_count
+
+    def delete_bus_line_document(self, object_id=None, line_id=None):
+        """
+        Delete a bus_line_document.
+
+        bus_line_document: {
+            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        }
+        :param object_id: ObjectId
+        :param line_id: int
+        :return: True if the bus_line_document was successfully deleted, otherwise False.
+        """
+        if object_id is not None:
+            result = self.bus_lines_collection.delete_one({'_id': ObjectId(object_id)})
+        elif line_id is not None:
+            result = self.bus_lines_collection.delete_one({'line_id': line_id})
+        else:
+            return False
+
         return result.deleted_count == 1
 
-    def delete_bus_stop(self, osm_id):
+    def delete_bus_line_documents(self, object_ids=None, line_ids=None):
         """
-        Delete a bus_stop document based on the osm_id.
+        Delete multiple bus_line_document.
+
+        bus_line_document: {
+            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        }
+        :param object_ids: [ObjectId]
+        :param line_ids: [int]
+        :return: The number of deleted documents.
+        """
+        if object_ids is not None:
+            processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
+            result = self.bus_lines_collection.delete_many({'_id': {'$in': processed_object_ids}})
+        elif line_ids is not None:
+            result = self.bus_lines_collection.delete_many({'line_id': {'$in': line_ids}})
+        else:
+            return 0
+
+        return result.deleted_count
+
+    def delete_bus_stop_document(self, object_id=None, osm_id=None):
+        """
+        Delete a bus_stop_document.
+
         bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
 
-        :type osm_id: int
-        :return: True if the bus_stop exists in the database, otherwise False.
+        :param object_id: ObjectId
+        :param osm_id: int
+        :return: True if the bus_stop_document was successfully deleted, otherwise False.
         """
-        result = self.bus_stops_collection.delete_one({'osm_id': osm_id})
+        if object_id is not None:
+            result = self.bus_stops_collection.delete_one({'_id': ObjectId(object_id)})
+        elif osm_id is not None:
+            result = self.bus_stops_collection.delete_one({'osm_id': osm_id})
+        else:
+            return False
+
         return result.deleted_count == 1
 
-    def delete_bus_stop_waypoints(self, starting_bus_stop_name, ending_bus_stop_name):
+    def delete_bus_stop_documents(self, object_ids=None, osm_ids=None):
         """
-        Delete a bus_stop_waypoints document based on the starting and ending node names.
-        bus_stop_waypoints_document:
-            {'_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-             'waypoints': [[edge_object_id]]}
+        Delete multiple bus_stop_documents.
 
-        :type starting_bus_stop_name: string
-        :type ending_bus_stop_name: string
-        :return: True if the document exists, otherwise False.
-        """
-        result = self.bus_stop_waypoints_collection.delete_one({'starting_bus_stop.name': starting_bus_stop_name,
-                                                                'ending_bus_stop.name': ending_bus_stop_name})
-        return result.deleted_count == 1
+        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
 
-    def delete_edge(self, starting_node_osm_id, ending_node_osm_id):
-        """
-        Delete an edge document based on the starting and ending nodes.
-        edge_document: {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                        'max_speed', 'road_type', 'way_id', 'traffic_density'}
-
-        :type starting_node_osm_id: int
-        :type ending_node_osm_id: int
-        :return: True if the document exists, otherwise False.
-        """
-        result = self.edges_collection.delete_one({'starting_node.osm_id': starting_node_osm_id,
-                                                   'ending_node.osm_id': ending_node_osm_id})
-        return result.deleted_count
-
-    def delete_edges_from_starting_node(self, starting_node_osm_id):
-        """
-        Delete the documents of the Edges collection, with a specific starting_node_osm_id.
-        edge_document: {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                        'max_speed', 'road_type', 'way_id', 'traffic_density'}
-
-        :type starting_node_osm_id: int
+        :param object_ids: [ObjectId]
+        :param osm_ids: [int]
         :return: The number of deleted documents.
         """
-        result = self.edges_collection.delete_many({'starting_node.osm_id': starting_node_osm_id})
+        if object_ids is not None:
+            processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
+            result = self.bus_stops_collection.delete_many({'_id': {'$in': processed_object_ids}})
+        elif osm_ids is not None:
+            result = self.bus_stops_collection.delete_many({'osm_id': {'$in': osm_ids}})
+        else:
+            return 0
+
         return result.deleted_count
 
-    def delete_node(self, osm_id):
+    def delete_bus_stop_waypoints_document(self, object_id=None, starting_bus_stop=None, ending_bus_stop=None,
+                                           starting_bus_stop_name=None, ending_bus_stop_name=None):
         """
-        Delete a node document based on the osm_id.
+        Delete a bus_stop_waypoints_document.
+
+        bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_object_id]]
+        }
+        :param object_id: ObjectId
+        :param starting_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+        :param ending_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+        :param starting_bus_stop_name: string
+        :param ending_bus_stop_name: string
+        :return: True if the bus_stop_waypoints_document was successfully deleted, otherwise False.
+        """
+        if object_id is not None:
+            result = self.bus_stop_waypoints_collection.delete_one({'_id': ObjectId(object_id)})
+        elif starting_bus_stop is not None and ending_bus_stop is not None:
+            result = self.bus_stop_waypoints_collection.delete_one({
+                'starting_bus_stop._id': starting_bus_stop.get('_id'),
+                'ending_bus_stop._id': ending_bus_stop.get('_id')
+            })
+        elif starting_bus_stop_name is not None and ending_bus_stop_name is not None:
+            result = self.bus_stop_waypoints_collection.delete_one({
+                'starting_bus_stop.name': starting_bus_stop_name,
+                'ending_bus_stop.name': ending_bus_stop_name
+            })
+        else:
+            return False
+
+        return result.deleted_count == 1
+
+    def delete_bus_stop_waypoints_documents(self, object_ids):
+        """
+        Delete multiple bus_stop_waypoints_documents.
+
+        bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_object_id]]
+        }
+        :param object_ids: [ObjectId]
+        :return: The number of deleted documents
+        """
+        processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
+        result = self.bus_stop_waypoints_collection.delete_many({'_id': {'$in': processed_object_ids}})
+        return result.deleted_count
+
+    def delete_edge_document(self, object_id=None, starting_node_osm_id=None, ending_node_osm_id=None):
+        """
+        Delete an edge_document.
+
+        edge_document: {
+            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'max_speed', 'road_type', 'way_id', 'traffic_density'
+        }
+        :param object_id: ObjectId
+        :param starting_node_osm_id: int
+        :param ending_node_osm_id: int
+        :return: True if the document was successfully deleted, otherwise False.
+        """
+        if object_id is not None:
+            result = self.edges_collection.delete_one({'_id': ObjectId(object_id)})
+        elif starting_node_osm_id is not None and ending_node_osm_id is not None:
+            result = self.edges_collection.delete_one({
+                'starting_node.osm_id': starting_node_osm_id,
+                'ending_node.osm_id': ending_node_osm_id
+            })
+        else:
+            return False
+
+        return result.deleted_count == 1
+
+    def delete_edge_documents(self, object_ids=None, starting_node_osm_id=None, ending_node_osm_id=None):
+        """
+        Delete multiple edge_documents.
+
+        edge_document: {
+            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'max_speed', 'road_type', 'way_id', 'traffic_density'
+        }
+        :param object_ids: [ObjectId]
+        :param starting_node_osm_id: int
+        :param ending_node_osm_id: int
+        :return: The number of deleted documents.
+        """
+        if object_ids is not None:
+            processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
+            result = self.edges_collection.delete_many({'_id': {'$in': processed_object_ids}})
+        elif starting_node_osm_id is not None:
+            result = self.edges_collection.delete_many({'starting_node.osm_id': starting_node_osm_id})
+        elif ending_node_osm_id is not None:
+            result = self.edges_collection.delete_many({'ending_node.osm_id': ending_node_osm_id})
+        else:
+            return 0
+
+        return result.deleted_count
+
+    def delete_node_document(self, object_id=None, osm_id=None):
+        """
+        Delete a node_document.
+
         node_document: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
 
-        :type osm_id: int
-        :return: True if node exists in database, otherwise False.
+        :param object_id: ObjectId
+        :param osm_id: int
+        :return: True if node_document was successfully deleted, otherwise False.
         """
-        result = self.nodes_collection.delete_one({'osm_id': osm_id})
+        if object_id is not None:
+            result = self.nodes_collection.delete_one({'_id': ObjectId(object_id)})
+        elif osm_id is not None:
+            result = self.nodes_collection.delete_one({'osm_id': osm_id})
+        else:
+            return False
+
         return result.deleted_count == 1
 
-    def delete_point(self, osm_id):
+    def delete_node_documents(self, object_ids=None, osm_ids=None):
         """
-        Delete a point document based on the osm_id.
+        Delete multiple node_documents.
+
+        node_document: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
+
+        :param object_ids: [ObjectId]
+        :param osm_ids: [int]
+        :return: The number of deleted documents.
+        """
+        if object_ids is not None:
+            processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
+            result = self.nodes_collection.delete_many({'_id': {'$in': processed_object_ids}})
+        elif osm_ids is not None:
+            result = self.nodes_collection.delete_many({'osm_id': {'$in': osm_ids}})
+        else:
+            return 0
+
+        return result.deleted_count
+
+    def delete_point_document(self, object_id=None, osm_id=None):
+        """
+        Delete a point_document.
+
         point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
 
-        :type osm_id: int
-        :return: True if the point exists in the database, otherwise False.
+        :param object_id: ObjectId
+        :param osm_id: int
+        :return: True if the point_document was successfully deleted, otherwise False.
         """
-        result = self.points_collection.delete_one({'osm_id': osm_id})
+        if object_id is not None:
+            result = self.points_collection.delete_one({'_id': ObjectId(object_id)})
+        elif osm_id is not None:
+            result = self.points_collection.delete_one({'osm_id': osm_id})
+        else:
+            return False
+
         return result.deleted_count == 1
 
-    def delete_timetable(self, timetable_id):
+    def delete_point_documents(self, object_ids=None, osm_ids=None):
         """
-        Delete a document of the Timetables collection, based on the '_id' entry.
+        Delete multiple point_document.
+
+        point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
+
+        :param object_ids: [ObjectId]
+        :param osm_ids: [int]
+        :return: The number of deleted documents.
+        """
+        if object_ids is not None:
+            processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
+            result = self.points_collection.delete_many({'_id': {'$in': processed_object_ids}})
+        elif osm_ids is not None:
+            result = self.points_collection.delete_many({'osm_id': {'$in': osm_ids}})
+        else:
+            return 0
+
+        return result.deleted_count
+
+    def delete_timetable_document(self, object_id):
+        """
+        Delete a timetable_document.
 
         timetable_document: {
             '_id', 'line_id',
@@ -259,17 +458,17 @@ class MongoConnection(object):
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                 'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                 'departure_datetime', 'arrival_datetime',
-                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]}
-
-        :param timetable_id: ObjectId
-        :return: True if the document exists, otherwise False.
+                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
+        }
+        :param object_id: ObjectId
+        :return: True if the document was successfully deleted, otherwise False.
         """
-        result = self.timetables_collection.delete_one({'_id': timetable_id})
+        result = self.timetables_collection.delete_one({'_id': ObjectId(object_id)})
         return result.deleted_count == 1
 
-    def delete_timetables(self, timetable_ids):
+    def delete_timetable_documents(self, object_ids=None, line_id=None):
         """
-        Delete multiple documents of the Timetables collection, based on the '_id' entry.
+        Delete multiple timetable_documents.
 
         timetable_document: {
             '_id', 'line_id',
@@ -283,81 +482,108 @@ class MongoConnection(object):
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                 'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                 'departure_datetime', 'arrival_datetime',
-                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]}
-
-        :param timetable_ids: [ObjectId]
-        :return: The number of deleted documents.
-        """
-        result = self.timetables_collection.delete_one({'_id': {'$in': timetable_ids}})
-        return result.deleted_count
-
-    def delete_travel_request(self, travel_request_id):
-        """
-        Delete a document of the TravelRequests collection, based on the '_id' entry.
-        travel_request_document: {'_id', 'client_id', 'line_id', 'starting_bus_stop_id',
-                                  'ending_bus_stop_id', 'departure_datetime', 'arrival_datetime'}
-
-        :param travel_request_id: ObjectId
-        :return: True if the document exists, otherwise False.
-        """
-        result = self.travel_requests_collection.delete_one({'_id': travel_request_id})
-        return result.deleted_count == 1
-
-    def delete_travel_requests(self, travel_request_ids):
-        """
-        Delete multiple documents of the TravelRequests collection, based on the '_id' entry.
-        travel_request_document: {'_id', 'client_id', 'line_id', 'starting_bus_stop',
-                                  'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
-
-        :param travel_request_ids: [ObjectId]
-        :return: The number of deleted documents.
-        """
-        result = self.travel_requests_collection.delete_many({'_id': {'$in': travel_request_ids}})
-        return result.deleted_count
-
-    def delete_travel_requests_based_on_line_id(self, line_id):
-        """
-        Delete multiple documents of the TravelRequests collection, based on the line_id entry.
-        travel_request_document: {'_id', 'client_id', 'line_id', 'starting_bus_stop',
-                                  'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
-
+                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
+        }
+        :param object_ids: [ObjectId]
         :param line_id: int
         :return: The number of deleted documents.
         """
-        result = self.travel_requests_collection.delete_many({'line_id': line_id})
+        if object_ids is not None:
+            processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
+            result = self.timetables_collection.delete_many({'_id': {'$in': processed_object_ids}})
+        elif line_id is not None:
+            result = self.timetables_collection.delete_many({'line_id': line_id})
+        else:
+            return 0
+
         return result.deleted_count
 
-    def delete_travel_requests_based_on_departure_datetime(self, min_departure_datetime, max_departure_datetime):
+    def delete_travel_request_document(self, object_id):
         """
-        Delete multiple documents from the TravelRequests collection, based on the departure_datetime entry.
-        travel_request_document: {'_id', 'client_id', 'line_id', 'starting_bus_stop',
-                                  'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
+        Delete a travel_request_document.
 
+        travel_request_document: {
+            '_id', 'client_id', 'line_id',
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'departure_datetime', 'arrival_datetime'
+        }
+        :param object_id: ObjectId
+        :return: True if the travel_request_document was successfully deleted, otherwise False.
+        """
+        result = self.travel_requests_collection.delete_one({'_id': ObjectId(object_id)})
+        return result.deleted_count == 1
+
+    def delete_travel_request_documents(self, object_ids=None, line_id=None, min_departure_datetime=None,
+                                        max_departure_datetime=None):
+        """
+        Delete multiple travel_request_documents.
+
+        travel_request_document: {
+            '_id', 'client_id', 'line_id',
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'departure_datetime', 'arrival_datetime'
+        }
+        :param object_ids: [ObjectId]
+        :param line_id: int
         :param min_departure_datetime: datetime
-        :param max_departure_datetime: datetime
+        :param max_departure_datetime
         :return: The number of deleted documents.
         """
-        # result = self.travel_requests_collection.delete_many(
-        #     {'departure_datetime': {'$and': [
-        #         {'$gt': min_departure_datetime},
-        #         {'$lt': max_departure_datetime}
-        #     ]}})
-        result = self.travel_requests_collection.delete_many({
-            'departure_time': {'$gt': min_departure_datetime},
-            'departure_time': {'$lt': max_departure_datetime}
-        })
+        if object_ids is not None:
+            processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
+            result = self.travel_requests_collection.delete_many({'_id': {'$in': processed_object_ids}})
+        elif line_id is not None:
+            result = self.travel_requests_collection.delete_many({'line_id': line_id})
+        elif min_departure_datetime is not None and max_departure_datetime is not None:
+            result = self.travel_requests_collection.delete_many({
+                'departure_time': {'$gt': min_departure_datetime},
+                'departure_time': {'$lt': max_departure_datetime}
+            })
+        else:
+            return 0
+
         return result.deleted_count
 
-    def delete_way(self, osm_id):
+    def delete_way_document(self, object_id=None, osm_id=None):
         """
-        Delete a way document based on the osm_id.
+        Delete a way_document.
+
         way_document: {'_id', 'osm_id', 'tags', 'references'}
 
-        :type osm_id: int
-        :return: True if the way exists in the database, otherwise False.
+        :param object_id: ObjectId
+        :param osm_id: int
+        :return: True if the way_document was successfully deleted, otherwise False.
         """
-        result = self.ways_collection.delete_one({'osm_id': osm_id})
+        if object_id is not None:
+            result = self.ways_collection.delete_one({'_id': ObjectId(object_id)})
+        elif osm_id is not None:
+            result = self.ways_collection.delete_one({'osm_id': osm_id})
+        else:
+            return False
+
         return result.deleted_count == 1
+
+    def delete_way_documents(self, object_ids=None, osm_ids=None):
+        """
+        Delete multiple way_documents.
+
+        way_document: {'_id', 'osm_id', 'tags', 'references'}
+
+        :param object_ids: [ObjectId]
+        :param osm_ids: [int]
+        :return: The number of deleted documents.
+        """
+        if object_ids is not None:
+            processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
+            result = self.ways_collection.delete_many({'_id': {'$in': processed_object_ids}})
+        elif osm_ids is not None:
+            result = self.ways_collection.delete_many({'osm_id': {'$in': osm_ids}})
+        else:
+            return 0
+
+        return result.deleted_count
 
     def find_address(self, name):
         """
@@ -1390,9 +1616,13 @@ class MongoConnection(object):
                               departure_datetime, arrival_datetime):
         """
         Insert a new document to the TravelRequests collection.
-        travel_request_document: {'_id', 'client_id', 'line_id', 'starting_bus_stop',
-                                  'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
 
+        travel_request_document: {
+            '_id', 'client_id', 'line_id',
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'departure_datetime', 'arrival_datetime'
+        }
         :param client_id: int
         :param line_id: int
         :param starting_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
@@ -1410,9 +1640,13 @@ class MongoConnection(object):
     def insert_travel_request_documents(self, travel_request_documents):
         """
         Insert multiple documents to the TravelRequests collection.
-        travel_request_document: {'_id', 'client_id', 'line_id', 'starting_bus_stop',
-                                  'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
 
+        travel_request_document: {
+            '_id', 'client_id', 'line_id',
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'departure_datetime', 'arrival_datetime'
+        }
         :param travel_request_documents: [{'client_id', 'line_id', 'starting_bus_stop', 'ending_bus_stop',
                                            'departure_datetime', 'arrival_datetime'}]
         :return: [ObjectId]
@@ -1692,3 +1926,15 @@ class MongoConnection(object):
         # print 'Total number of travel_request documents: ' + str(documents_cursor.count())
         file_writer.write('Total number of travel_request documents: ' + str(documents_cursor.count()))
         file_writer.close()
+
+    def test(self):
+        bus_line = self.find_bus_line(line_id=1)
+        bus_stops = bus_line.get('bus_stops')
+        bus_stop_ids = [ObjectId(bus_stop.get('_id')) for bus_stop in bus_stops]
+        collected_bus_stops = list(self.bus_stops_collection.find({'_id': {'$in': bus_stop_ids}}))
+
+        print bus_stops
+        print collected_bus_stops
+
+        print len(bus_stops)
+        print len(collected_bus_stops)
