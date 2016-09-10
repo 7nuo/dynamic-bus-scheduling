@@ -282,7 +282,7 @@ class LookAheadHandler(object):
         # bus_line: {'_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
         # bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
         #
-        bus_line = self.connection.find_bus_line(line_id=line_id)
+        bus_line = self.connection.find_bus_line_document(line_id=line_id)
         self.generate_timetables_for_bus_line(
             bus_line=bus_line,
             timetables_starting_datetime=timetables_starting_datetime,
@@ -303,7 +303,7 @@ class LookAheadHandler(object):
         :param requests_max_departure_datetime: datetime
         :return: None
         """
-        bus_lines = self.connection.get_bus_lines_list()
+        bus_lines = self.connection.get_bus_line_documents_list()
 
         for bus_line in bus_lines:
             self.generate_timetables_for_bus_line(
@@ -341,7 +341,7 @@ class LookAheadHandler(object):
         :param line_id: int
         :return: None
         """
-        bus_line = self.connection.find_bus_line(line_id=line_id)
+        bus_line = self.connection.find_bus_line_document(line_id=line_id)
         self.update_timetables_of_bus_line(bus_line=bus_line)
 
     def update_timetables_of_bus_lines(self):
@@ -350,7 +350,7 @@ class LookAheadHandler(object):
 
         :return: None
         """
-        bus_lines = self.connection.get_bus_lines_list()
+        bus_lines = self.connection.get_bus_line_documents_list()
 
         for bus_line in bus_lines:
             self.update_timetables_of_bus_line(bus_line=bus_line)

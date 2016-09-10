@@ -153,7 +153,7 @@ class Router(object):
 
         :return: bus_stops_dictionary: {name -> {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}}
         """
-        bus_stops_dictionary = self.connection.get_bus_stops_dictionary()
+        bus_stops_dictionary = self.connection.get_bus_stop_documents_dictionary()
         return bus_stops_dictionary
 
     def get_bus_stops_list(self):
@@ -162,7 +162,7 @@ class Router(object):
 
         :return: bus_stops_list: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         """
-        bus_stops_list = self.connection.get_bus_stops_list()
+        bus_stops_list = self.connection.get_bus_stop_documents_list()
         return bus_stops_list
 
     def get_edges_dictionary(self):

@@ -73,6 +73,7 @@ class MongodbDatabaseTester(object):
 
 if __name__ == '__main__':
     tester = MongodbDatabaseTester()
+    tester.mongo.test()
     # tester.clear_all_collections()
     # tester.print_nodes(counter=200)
     # tester.print_bus_stops(counter=200)

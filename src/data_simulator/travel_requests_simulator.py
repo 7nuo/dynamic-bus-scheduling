@@ -47,9 +47,9 @@ class TravelRequestsSimulator(object):
         :param line_id: int
         :return: None
         """
-        self.connection.delete_travel_requests_based_on_line_id(line_id=line_id)
+        self.connection.delete_travel_request_documents(line_id=line_id)
         log(module_name='travel_requests_simulator', log_type='DEBUG',
-            log_message='delete_travel_requests_based_on_line_id ok')
+            log_message='delete_travel_request_documents ok')
 
     def delete_travel_requests_based_on_departure_datetime(self, min_departure_datetime, max_departure_datetime):
         """
@@ -63,12 +63,12 @@ class TravelRequestsSimulator(object):
         :param max_departure_datetime: datetime
         :return: None
         """
-        self.connection.delete_travel_requests_based_on_departure_datetime(
+        self.connection.delete_travel_request_documents(
             min_departure_datetime=min_departure_datetime,
             max_departure_datetime=max_departure_datetime
         )
         log(module_name='travel_requests_simulator', log_type='DEBUG',
-            log_message='delete_travel_requests_based_on_departure_datetime ok')
+            log_message='delete_travel_request_documents ok')
 
     def generate_travel_requests(self, line_id, initial_datetime, number_of_requests):
         """
@@ -91,7 +91,7 @@ class TravelRequestsSimulator(object):
         #
         # bus_line: {'_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
         #
-        bus_line = self.connection.find_bus_line(line_id=line_id)
+        bus_line = self.connection.find_bus_line_document(line_id=line_id)
         bus_stops = bus_line.get('bus_stops')
         number_of_bus_stops = len(bus_stops)
 

@@ -92,7 +92,7 @@ def application(env, start_response):
             response_type = 'application/json'
             response = json.dumps(result, cls=JSONResponseEncoder)
 
-        elif path_info == '/get_waypoints_between_two_bus_stops':
+        elif path_info == '/find_bus_stop_waypoints_document':
             form = cgi.FieldStorage(fp=env['wsgi.input'], environ=data_env)
 
             starting_bus_stop_name = form.getvalue('starting_bus_stop_name')

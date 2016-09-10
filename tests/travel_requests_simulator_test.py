@@ -43,17 +43,17 @@ class TravelRequestsSimulatorTester(object):
 
     def delete_travel_requests_based_on_bus_line_id(self, bus_line_id):
         log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='delete_travel_requests_based_on_line_id: starting')
+            log_message='delete_travel_request_documents: starting')
         self.start_time = time.time()
         self.travel_requests_simulator.delete_travel_requests_based_on_line_id(line_id=bus_line_id)
         self.elapsed_time = time.time() - self.start_time
         log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='delete_travel_requests_based_on_line_id: finished - elapsed_time = ' +
+            log_message='delete_travel_request_documents: finished - elapsed_time = ' +
                         str(self.elapsed_time) + ' sec')
 
     def delete_travel_requests_based_on_departure_datetime(self, min_departure_datetime, max_departure_datetime):
         log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='delete_travel_requests_based_on_departure_datetime: starting')
+            log_message='delete_travel_request_documents: starting')
         self.start_time = time.time()
         self.travel_requests_simulator.delete_travel_requests_based_on_departure_datetime(
             min_departure_datetime=min_departure_datetime,
@@ -61,7 +61,7 @@ class TravelRequestsSimulatorTester(object):
         )
         self.elapsed_time = time.time() - self.start_time
         log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='delete_travel_requests_based_on_departure_datetime: finished - elapsed_time = ' +
+            log_message='delete_travel_request_documents: finished - elapsed_time = ' +
                         str(self.elapsed_time) + ' sec')
 
     def generate_travel_requests(self, bus_line_id, initial_datetime, number_of_requests):
@@ -89,9 +89,9 @@ if __name__ == '__main__':
         number_of_requests=10000
     )
 
-    # tester.delete_travel_requests_based_on_line_id(bus_line_id=1)
+    # tester.delete_travel_request_documents(bus_line_id=1)
 
-    # tester.delete_travel_requests_based_on_departure_datetime(
+    # tester.delete_travel_request_documents(
     #     min_departure_datetime=datetime(2016, 6, 30, 0, 0, 0, 00000),
     #     max_departure_datetime=datetime(2016, 7, 1, 0, 0, 0, 00000)
     # )

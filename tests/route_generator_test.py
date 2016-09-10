@@ -125,7 +125,7 @@ def test_get_waypoints_between_two_bus_stops(starting_bus_stop_name, ending_bus_
     :param ending_bus_stop_name:  string
     """
     log(module_name='route_generator_test', log_type='INFO',
-        log_message='get_waypoints_between_two_bus_stops: starting')
+        log_message='find_bus_stop_waypoints_document: starting')
     start_time = time.time()
 
     # response = {'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -148,7 +148,7 @@ def test_get_waypoints_between_two_bus_stops(starting_bus_stop_name, ending_bus_
 
     elapsed_time = time.time() - start_time
     log(module_name='route_generator_test', log_type='INFO',
-        log_message='get_waypoints_between_two_bus_stops: finished - elapsed_time = ' +
+        log_message='find_bus_stop_waypoints_document: finished - elapsed_time = ' +
                     str(elapsed_time) + ' sec')
 
 

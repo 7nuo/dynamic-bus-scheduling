@@ -41,7 +41,7 @@ class TrafficDataSimulator(object):
         #  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         #  'waypoints': [[edge_object_id]]}
 
-        bus_stop_waypoints = self.connection.get_waypoints_between_two_bus_stop_names(
+        bus_stop_waypoints = self.connection.find_bus_stop_waypoints_document(
             starting_bus_stop_name=starting_bus_stop_name,
             ending_bus_stop_name=ending_bus_stop_name
         )

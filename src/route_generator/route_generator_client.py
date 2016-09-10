@@ -114,7 +114,7 @@ def get_waypoints_between_two_bus_stops(starting_bus_stop_name, ending_bus_stop_
                               'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
                               'max_speed', 'road_type', 'way_id', 'traffic_density'}]]}
     """
-    url = 'http://' + route_generator_host + ':' + route_generator_port + '/get_waypoints_between_two_bus_stops'
+    url = 'http://' + route_generator_host + ':' + route_generator_port + '/find_bus_stop_waypoints_document'
     headers = {'content-type': 'application/x-www-form-urlencoded'}
     data = {'starting_bus_stop_name': starting_bus_stop_name,
             'ending_bus_stop_name': ending_bus_stop_name}
