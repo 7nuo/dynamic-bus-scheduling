@@ -1584,7 +1584,7 @@ class MongoConnection(object):
         :param name: string
         :param node_id: int
         :param point: Point
-        :return: The ObjectId of the inserted document.
+        :return: new_object_id: ObjectId
         """
         if address_document is None:
             address_document = {
@@ -1594,7 +1594,8 @@ class MongoConnection(object):
             }
 
         result = self.address_book_collection.insert_one(address_document)
-        return result.inserted_id
+        new_object_id = result.inserted_id
+        return new_object_id
 
     def insert_address_documents(self, address_documents):
         """
@@ -1603,10 +1604,11 @@ class MongoConnection(object):
         address_document: {'_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}}
 
         :param address_documents: [address_document]
-        :return: [ObjectId]
+        :return: new_object_ids: [ObjectId]
         """
         result = self.address_book_collection.insert_many(address_documents)
-        return result.inserted_ids
+        new_object_ids = result.inserted_ids
+        return new_object_ids
 
     def insert_bus_line_document(self, bus_line_document=None, line_id=None, bus_stops=None):
         """
@@ -1618,10 +1620,10 @@ class MongoConnection(object):
         :param bus_line_document
         :param line_id: int
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
-        :return: The ObjectId if a new document was inserted.
+        :return: new_object_id: ObjectId
         """
         if bus_line_document is not None:
-            key = {'_id': bus_line_document.get('_id')}
+            key = {'_id': ObjectId(bus_line_document.get('_id'))}
             data = {
                 '$set': {
                     'line_id': bus_line_document.get('line_id'),
@@ -1645,22 +1647,38 @@ class MongoConnection(object):
             '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         }
         :param bus_line_documents: [bus_line_document]
-        :return: None
+        :return: new_object_ids: [ObjectId]
         """
-        for bus_line_document in bus_line_documents:
-            self.insert_bus_line_document(bus_line_document=bus_line_document)
+        new_object_ids = []
 
-    def insert_bus_stop_document(self, bus_stop_document):
+        for bus_line_document in bus_line_documents:
+            new_object_id = self.insert_bus_line_document(bus_line_document=bus_line_document)
+            new_object_ids.append(new_object_id)
+
+        return new_object_ids
+
+    def insert_bus_stop_document(self, bus_stop_document=None, osm_id=None, name=None, point=None):
         """
         Insert a bus_stop_document.
 
         bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
 
         :param bus_stop_document
-        :return: The ObjectId of the inserted document.
+        :param osm_id: int
+        :param name: string
+        :param point: Point
+        :return: new_object_id: ObjectId
         """
+        if bus_stop_document is None:
+            bus_stop_document = {
+                'osm_id': osm_id,
+                'name': name,
+                'point': {'longitude': point.longitude, 'latitude': point.latitude}
+            }
+
         result = self.bus_stops_collection.insert_one(bus_stop_document)
-        return result.inserted_id
+        new_object_id = result.inserted_id
+        return new_object_id
 
     def insert_bus_stop_documents(self, bus_stop_documents):
         """
@@ -1669,44 +1687,53 @@ class MongoConnection(object):
         bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
 
         :param bus_stop_documents: [bus_stop_document]
-        :return: [ObjectId]
+        :return: new_object_ids: [ObjectId]
         """
         result = self.bus_stops_collection.insert_many(bus_stop_documents)
-        return result.inserted_ids
+        new_object_ids = result.inserted_ids
+        return new_object_ids
 
-    def insert_bus_stop_waypoints(self, starting_bus_stop, ending_bus_stop, waypoints):
+    def insert_bus_stop_waypoints_document(self, bus_stop_waypoints_document=None, starting_bus_stop=None,
+                                           ending_bus_stop=None, waypoints=None):
         """
         Insert a new document to the BusStopWaypoints collection, or update the waypoints
         if the document already exists in the database.
 
+        bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_object_id]]
+        }
+        :param bus_stop_waypoints_document
         :param starting_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
         :param ending_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
         :param waypoints: [[edge_object_id]]
-        :return: The ObjectId, if a new document was inserted.
+        :return: new_object_id: ObjectId
         """
-        key = {'starting_bus_stop': starting_bus_stop, 'ending_bus_stop': ending_bus_stop}
-        data = {'$set': {'waypoints': waypoints}}
-        result = self.bus_stop_waypoints_collection.update_one(key, data, upsert=True)
-        return result.upserted_id
+        if bus_stop_waypoints_document is not None:
+            key = {'_id': ObjectId(bus_stop_waypoints_document.get('_id'))}
+            data = {
+                '$set': {
+                    'starting_bus_stop': starting_bus_stop,
+                    'ending_bus_stop': ending_bus_stop,
+                    'waypoints': waypoints
+                }
+            }
+            result = self.bus_stop_waypoints_collection.update_one(key, data, upsert=True)
+            new_object_id = result.upserted_id
+        else:
+            bus_stop_waypoints_document = {
+                'starting_bus_stop': starting_bus_stop,
+                'ending_bus_stop': ending_bus_stop,
+                'waypoints': waypoints
+            }
+            result = self.bus_stop_waypoints_collection.insert_one(bus_stop_waypoints_document)
+            new_object_id = result.inserted_id
 
-    # def insert_edge_document(self, starting_node, ending_node, max_speed, road_type, way_id, traffic_density):
-    #     """
-    #     Insert an edge document to the Edges collection.
-    #
-    #     :param starting_node: {'osm_id', 'point': {'longitude', 'latitude'}}
-    #     :param ending_node: {'osm_id', 'point': {'longitude', 'latitude'}}
-    #     :param max_speed: float or int
-    #     :param road_type: string
-    #     :param way_id: osm_id: int
-    #     :param traffic_density: A value between 0 and 1 indicating the density of traffic: float
-    #     :return: The Object Id of the inserted document.
-    #     """
-    #     document = {'starting_node': starting_node, 'ending_node': ending_node, 'max_speed': max_speed,
-    #                 'road_type': road_type, 'way_id': way_id, 'traffic_density': traffic_density}
-    #     result = self.edges_collection.insert_one(document)
-    #     return result.inserted_id
+        return new_object_id
 
-    def insert_edge_document(self, edge_document):
+    def insert_edge_document(self, edge_document=None, starting_node=None, ending_node=None, max_speed=None,
+                             road_type=None, way_id=None, traffic_density=None):
         """
         Insert an edge_document.
 
@@ -1716,10 +1743,23 @@ class MongoConnection(object):
             'max_speed', 'road_type', 'way_id', 'traffic_density'
         }
         :param edge_document
-        :return: The Object Id of the inserted document.
+        :param starting_node: {'osm_id', 'point': {'longitude', 'latitude'}}
+        :param ending_node: {'osm_id', 'point': {'longitude', 'latitude'}}
+        :param max_speed: float or int
+        :param road_type: string
+        :param way_id: osm_id: int
+        :param traffic_density: A value between 0 and 1 indicating the density of traffic: float
+        :return: new_object_id: ObjectId
         """
+        if edge_document is None:
+            edge_document = {
+                'starting_node': starting_node, 'ending_node': ending_node, 'max_speed': max_speed,
+                'road_type': road_type, 'way_id': way_id, 'traffic_density': traffic_density
+            }
+
         result = self.edges_collection.insert_one(edge_document)
-        return result.inserted_id
+        new_object_id = result.inserted_id
+        return new_object_id
 
     def insert_edge_documents(self, edge_documents):
         """
@@ -1731,36 +1771,33 @@ class MongoConnection(object):
             'max_speed', 'road_type', 'way_id', 'traffic_density'
         }
         :param edge_documents: [edge_document]
-        :return: [ObjectId]
+        :return: new_object_ids: [ObjectId]
         """
         result = self.edges_collection.insert_many(edge_documents)
-        return result.inserted_ids
+        new_object_ids = result.inserted_ids
+        return new_object_ids
 
-    # def insert_node_document(self, osm_id, tags, point):
-    #     """
-    #     Insert a node document to the Nodes collection.
-    #
-    #     :param osm_id: int
-    #     :param tags: dict
-    #     :param point: Point
-    #     :return: The ObjectId of the inserted document.
-    #     """
-    #     document = {'osm_id': osm_id, 'tags': tags,
-    #                 'point': {'longitude': point.longitude, 'latitude': point.latitude}}
-    #     result = self.nodes_collection.insert_one(document)
-    #     return result.inserted_id
-
-    def insert_node_document(self, node_document):
+    def insert_node_document(self, node_document=None, osm_id=None, tags=None, point=None):
         """
         Insert a node_document.
 
         node_document: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
 
         :param node_document
-        :return: The ObjectId of the inserted document.
+        :param osm_id: int
+        :param tags: dict
+        :param point: Point
+        :return: new_object_id: ObjectId
         """
+        if node_document is None:
+            node_document = {
+                'osm_id': osm_id, 'tags': tags,
+                'point': {'longitude': point.longitude, 'latitude': point.latitude}
+            }
+
         result = self.nodes_collection.insert_one(node_document)
-        return result.inserted_id
+        new_object_id = result.inserted_id
+        return new_object_id
 
     def insert_node_documents(self, node_documents):
         """
@@ -1769,10 +1806,11 @@ class MongoConnection(object):
         node_document: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
 
         :param node_documents: [node_document]
-        :return: [ObjectId]
+        :return: new_object_ids: [ObjectId]
         """
         result = self.nodes_collection.insert_many(node_documents)
-        return result.inserted_ids
+        new_object_ids = result.inserted_ids
+        return new_object_ids
 
     def insert_point_document(self, point_document=None, osm_id=None, point=None):
         """
@@ -1786,7 +1824,10 @@ class MongoConnection(object):
         :return: The ObjectId of the inserted document.
         """
         if point_document is None:
-            point_document = {'osm_id': osm_id, 'point': {'longitude': point.longitude, 'latitude': point.latitude}}
+            point_document = {
+                'osm_id': osm_id,
+                'point': {'longitude': point.longitude, 'latitude': point.latitude}
+            }
 
         result = self.points_collection.insert_one(point_document)
         return result.inserted_id

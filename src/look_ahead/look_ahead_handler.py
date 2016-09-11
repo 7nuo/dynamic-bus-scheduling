@@ -90,7 +90,7 @@ class LookAheadHandler(object):
             # 4: The Look Ahead populates the BusStopWaypoints collection, by storing all the possible waypoints
             #    for each combination of starting_bus_stop and ending_bus_stop oh the bus_line.
             #
-            self.connection.insert_bus_stop_waypoints(
+            self.connection.insert_bus_stop_waypoints_document(
                 starting_bus_stop=starting_bus_stop,
                 ending_bus_stop=ending_bus_stop,
                 waypoints=waypoints
@@ -103,7 +103,7 @@ class LookAheadHandler(object):
             bus_stops.append(ending_bus_stop)
 
         log(module_name='look_ahead_handler', log_type='DEBUG',
-            log_message='insert_bus_stop_waypoints (mongodb_database): ok')
+            log_message='insert_bus_stop_waypoints_document (mongodb_database): ok')
 
         # 5: The Look Ahead stores the generated bus_line, which is consisted of the line_id and
         #    the list of its bus_stops, to the corresponding collection of the System Database.
