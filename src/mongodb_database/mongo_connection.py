@@ -1206,71 +1206,44 @@ class MongoConnection(object):
         edge_documents_cursor = self.edges_collection.find({})
         return edge_documents_cursor
 
-    def get_edges_dictionary(self):
+    def get_edge_documents_dictionary(self):
         """
-        Retrieve a dictionary containing all the documents of the Edges collection.
-
-        edge_document: {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                        'max_speed', 'road_type', 'way_id', 'traffic_density'}
-
-        :return: edges_dictionary: {starting_node_osm_id -> [edge_document]}
-        """
-        edges_dictionary = {}
-        edges_cursor = self.get_edge_documents_cursor()
-
-        for edge_document in edges_cursor:
-            starting_node_osm_id = edge_document.get('starting_node').get('osm_id')
-
-            if starting_node_osm_id in edges_dictionary:
-                edges_dictionary[starting_node_osm_id].append(edge_document)
-            else:
-                edges_dictionary[starting_node_osm_id] = [edge_document]
-
-        return edges_dictionary
-
-    def get_edges_list(self):
-        """
-        Retrieve a list containing all the documents of the Edges collection.
-
-        edge_document: {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                        'max_speed', 'road_type', 'way_id', 'traffic_density'}
-
-        :return: edges_list: [edge_document]
-        """
-        edges_list = list(self.get_edge_documents_cursor())
-        return edges_list
-
-    def get_edges_cursor_from_starting_node_osm_id(self, starting_node_osm_id):
-        """
-        Retrieve a cursor of the edge documents, based on the osm_id of the starting node.
-
-        edge_document: {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                        'max_speed', 'road_type', 'way_id', 'traffic_density'}
-
-        :param starting_node_osm_id: osm_id (int)
-        :return: edges_cursor -> edge_document
-        """
-        edges_cursor = self.edges_collection.find({'starting_node.osm_id': starting_node_osm_id})
-        return edges_cursor
-
-    def get_edges_list_from_starting_node_osm_id(self, starting_node_osm_id):
-        """
-        Retrieve a list containing the edge documents, based on the osm_id of the starting node.
+        Retrieve a dictionary containing all the edge_documents.
 
         edge_document: {
             '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
             'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
             'max_speed', 'road_type', 'way_id', 'traffic_density'
         }
-        :param starting_node_osm_id: osm_id (int)
-        :return: edges_list: [edge_document]
+        :return: edge_documents_dictionary: {starting_node_osm_id -> [edge_document]}
         """
-        edges_cursor = self.edges_collection.find({'starting_node.osm_id': starting_node_osm_id})
-        edges_list = list(edges_cursor)
-        return edges_list
+        edge_documents_dictionary = {}
+        edge_documents_cursor = self.get_edge_documents_cursor()
+
+        for edge_document in edge_documents_cursor:
+            starting_node_osm_id = edge_document.get('starting_node').get('osm_id')
+
+            if starting_node_osm_id in edge_documents_dictionary:
+                edge_documents_dictionary[starting_node_osm_id].append(edge_document)
+            else:
+                edge_documents_dictionary[starting_node_osm_id] = [edge_document]
+
+        return edge_documents_dictionary
+
+    def get_edge_documents_list(self):
+        """
+        Retrieve a list containing all the edge_documents.
+
+        edge_document: {
+            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'max_speed', 'road_type', 'way_id', 'traffic_density'
+        }
+        :return: edge_documents_list: [edge_document]
+        """
+        edge_documents_cursor = self.get_edge_documents_cursor()
+        edge_documents_list = list(edge_documents_cursor)
+        return edge_documents_list
 
     def get_edges_list_of_bus_line(self, line_id):
         """
@@ -1411,44 +1384,72 @@ class MongoConnection(object):
 
         return ending_nodes_dictionary
 
-    def get_nodes(self):
+    def get_node_documents_cursor(self):
         """
-        Retrieve all the documents of the Nodes collection.
+        Retrieve a cursor of all node_documents.
 
-        :return: Cursor -> {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
+        node_document: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
+
+        :return: node_documents_cursor
         """
-        cursor = self.nodes_collection.find({})
-        return cursor
+        node_documents_cursor = self.nodes_collection.find({})
+        return node_documents_cursor
 
-    def get_points(self):
+    def get_node_documents_list(self):
         """
-        Retrieve all the documents of the Points collection.
+        Retrieve a list containing all the node_documents.
 
-        :return: Cursor -> {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
+        node_document: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
+
+        :return: node_documents_list: [node_document]
         """
-        cursor = self.points_collection.find({})
-        return cursor
+        node_documents_cursor = self.nodes_collection.find({})
+        node_documents_list = list(node_documents_cursor)
+        return node_documents_list
 
-    def get_points_dictionary(self):
+    def get_point_documents_cursor(self):
         """
-        Retrieve a dictionary containing all the documents of the Points collection.
+        Retrieve a cursor of all point_documents.
 
-        :return points_dictionary: {osm_id -> {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}}
+        point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
+
+        :return: point_documents_cursor
         """
-        points_dictionary = {}
-        points_cursor = self.get_points()
-        # Cursor -> {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
+        point_documents_cursor = self.points_collection.find({})
+        return point_documents_cursor
 
-        for point_document in points_cursor:
+    def get_point_documents_dictionary(self):
+        """
+        Retrieve a dictionary containing all the point_documents.
+
+        point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
+
+        :return points_documents_dictionary: {osm_id -> point_document}
+        """
+        points_documents_dictionary = {}
+        point_documents_cursor = self.get_point_documents_cursor()
+
+        for point_document in point_documents_cursor:
             osm_id = point_document.get('osm_id')
-            points_dictionary[osm_id] = point_document
+            points_documents_dictionary[osm_id] = point_document
 
-        return points_dictionary
+        return points_documents_dictionary
 
-    def get_timetables_of_bus_line(self, line_id):
+    def get_point_documents_list(self):
         """
-        Retrieve a cursor containing all the documents of the Timetables collection,
-        with a specific 'line_id' entry.
+        Retrieve a list containing all the point_documents.
+
+        point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
+
+        :return: point_documents_list: [point_document]
+        """
+        point_documents_cursor = self.points_collection.find({})
+        point_documents_list = list(point_documents_cursor)
+        return point_documents_list
+
+    def get_timetable_documents_cursor(self):
+        """
+        Retrieve a cursor of all timetable_documents.
 
         timetable_document: {
             '_id', 'line_id',
@@ -1462,18 +1463,16 @@ class MongoConnection(object):
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                 'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                 'departure_datetime', 'arrival_datetime',
-                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]}
-
-        :param line_id: int
-        :return: Cursor -> timetable document
+                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
+        }
+        :return: timetable_documents_cursor
         """
-        timetables_cursor = self.timetables_collection.find({'line_id': line_id})
-        return timetables_cursor
+        timetable_documents_cursor = self.timetables_collection.find({})
+        return timetable_documents_cursor
 
-    def get_timetables_of_bus_line_list(self, line_id):
+    def get_timetable_documents_list(self):
         """
-        Retrieve a list containing all the documents of the Timetables collection,
-        with a specific 'line_id' entry.
+        Retrieve a list containing all the timetable_documents.
 
         timetable_document: {
             '_id', 'line_id',
@@ -1487,14 +1486,13 @@ class MongoConnection(object):
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                 'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                 'departure_datetime', 'arrival_datetime',
-                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]}
-
-        :param line_id: int
-        :return: timetables_list: [timetable document]
+                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
+        }
+        :return: timetable_documents_list: [timetable_document]
         """
-        timetables_cursor = self.get_timetables_of_bus_line(line_id=line_id)
-        timetables_list = list(timetables_cursor)
-        return timetables_list
+        timetable_documents_cursor = self.timetables_collection.find({})
+        timetable_documents_list = list(timetable_documents_cursor)
+        return timetable_documents_list
 
     def get_traffic_density_between_two_bus_stop_names(self, starting_bus_stop_name, ending_bus_stop_name):
         """
@@ -1526,102 +1524,36 @@ class MongoConnection(object):
         bus_stop_waypoints['waypoints'] = lists_of_edge_traffic
         return bus_stop_waypoints
 
-    def get_travel_requests_cursor(self):
+    def get_travel_request_documents_cursor(self):
         """
-        Retrieve a cursor of all the documents of the TravelRequests collection.
+        Retrieve a cursor of all travel_request_documents.
 
-        :return: Cursor -> {'_id', 'client_id', 'line_id', 'starting_bus_stop',
-                            'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
+        travel_request_document: {
+            '_id', 'client_id', 'line_id',
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'departure_datetime', 'arrival_datetime'
+        }
+        :return: travel_request_documents_cursor
         """
-        cursor = self.travel_requests_collection.find({})
-        return cursor
+        travel_request_documents_cursor = self.travel_requests_collection.find({})
+        return travel_request_documents_cursor
 
-    def get_travel_requests_list(self):
+    def get_travel_request_documents_list(self):
         """
-        Retrieve a list containing all the documents of the TravelRequests collection.
+        Retrieve a list containing all the travel_request_documents.
 
-        :return: [{'_id', 'client_id', 'line_id', 'starting_bus_stop',
-                   'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}]
+        travel_request_document: {
+            '_id', 'client_id', 'line_id',
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'departure_datetime', 'arrival_datetime'
+        }
+        :return: travel_request_documents_list: [travel_request_document]
         """
-        travel_requests_list = list(self.get_travel_requests_cursor())
-        return travel_requests_list
-
-    def get_travel_requests_cursor_based_on_line_id(self, line_id):
-        """
-        Retrieve a cursor of all the documents of the TravelRequests collection, based on the line_id entry.
-
-        :param line_id: int
-        :return: Cursor -> {'_id', 'client_id', 'line_id', 'starting_bus_stop',
-                            'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
-        """
-        cursor = self.travel_requests_collection.find({'line_id': line_id})
-        return cursor
-
-    def get_travel_requests_cursor_based_on_departure_datetime(self, min_departure_datetime, max_departure_datetime):
-        """
-        Retrieve a cursor of all the documents of the TravelRequests collection,
-        based on the departure_datetime entry.
-
-        :param min_departure_datetime: datetime
-        :param max_departure_datetime: datetime
-        :return: Cursor -> {'_id', 'client_id', 'line_id', 'starting_bus_stop',
-                            'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
-        """
-        # cursor = self.travel_requests_collection.find(
-        #     {'departure_datetime': {'$and': [
-        #         {'$gt': min_departure_datetime},
-        #         {'$lt': max_departure_datetime}
-        #     ]}})
-        cursor = self.travel_requests_collection.find({
-            'departure_time': {'$gt': min_departure_datetime},
-            'departure_time': {'$lt': max_departure_datetime}
-        })
-        return cursor
-
-    def get_travel_requests_cursor_based_on_line_id_and_departure_datetime(
-            self, line_id, min_departure_datetime, max_departure_datetime):
-        """
-        Retrieve a cursor of all the documents of the TravelRequests collection,
-        based on the line_id and departure_datetime entries.
-
-        :param line_id: int
-        :param min_departure_datetime: datetime
-        :param max_departure_datetime: datetime
-        :return: Cursor -> {'_id', 'client_id', 'line_id', 'starting_bus_stop',
-                            'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}
-        """
-        # cursor = self.travel_requests_collection.find({'$and': [
-        #     {'line_id': line_id},
-        #     {'departure_datetime': {'$and': [
-        #         {'$gt': min_departure_datetime},
-        #         {'$lt': max_departure_datetime}
-        #     ]}}
-        # ]})
-        cursor = self.travel_requests_collection.find({
-            'line_id': line_id,
-            'departure_datetime': {'$gt': min_departure_datetime},
-            'departure_datetime': {'$lt': max_departure_datetime}
-        })
-        return cursor
-
-    def get_travel_requests_list_based_on_line_id_and_departure_datetime(
-            self, line_id, min_departure_datetime, max_departure_datetime):
-        """
-        Retrieve a list containing all the documents of the TravelRequests collection,
-        based on the line_id and departure_datetime entries.
-
-        :param line_id: int
-        :param min_departure_datetime: datetime
-        :param max_departure_datetime: datetime
-        :return: [{'_id', 'client_id', 'line_id', 'starting_bus_stop',
-                   'ending_bus_stop', 'departure_datetime', 'arrival_datetime'}]
-        """
-        cursor = self.get_travel_requests_cursor_based_on_line_id_and_departure_datetime(
-            line_id=line_id,
-            min_departure_datetime=min_departure_datetime,
-            max_departure_datetime=max_departure_datetime
-        )
-        return list(cursor)
+        travel_request_documents_cursor = self.get_travel_request_documents_cursor()
+        travel_request_documents_list = list(travel_request_documents_cursor)
+        return travel_request_documents_list
 
     def has_edges(self, node_osm_id):
         """
@@ -1642,79 +1574,104 @@ class MongoConnection(object):
         return self.edges_collection.find_one({'$or': [{'starting_node.osm_id': node_osm_id},
                                                        {'ending_node.osm_id': node_osm_id}]}) is not None
 
-    def insert_address(self, name, node_id, point):
+    def insert_address_document(self, address_document=None, name=None, node_id=None, point=None):
         """
-        Insert an address document to the AddressBook collection.
+        Insert an address_document.
 
+        address_document: {'_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}}
+
+        :param address_document
         :param name: string
         :param node_id: int
         :param point: Point
         :return: The ObjectId of the inserted document.
         """
-        document = {'name': name, 'node_id': node_id,
-                    'point': {'longitude': point.longitude, 'latitude': point.latitude}}
+        if address_document is None:
+            address_document = {
+                'name': name,
+                'node_id': node_id,
+                'point': {'longitude': point.longitude, 'latitude': point.latitude}
+            }
 
-        result = self.address_book_collection.insert_one(document)
+        result = self.address_book_collection.insert_one(address_document)
         return result.inserted_id
 
-    def insert_addresses(self, address_book):
+    def insert_address_documents(self, address_documents):
         """
-        Insert a list of address documents to the AddressBook collection.
+        Insert multiple address_documents.
 
-        :param address_book: [{'name', 'node_id', 'point': {'longitude', 'latitude'}}]
+        address_document: {'_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}}
+
+        :param address_documents: [address_document]
         :return: [ObjectId]
         """
-        result = self.address_book_collection.insert_many(address_book)
+        result = self.address_book_collection.insert_many(address_documents)
         return result.inserted_ids
 
-    def insert_bus_line(self, line_id, bus_stops):
+    def insert_bus_line_document(self, bus_line_document=None, line_id=None, bus_stops=None):
         """
-        Insert a bus_line document to the BusLines collection, or update the bus_stops
-        if the document already exists in the database.
+        Insert a new bus_line_document or update, if it already exists in the database.
 
+        bus_line_document: {
+            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        }
+        :param bus_line_document
         :param line_id: int
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         :return: The ObjectId if a new document was inserted.
         """
-        # document = {'line_id': line_id, 'bus_stops': bus_stops}
-        # result = self.bus_lines_collection.insert_one(document)
-        key = {'line_id': line_id}
-        data = {'$set': {'bus_stops': bus_stops}}
-        result = self.bus_lines_collection.update_one(key, data, upsert=True)
-        return result.upserted_id
+        if bus_line_document is not None:
+            key = {'_id': bus_line_document.get('_id')}
+            data = {
+                '$set': {
+                    'line_id': bus_line_document.get('line_id'),
+                    'bus_stops': bus_line_document.get('bus_stops')
+                }
+            }
+            result = self.bus_lines_collection.update_one(key, data, upsert=True)
+            new_object_id = result.upserted_id
+        else:
+            bus_line_document = {'line_id': line_id, 'bus_stops': bus_stops}
+            result = self.bus_lines_collection.insert_one(bus_line_document)
+            new_object_id = result.inserted_id
 
-    def insert_bus_lines(self, bus_lines):
+        return new_object_id
+
+    def insert_bus_line_documents(self, bus_line_documents):
         """
-        Insert a list of bus_line documents to the BusLines collection.
+        Insert a list of bus_line_documents or update, if it already exists in the database.
 
-        :param bus_lines: [{'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}]
-        :return: [ObjectId]
+        bus_line_document: {
+            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        }
+        :param bus_line_documents: [bus_line_document]
+        :return: None
         """
-        result = self.bus_lines_collection.insert_many(bus_lines)
-        return result.inserted_ids
+        for bus_line_document in bus_line_documents:
+            self.insert_bus_line_document(bus_line_document=bus_line_document)
 
-    def insert_bus_stop(self, osm_id, name, point):
+    def insert_bus_stop_document(self, bus_stop_document):
         """
-        Insert a bus_stop document to the BusStops collection.
+        Insert a bus_stop_document.
 
-        :param osm_id: int
-        :param name: string
-        :param point: Point
+        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+
+        :param bus_stop_document
         :return: The ObjectId of the inserted document.
         """
-        document = {'osm_id': osm_id, 'name': name,
-                    'point': {'longitude': point.longitude, 'latitude': point.latitude}}
-        result = self.bus_stops_collection.insert_one(document)
+        result = self.bus_stops_collection.insert_one(bus_stop_document)
         return result.inserted_id
 
-    def insert_bus_stops(self, bus_stops):
+    def insert_bus_stop_documents(self, bus_stop_documents):
         """
-        Insert a list of bus_stop documents to the BusStops collection.
+        Insert multiple bus_stop documents.
 
-        :param bus_stops: [{'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+
+        :param bus_stop_documents: [bus_stop_document]
         :return: [ObjectId]
         """
-        result = self.bus_stops_collection.insert_many(bus_stops)
+        result = self.bus_stops_collection.insert_many(bus_stop_documents)
         return result.inserted_ids
 
     def insert_bus_stop_waypoints(self, starting_bus_stop, ending_bus_stop, waypoints):
@@ -1732,76 +1689,115 @@ class MongoConnection(object):
         result = self.bus_stop_waypoints_collection.update_one(key, data, upsert=True)
         return result.upserted_id
 
-    def insert_edge(self, starting_node, ending_node, max_speed, road_type, way_id, traffic_density):
-        """
-        Insert an edge document to the Edges collection.
+    # def insert_edge_document(self, starting_node, ending_node, max_speed, road_type, way_id, traffic_density):
+    #     """
+    #     Insert an edge document to the Edges collection.
+    #
+    #     :param starting_node: {'osm_id', 'point': {'longitude', 'latitude'}}
+    #     :param ending_node: {'osm_id', 'point': {'longitude', 'latitude'}}
+    #     :param max_speed: float or int
+    #     :param road_type: string
+    #     :param way_id: osm_id: int
+    #     :param traffic_density: A value between 0 and 1 indicating the density of traffic: float
+    #     :return: The Object Id of the inserted document.
+    #     """
+    #     document = {'starting_node': starting_node, 'ending_node': ending_node, 'max_speed': max_speed,
+    #                 'road_type': road_type, 'way_id': way_id, 'traffic_density': traffic_density}
+    #     result = self.edges_collection.insert_one(document)
+    #     return result.inserted_id
 
-        :param starting_node: {'osm_id', 'point': {'longitude', 'latitude'}}
-        :param ending_node: {'osm_id', 'point': {'longitude', 'latitude'}}
-        :param max_speed: float or int
-        :param road_type: string
-        :param way_id: osm_id: int
-        :param traffic_density: A value between 0 and 1 indicating the density of traffic: float
+    def insert_edge_document(self, edge_document):
+        """
+        Insert an edge_document.
+
+        edge_document: {
+            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'max_speed', 'road_type', 'way_id', 'traffic_density'
+        }
+        :param edge_document
         :return: The Object Id of the inserted document.
         """
-        document = {'starting_node': starting_node, 'ending_node': ending_node, 'max_speed': max_speed,
-                    'road_type': road_type, 'way_id': way_id, 'traffic_density': traffic_density}
-        result = self.edges_collection.insert_one(document)
+        result = self.edges_collection.insert_one(edge_document)
         return result.inserted_id
 
-    def insert_edges(self, edge_documents):
+    def insert_edge_documents(self, edge_documents):
         """
-        Insert a list of edge documents to the Edges collection.
+        Insert multiple edge_documents.
 
-        :param edge_documents: [{'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                 'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                 'max_speed', 'road_type', 'way_id', 'traffic_density'}]
+        edge_document: {
+            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'max_speed', 'road_type', 'way_id', 'traffic_density'
+        }
+        :param edge_documents: [edge_document]
         :return: [ObjectId]
         """
         result = self.edges_collection.insert_many(edge_documents)
         return result.inserted_ids
 
-    def insert_node(self, osm_id, tags, point):
-        """
-        Insert a node document to the Nodes collection.
+    # def insert_node_document(self, osm_id, tags, point):
+    #     """
+    #     Insert a node document to the Nodes collection.
+    #
+    #     :param osm_id: int
+    #     :param tags: dict
+    #     :param point: Point
+    #     :return: The ObjectId of the inserted document.
+    #     """
+    #     document = {'osm_id': osm_id, 'tags': tags,
+    #                 'point': {'longitude': point.longitude, 'latitude': point.latitude}}
+    #     result = self.nodes_collection.insert_one(document)
+    #     return result.inserted_id
 
-        :param osm_id: int
-        :param tags: {}
-        :param point: Point
+    def insert_node_document(self, node_document):
+        """
+        Insert a node_document.
+
+        node_document: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
+
+        :param node_document
         :return: The ObjectId of the inserted document.
         """
-        document = {'osm_id': osm_id, 'tags': tags,
-                    'point': {'longitude': point.longitude, 'latitude': point.latitude}}
-        result = self.nodes_collection.insert_one(document)
+        result = self.nodes_collection.insert_one(node_document)
         return result.inserted_id
 
-    def insert_nodes(self, node_documents):
+    def insert_node_documents(self, node_documents):
         """
-        Insert a list of node documents to the Nodes dictionary.
+        Insert multiple node_documents.
 
-        :param node_documents: [{'osm_id', 'tags', 'point': {'longitude', 'latitude'}}]
+        node_document: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
+
+        :param node_documents: [node_document]
         :return: [ObjectId]
         """
         result = self.nodes_collection.insert_many(node_documents)
         return result.inserted_ids
 
-    def insert_point(self, osm_id, point):
+    def insert_point_document(self, point_document=None, osm_id=None, point=None):
         """
-        Insert a point document to the Points collection.
+        Insert a point_document.
 
+        point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
+
+        :param point_document
         :param osm_id: int
         :param point: Point
         :return: The ObjectId of the inserted document.
         """
-        document = {'osm_id': osm_id, 'point': {'longitude': point.longitude, 'latitude': point.latitude}}
-        result = self.points_collection.insert_one(document)
+        if point_document is None:
+            point_document = {'osm_id': osm_id, 'point': {'longitude': point.longitude, 'latitude': point.latitude}}
+
+        result = self.points_collection.insert_one(point_document)
         return result.inserted_id
 
-    def insert_points(self, point_documents):
+    def insert_point_documents(self, point_documents):
         """
-        Insert a list of point documents to the Points collection.
+        Insert multiple point_documents.
 
-        :param point_documents: [{'osm_id', 'point': {'longitude', 'latitude'}}]
+        point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
+
+        :param point_documents: [point_document]
         :return: [ObjectId]
         """
         result = self.points_collection.insert_many(point_documents)
@@ -1829,7 +1825,7 @@ class MongoConnection(object):
         :param timetable: timetable_document
         :return: The ObjectId, if a new document was inserted.
         """
-        key = {'_id': timetable.get('_id')}
+        key = {'_id': ObjectId(timetable.get('_id'))}
         data = {'$set': {
             'line_id': timetable.get('line_id'),
             'timetable_entries': timetable.get('timetable_entries'),
@@ -1863,10 +1859,11 @@ class MongoConnection(object):
         for timetable in timetables:
             self.insert_timetable(timetable=timetable)
 
-    def insert_travel_request(self, client_id, line_id, starting_bus_stop, ending_bus_stop,
-                              departure_datetime, arrival_datetime):
+    def insert_travel_request_document(self, travel_request_document=None, client_id=None, line_id=None,
+                                       starting_bus_stop=None, ending_bus_stop=None,
+                                       departure_datetime=None, arrival_datetime=None):
         """
-        Insert a new document to the TravelRequests collection.
+        Insert a travel_request_document.
 
         travel_request_document: {
             '_id', 'client_id', 'line_id',
@@ -1874,6 +1871,7 @@ class MongoConnection(object):
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'departure_datetime', 'arrival_datetime'
         }
+        :param travel_request_document
         :param client_id: int
         :param line_id: int
         :param starting_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
@@ -1882,15 +1880,18 @@ class MongoConnection(object):
         :param arrival_datetime: datetime
         :return: The ObjectId of the inserted document.
         """
-        document = {'client_id': client_id, 'line_id': line_id,
-                    'starting_bus_stop': starting_bus_stop, 'ending_bus_stop': ending_bus_stop,
-                    'departure_datetime': departure_datetime, 'arrival_datetime': arrival_datetime}
-        result = self.travel_requests_collection.insert_one(document)
+        if travel_request_document is None:
+            travel_request_document = {
+                'client_id': client_id, 'line_id': line_id,
+                'starting_bus_stop': starting_bus_stop, 'ending_bus_stop': ending_bus_stop,
+                'departure_datetime': departure_datetime, 'arrival_datetime': arrival_datetime
+            }
+        result = self.travel_requests_collection.insert_one(travel_request_document)
         return result.inserted_id
 
     def insert_travel_request_documents(self, travel_request_documents):
         """
-        Insert multiple documents to the TravelRequests collection.
+        Insert multiple travel_request_documents.
 
         travel_request_document: {
             '_id', 'client_id', 'line_id',
@@ -1898,8 +1899,7 @@ class MongoConnection(object):
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'departure_datetime', 'arrival_datetime'
         }
-        :param travel_request_documents: [{'client_id', 'line_id', 'starting_bus_stop', 'ending_bus_stop',
-                                           'departure_datetime', 'arrival_datetime'}]
+        :param travel_request_documents: [travel_request_document]
         :return: [ObjectId]
         """
         result = self.travel_requests_collection.insert_many(travel_request_documents)
@@ -1910,7 +1910,7 @@ class MongoConnection(object):
         Insert a way document to the Ways collection.
 
         :param osm_id: int
-        :param tags: {}
+        :param tags: dict
         :param references: [osm_id]
         :return: The ObjectId of the inserted document.
         """
@@ -1990,7 +1990,7 @@ class MongoConnection(object):
 
         :param counter: int
         """
-        documents_cursor = self.get_nodes()
+        documents_cursor = self.get_node_documents_cursor()
         i = 0
 
         # Cursor -> {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
@@ -2161,7 +2161,7 @@ class MongoConnection(object):
         :param counter: int
         """
         file_writer = open('../src/travel_requests.txt', 'w')
-        documents_cursor = self.get_travel_requests_cursor()
+        documents_cursor = self.get_travel_request_documents_cursor()
         i = 0
 
         # Cursor -> {'_id', 'client_id', 'line_id', 'starting_bus_stop',
@@ -2210,13 +2210,37 @@ class MongoConnection(object):
         return detailed_bus_stop_waypoints
 
     def test(self):
-        bus_line = self.find_bus_line_document(line_id=1)
-        bus_stops = bus_line.get('bus_stops')
-        bus_stop_ids = [ObjectId(bus_stop.get('_id')) for bus_stop in bus_stops]
-        collected_bus_stops = list(self.bus_stops_collection.find({'_id': {'$in': bus_stop_ids}}))
+        print 'Test'
+        # a = ObjectId(None)
+        # print a
+        # bus_lines = self.get_bus_line_documents_list()
+        # print bus_lines
+        # bus_line_0 = bus_lines[0]
 
-        print bus_stops
-        print collected_bus_stops
+        # bus_line = self.bus_lines_collection.find_one({'_id': ObjectId(ObjectId(bus_line_0.get('_id')))})
+        # print bus_line
 
-        print len(bus_stops)
-        print len(collected_bus_stops)
+        # print type(bus_line.get('_id'))
+
+        # bus_stops = bus_line.get('bus_stops')
+        # bus_stop = bus_stops[0]
+
+        # print type(bus_stop.get('_id'))
+
+
+        # timetables = self.get_timetable_documents_list()
+        # print timetables
+        # timetable_0 = timetables[0]
+        # timetable = self.timetables_collection.find_one({'_id': timetable_0.get('_id')})
+        # print timetable
+
+        # bus_line = self.find_bus_line_document(line_id=1)
+        # bus_stops = bus_line.get('bus_stops')
+        # bus_stop_ids = [ObjectId(bus_stop.get('_id')) for bus_stop in bus_stops]
+        # collected_bus_stops = list(self.bus_stops_collection.find({'_id': {'$in': bus_stop_ids}}))
+        #
+        # print bus_stops
+        # print collected_bus_stops
+        #
+        # print len(bus_stops)
+        # print len(collected_bus_stops)

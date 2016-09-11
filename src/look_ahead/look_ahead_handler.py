@@ -30,6 +30,9 @@ class LookAheadHandler(object):
         collection of the System Database. Moreover, identify all the possible waypoints between the bus_stops
         of the bus_line, and populate the BusStopWaypoints collection.
 
+        bus_line_document: {
+            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        }
         :param line_id: int
         :param bus_stop_names: [string]
         :return: None
@@ -105,10 +108,11 @@ class LookAheadHandler(object):
         # 5: The Look Ahead stores the generated bus_line, which is consisted of the line_id and
         #    the list of its bus_stops, to the corresponding collection of the System Database.
         #
-        self.connection.insert_bus_line(line_id=line_id, bus_stops=bus_stops)
+        bus_line_document = {'line_id': line_id, 'bus_stops': bus_stops}
+        self.connection.insert_bus_line_document(bus_line_document=bus_line_document)
 
         log(module_name='look_ahead_handler', log_type='DEBUG',
-            log_message='insert_bus_line (mongodb_database): ok')
+            log_message='insert_bus_line_document (mongodb_database): ok')
 
     def generate_timetables_for_bus_line(self, bus_line, timetables_starting_datetime, timetables_ending_datetime,
                                          requests_min_departure_datetime, requests_max_departure_datetime):
@@ -324,7 +328,7 @@ class LookAheadHandler(object):
         """
         line_id = bus_line.get('line_id')
         bus_stops = bus_line.get('bus_stops')
-        timetables = self.connection.get_timetables_of_bus_line_list(line_id=line_id)
+        timetables = self.connection.find_timetable_documents(line_ids=[line_id])
 
         timetable_updater = TimetableUpdater(bus_stops=bus_stops, timetables=timetables)
 

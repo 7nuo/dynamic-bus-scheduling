@@ -385,27 +385,27 @@ class Parser(object):
                     self.add_address(name=name, node_id=reference, point=point)
 
     def populate_address_book(self):
-        self.connection.insert_addresses(address_book=self.get_list_of_addresses())
+        self.connection.insert_address_documents(address_documents=self.get_list_of_addresses())
         log(module_name='Parser', log_type='DEBUG',
             log_message='populate_address_book collection (mongodb_database) ok')
 
     def populate_edges(self):
-        self.connection.insert_edges(edge_documents=self.get_list_of_edges())
+        self.connection.insert_edge_documents(edge_documents=self.get_list_of_edges())
         log(module_name='Parser', log_type='DEBUG',
             log_message='populate_edges collection (mongodb_database) ok')
 
     def populate_nodes(self):
-        self.connection.insert_nodes(node_documents=self.get_list_of_nodes())
+        self.connection.insert_node_documents(node_documents=self.get_list_of_nodes())
         log(module_name='Parser', log_type='DEBUG',
             log_message='populate_nodes collection (mongodb_database) ok')
 
     def populate_points(self):
-        self.connection.insert_points(point_documents=self.get_list_of_points())
+        self.connection.insert_point_documents(point_documents=self.get_list_of_points())
         log(module_name='Parser', log_type='DEBUG',
             log_message='populate_points collection (mongodb_database) ok')
 
     def populate_bus_stops(self):
-        self.connection.insert_bus_stops(bus_stops=self.get_list_of_bus_stops())
+        self.connection.insert_bus_stop_documents(bus_stop_documents=self.get_list_of_bus_stops())
         log(module_name='Parser', log_type='DEBUG',
             log_message='populate_bus_stops collection (mongodb_database) ok')
 

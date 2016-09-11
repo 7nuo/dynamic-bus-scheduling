@@ -173,7 +173,7 @@ class Router(object):
                                             'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
                                             'max_speed', 'road_type', 'way_id', 'traffic_density'}]}
         """
-        edges_dictionary = self.connection.get_edges_dictionary()
+        edges_dictionary = self.connection.get_edge_documents_dictionary()
         return edges_dictionary
 
     def get_edges_list(self):
@@ -184,7 +184,7 @@ class Router(object):
                                'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
                                'max_speed', 'road_type', 'way_id', 'traffic_density'}]
         """
-        edges_list = self.connection.get_edges_list()
+        edges_list = self.connection.get_edge_documents_list()
         return edges_list
 
     def get_points_dictionary(self):
@@ -193,7 +193,7 @@ class Router(object):
 
         :return points_dictionary: {osm_id -> {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}}
         """
-        points_dictionary = self.connection.get_points_dictionary()
+        points_dictionary = self.connection.get_point_documents_dictionary()
         return points_dictionary
 
     def get_route_between_two_bus_stops(self, starting_bus_stop, ending_bus_stop):
