@@ -263,7 +263,7 @@ class LookAheadHandler(object):
 
         print_timetables(timetables=timetable_generator.timetables)
 
-        # self.connection.insert_timetables(timetables=timetable_generator.timetables)
+        # self.connection.insert_timetable_documents(timetables=timetable_generator.timetables)
 
     def generate_timetables_for_bus_line_id(self, line_id, timetables_starting_datetime, timetables_ending_datetime,
                                             requests_min_departure_datetime, requests_max_departure_datetime):
@@ -336,7 +336,7 @@ class LookAheadHandler(object):
             timetables=timetable_updater.timetables,
             route_generator_response=timetable_updater.route_generator_response
         )
-        # self.connection.insert_timetables(timetables=timetable_updater.timetables)
+        # self.connection.insert_timetable_documents(timetables=timetable_updater.timetables)
 
     def update_timetables_of_bus_line_id(self, line_id):
         """

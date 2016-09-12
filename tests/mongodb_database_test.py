@@ -43,8 +43,8 @@ class MongodbDatabaseTester(object):
                         str(self.elapsed_time) + ' sec')
 
     def print_bus_line(self, line_id):
-        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_line')
-        self.mongo.print_bus_line(line_id=line_id)
+        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_line_document')
+        self.mongo.print_bus_line_document(line_id=line_id)
 
     def print_bus_line_waypoints(self, line_id):
         log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_line_waypoints')
@@ -55,16 +55,16 @@ class MongodbDatabaseTester(object):
         self.mongo.print_detailed_bus_line_waypoints(line_id=line_id)
 
     def print_bus_stops(self, counter):
-        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_stops')
-        self.mongo.print_bus_stops(counter=counter)
+        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_stop_documents')
+        self.mongo.print_bus_stop_documents(counter=counter)
 
     def print_edges(self, counter):
-        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_edges')
-        self.mongo.print_edges(counter=counter)
+        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_edge_documents')
+        self.mongo.print_edge_documents(counter=counter)
 
     def print_nodes(self, counter):
-        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_nodes')
-        self.mongo.print_nodes(counter=counter)
+        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_node_documents')
+        self.mongo.print_node_documents(counter=counter)
 
     def print_travel_request_documents(self, counter):
         log(module_name='mongodb_database_test', log_type='INFO', log_message='print_travel_request_documents')
@@ -75,10 +75,10 @@ if __name__ == '__main__':
     tester = MongodbDatabaseTester()
     tester.mongo.test()
     # tester.clear_all_collections()
-    # tester.print_nodes(counter=200)
-    # tester.print_bus_stops(counter=200)
-    # tester.print_edges(counter=200)
-    # tester.print_bus_line(line_id=1)
+    # tester.print_node_documents(counter=200)
+    # tester.print_bus_stop_documents(counter=200)
+    # tester.print_edge_documents(counter=200)
+    # tester.print_bus_line_document(line_id=1)
     # tester.print_bus_line_waypoints(line_id=1)
     # tester.print_detailed_bus_line_waypoints(line_id=1)
     # tester.print_travel_request_documents(counter=10000)

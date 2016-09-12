@@ -410,7 +410,7 @@ class Parser(object):
             log_message='populate_bus_stops collection (mongodb_database) ok')
 
     def populate_ways(self):
-        self.connection.insert_ways(way_documents=self.get_list_of_ways())
+        self.connection.insert_way_documents(way_documents=self.get_list_of_ways())
         log(module_name='Parser', log_type='DEBUG',
             log_message='populate_ways collection (mongodb_database) ok')
 
