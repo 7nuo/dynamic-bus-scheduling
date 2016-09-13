@@ -143,6 +143,37 @@ class MongoConnection(object):
         result = self.ways_collection.delete_many({})
         return result.deleted_count
 
+    def convert_bus_stop_waypoints_document_to_detailed_bus_stop_waypoints_document(self, bus_stop_waypoints_document):
+        """
+        Convert a bus_stop_waypoints_document to a detailed_bus_stop_waypoints document.
+
+        bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_object_id]]
+        }
+        detailed_bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_document]]
+        }
+        :param bus_stop_waypoints_document
+        :return: detailed_bus_stop_waypoints_document
+        """
+        lists_of_edge_object_ids = bus_stop_waypoints_document.get('waypoints')
+        lists_of_detailed_edges = []
+
+        for list_of_edge_object_ids in lists_of_edge_object_ids:
+            list_of_detailed_edge_object_ids = [ObjectId(i) for i in list_of_edge_object_ids]
+            list_of_detailed_edges = [
+                self.edges_collection.find_one({'_id': i}) for i in list_of_detailed_edge_object_ids
+                ]
+            lists_of_detailed_edges.append(list_of_detailed_edges)
+
+        detailed_bus_stop_waypoints_document = bus_stop_waypoints_document
+        detailed_bus_stop_waypoints_document['waypoints'] = lists_of_detailed_edges
+        return detailed_bus_stop_waypoints_document
+
     def delete_address_document(self, object_id=None, name=None):
         """
         Delete an address_document.
@@ -771,7 +802,7 @@ class MongoConnection(object):
 
         return bus_stop_waypoints_document
 
-    def find_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None, bus_stop_names=None):
+    def find_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None, bus_stop_names=None, line_id=None):
         """
         Retrieve multiple bus_stop_waypoints_documents.
 
@@ -783,6 +814,7 @@ class MongoConnection(object):
         :param object_ids: [ObjectId]
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         :param bus_stop_names: [string]
+        :param line_id: int
         :return: bus_stop_waypoints_documents: [bus_stop_waypoints_document]
         """
         bus_stop_waypoints_documents = []
@@ -817,6 +849,22 @@ class MongoConnection(object):
                     ending_bus_stop_name=ending_bus_stop_name
                 )
                 bus_stop_waypoints_documents.append(bus_stop_waypoints_document)
+
+        elif line_id is not None:
+            bus_line_document = self.find_bus_line_document(line_id=line_id)
+
+            if bus_line_document is not None:
+                retrieved_bus_stops = bus_line_document.get('bus_stops')
+                number_of_retrieved_bus_stops = len(retrieved_bus_stops)
+
+                for i in range(0, number_of_retrieved_bus_stops - 1):
+                    starting_bus_stop = retrieved_bus_stops[i]
+                    ending_bus_stop = retrieved_bus_stops[i + 1]
+                    bus_stop_waypoints_document = self.find_bus_stop_waypoints_document(
+                        starting_bus_stop=starting_bus_stop,
+                        ending_bus_stop=ending_bus_stop
+                    )
+                    bus_stop_waypoints_documents.append(bus_stop_waypoints_document)
 
         else:
             bus_stop_waypoints_documents_cursor = self.bus_stop_waypoints_collection.find({})
@@ -858,12 +906,14 @@ class MongoConnection(object):
             starting_bus_stop_name=starting_bus_stop_name,
             ending_bus_stop_name=ending_bus_stop_name
         )
-        detailed_bus_stop_waypoints_document = self.get_detailed_waypoints_from_waypoints(
-            bus_stop_waypoints=bus_stop_waypoints_document
-        )
+        detailed_bus_stop_waypoints_document = \
+            self.convert_bus_stop_waypoints_document_to_detailed_bus_stop_waypoints_document(
+                bus_stop_waypoints_document=bus_stop_waypoints_document
+            )
         return detailed_bus_stop_waypoints_document
 
-    def find_detailed_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None, bus_stop_names=None):
+    def find_detailed_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None,
+                                                   bus_stop_names=None, line_id=None):
         """
         Retrieve multiple detailed_bus_stop_waypoints_documents.
 
@@ -885,18 +935,21 @@ class MongoConnection(object):
         :param object_ids: [ObjectId]
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         :param bus_stop_names: [string]
+        :param line_id: int
         :return: detailed_bus_stop_waypoints_documents: [detailed_bus_stop_waypoints_document]
         """
         detailed_bus_stop_waypoints_documents = []
         bus_stop_waypoints_documents = self.find_bus_stop_waypoints_documents(
             object_ids=object_ids,
             bus_stops=bus_stops,
-            bus_stop_names=bus_stop_names
+            bus_stop_names=bus_stop_names,
+            line_id=line_id
         )
         for bus_stop_waypoints_document in bus_stop_waypoints_documents:
-            detailed_bus_stop_waypoints_document = self.get_detailed_waypoints_from_waypoints(
-                bus_stop_waypoints=bus_stop_waypoints_document
-            )
+            detailed_bus_stop_waypoints_document = \
+                self.convert_bus_stop_waypoints_document_to_detailed_bus_stop_waypoints_document(
+                    bus_stop_waypoints_document=bus_stop_waypoints_document
+                )
             detailed_bus_stop_waypoints_documents.append(detailed_bus_stop_waypoints_document)
 
         return detailed_bus_stop_waypoints_documents
@@ -949,7 +1002,7 @@ class MongoConnection(object):
         elif ending_node_osm_id is not None:
             edge_documents_cursor = self.edges_collection.find({'ending_node.oms_id': ending_node_osm_id})
         else:
-            return None
+            edge_documents_cursor = self.edges_collection.find({})
 
         edge_documents = list(edge_documents_cursor)
         return edge_documents
@@ -995,7 +1048,7 @@ class MongoConnection(object):
         elif osm_ids is not None:
             node_documents_cursor = self.nodes_collection.find({'osm_id': {'$in': osm_ids}})
         else:
-            return None
+            node_documents_cursor = self.nodes_collection.find({})
 
         node_documents = list(node_documents_cursor)
         return node_documents
@@ -1041,7 +1094,7 @@ class MongoConnection(object):
         elif osm_ids is not None:
             point_documents_cursor = self.points_collection.find({'osm_id': {'$in': osm_ids}})
         else:
-            return None
+            point_documents_cursor = self.points_collection.find({})
 
         point_documents = list(point_documents_cursor)
         return point_documents
@@ -1098,7 +1151,7 @@ class MongoConnection(object):
         elif line_ids is not None:
             timetable_documents_cursor = self.timetables_collection.find({'line_id': {'$in': line_ids}})
         else:
-            return None
+            timetable_documents_cursor = self.timetables_collection.find({})
 
         timetable_documents = list(timetable_documents_cursor)
         return timetable_documents
@@ -1153,7 +1206,7 @@ class MongoConnection(object):
                 'departure_time': {'$lt': max_departure_datetime}
             })
         else:
-            return None
+            travel_requests_cursor = self.travel_requests_collection.find({})
 
         travel_requests = list(travel_requests_cursor)
         return travel_requests
@@ -1585,35 +1638,57 @@ class MongoConnection(object):
         timetable_documents_list = list(timetable_documents_cursor)
         return timetable_documents_list
 
-    def get_traffic_density_between_two_bus_stop_names(self, starting_bus_stop_name, ending_bus_stop_name):
+    def get_traffic_density_documents(self, bus_stops=None, bus_stop_names=None):
         """
+        Get multiple traffic_density_documents.
 
-        :param starting_bus_stop_name:
-        :param ending_bus_stop_name:
-        :return: {'_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                  'waypoints': [[{'edge_object_id', 'traffic_density'}]]}
+        edge_document: {
+            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'max_speed', 'road_type', 'way_id', 'traffic_density'
+        }
+        detailed_bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_document]]
+        }
+        traffic_density_document: {
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'traffic_density_values': [[{'edge_object_id', 'traffic_density'}]]
+        }
+        :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        :param bus_stop_names: [string]
+        :return: traffic_density_documents: [traffic_density_document]
         """
-        bus_stop_waypoints = self.find_bus_stop_waypoints_document(
-            starting_bus_stop_name=starting_bus_stop_name,
-            ending_bus_stop_name=ending_bus_stop_name
+        traffic_density_documents = []
+
+        detailed_bus_stop_waypoints_documents = self.find_detailed_bus_stop_waypoints_documents(
+            bus_stops=bus_stops,
+            bus_stop_names=bus_stop_names
         )
-        # {'_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        #  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        #  'waypoints': [[edge_object_id]]}
+        for detailed_bus_stop_waypoints_document in detailed_bus_stop_waypoints_documents:
+            starting_bus_stop = detailed_bus_stop_waypoints_document.get('starting_bus_stop')
+            ending_bus_stop = detailed_bus_stop_waypoints_document.get('ending_bus_stop')
+            lists_of_edge_documents = detailed_bus_stop_waypoints_document.get('waypoints')
+            traffic_density_values = []
 
-        lists_of_edge_object_ids = bus_stop_waypoints.get('waypoints')
-        lists_of_edge_traffic = []
+            for list_of_edge_documents in lists_of_edge_documents:
+                traffic_density_values_entry = [
+                    {'edge_object_id': edge_document.get('_id'),
+                     'traffic_density': edge_document.get('traffic_density')}
+                    for edge_document in list_of_edge_documents
+                ]
+                traffic_density_values.append(traffic_density_values_entry)
 
-        for list_of_edge_object_ids in lists_of_edge_object_ids:
-            list_of_edge_object_ids = [ObjectId(i) for i in list_of_edge_object_ids]
-            list_of_detailed_edges = [self.edges_collection.find_one({'_id': i}) for i in list_of_edge_object_ids]
-            list_of_edge_traffic = [{'edge_object_id': i.get('_id'), 'traffic_density': i.get('traffic_density')}
-                                    for i in list_of_detailed_edges]
-            lists_of_edge_traffic.append(list_of_edge_traffic)
+            traffic_density_document = {
+                'starting_bus_stop': starting_bus_stop,
+                'ending_bus_stop': ending_bus_stop,
+                'traffic_density_values': traffic_density_values
+            }
+            traffic_density_documents.append(traffic_density_document)
 
-        bus_stop_waypoints['waypoints'] = lists_of_edge_traffic
-        return bus_stop_waypoints
+        return traffic_density_documents
 
     def get_travel_request_documents_cursor(self):
         """
@@ -2096,16 +2171,23 @@ class MongoConnection(object):
         )
         print address_document
 
-    def print_address_documents(self, counter=None):
+    def print_address_documents(self, object_ids=None, names=None, node_ids=None, counter=None):
         """
         Print multiple address_documents.
 
         address_document: {'_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}}
 
+        :param object_ids: [ObjectId]
+        :param names: [string]
+        :param node_ids: [int]
         :param counter: int
         :return: None
         """
-        address_documents_list = self.find_address_documents()
+        address_documents_list = self.find_address_documents(
+            object_ids=object_ids,
+            names=names,
+            node_ids=node_ids
+        )
         number_of_address_documents = len(address_documents_list)
 
         if counter is not None:
@@ -2136,17 +2218,22 @@ class MongoConnection(object):
         bus_line_document = self.find_bus_line_document(object_id=object_id, line_id=line_id)
         print bus_line_document
 
-    def print_bus_line_documents(self, counter=None):
+    def print_bus_line_documents(self, object_ids=None, line_ids=None, counter=None):
         """
         Print multiple bus_line_documents.
 
         bus_line_document: {
             '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         }
+        :param object_ids: [ObjectId]
+        :param line_ids: [int]
         :param counter: int
         :return: None
         """
-        bus_line_documents_list = self.find_bus_line_documents()
+        bus_line_documents_list = self.find_bus_line_documents(
+            object_ids=object_ids,
+            line_ids=line_ids
+        )
         number_of_bus_line_documents = len(bus_line_documents_list)
 
         if counter is not None:
@@ -2181,16 +2268,23 @@ class MongoConnection(object):
         )
         print bus_stop_document
 
-    def print_bus_stop_documents(self, counter):
+    def print_bus_stop_documents(self, object_ids=None, osm_ids=None, names=None, counter=None):
         """
         Print multiple bus_stop_documents.
 
         bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
 
+        :param object_ids: [ObjectId]
+        :param osm_ids: [int]
+        :param names: [string]
         :param counter: int
         :return: None
         """
-        bus_stop_documents_list = self.find_bus_stop_documents()
+        bus_stop_documents_list = self.find_bus_stop_documents(
+            object_ids=object_ids,
+            osm_ids=osm_ids,
+            names=names
+        )
         number_of_bus_stop_documents = len(bus_stop_documents_list)
 
         if counter is not None:
@@ -2226,7 +2320,7 @@ class MongoConnection(object):
         )
         print edge_document
 
-    def print_edge_documents(self, counter=None):
+    def print_edge_documents(self, object_ids=None, starting_node_osm_id=None, ending_node_osm_id=None, counter=None):
         """
         Print multiple edge_documents.
 
@@ -2235,10 +2329,17 @@ class MongoConnection(object):
             'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
             'max_speed', 'road_type', 'way_id', 'traffic_density'
         }
+        :param object_ids: [ObjectId]
+        :param starting_node_osm_id: int
+        :param ending_node_osm_id: int
         :param counter: int
         :return: None
         """
-        edge_documents_list = self.find_edge_documents()
+        edge_documents_list = self.find_edge_documents(
+            object_ids=object_ids,
+            starting_node_osm_id=starting_node_osm_id,
+            ending_node_osm_id=ending_node_osm_id
+        )
         number_of_edge_documents = len(edge_documents_list)
 
         if counter is not None:
@@ -2272,16 +2373,21 @@ class MongoConnection(object):
         )
         print node_document
 
-    def print_node_documents(self, counter=None):
+    def print_node_documents(self, object_ids=None, osm_ids=None, counter=None):
         """
         Print multiple node_documents.
 
         node_document: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
 
+        :param object_ids: [ObjectId]
+        :param osm_ids: [int]
         :param counter: int
         :return: None
         """
-        node_documents_list = self.find_node_documents()
+        node_documents_list = self.find_node_documents(
+            object_ids=object_ids,
+            osm_ids=osm_ids
+        )
         number_of_node_documents = len(node_documents_list)
 
         if counter is not None:
@@ -2315,16 +2421,21 @@ class MongoConnection(object):
         )
         print point_document
 
-    def print_point_documents(self, counter=None):
+    def print_point_documents(self, object_ids=None, osm_ids=None, counter=None):
         """
         Print multiple point_documents.
 
         point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
 
+        :param object_ids: [ObjectId]
+        :param osm_ids: [int]
         :param counter: int
         :return: None
         """
-        point_documents_list = self.find_point_documents()
+        point_documents_list = self.find_point_documents(
+            object_ids=object_ids,
+            osm_ids=osm_ids
+        )
         number_of_point_documents = len(point_documents_list)
 
         if counter is not None:
@@ -2357,7 +2468,8 @@ class MongoConnection(object):
         travel_request_document = self.find_travel_request_document(object_id=object_id)
         print travel_request_document
 
-    def print_travel_request_documents(self, counter=None):
+    def print_travel_request_documents(self, object_ids=None, line_ids=None, min_departure_datetime=None,
+                                      max_departure_datetime=None, counter=None):
         """
         Print multiple travel_request_documents.
 
@@ -2367,10 +2479,19 @@ class MongoConnection(object):
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'departure_datetime', 'arrival_datetime'
         }
+        :param object_ids: [ObjectId]
+        :param line_ids: [int]
+        :param min_departure_datetime: datetime
+        :param max_departure_datetime: datetime
         :param counter: int
         :return: None
         """
-        travel_request_documents_list = self.find_travel_request_documents()
+        travel_request_documents_list = self.find_travel_request_documents(
+            object_ids=object_ids,
+            line_ids=line_ids,
+            min_departure_datetime=min_departure_datetime,
+            max_departure_datetime=max_departure_datetime
+        )
         number_of_travel_request_documents = len(travel_request_documents_list)
 
         if counter is not None:
@@ -2400,16 +2521,21 @@ class MongoConnection(object):
         way_document = self.find_way_document(object_id=object_id, osm_id=osm_id)
         print way_document
 
-    def print_way_documents(self, counter=None):
+    def print_way_documents(self, object_ids=None, osm_ids=None, counter=None):
         """
         Print multiple way_documents.
 
         way_document: {'_id', 'osm_id', 'tags', 'references'}
 
+        :param object_ids: [ObjectId]
+        :param osm_ids: [int]
         :param counter: int
         :return: None
         """
-        way_documents_list = self.find_way_documents()
+        way_documents_list = self.find_way_documents(
+            object_ids=object_ids,
+            osm_ids=osm_ids
+        )
         number_of_way_documents = len(way_documents_list)
 
         if counter is not None:
@@ -2466,7 +2592,7 @@ class MongoConnection(object):
             for alternative_waypoints in waypoints:
                 print 'alternative_waypoints:', alternative_waypoints
 
-    def print_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None, bus_stop_names=None):
+    def print_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None, bus_stop_names=None, line_id=None):
         """
         Print multiple bus_stop_waypoints_documents.
 
@@ -2478,12 +2604,14 @@ class MongoConnection(object):
         :param object_ids: [ObjectId]
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         :param bus_stop_names: [string]
+        :param line_id: int
         :return: None
         """
         bus_stop_waypoints_documents = self.find_bus_stop_waypoints_documents(
             object_ids=object_ids,
             bus_stops=bus_stops,
-            bus_stop_names=bus_stop_names
+            bus_stop_names=bus_stop_names,
+            line_id=line_id
         )
         for bus_stop_waypoints_document in bus_stop_waypoints_documents:
             if bus_stop_waypoints_document is not None:
@@ -2539,7 +2667,8 @@ class MongoConnection(object):
             for alternative_waypoints in waypoints:
                 print 'alternative_waypoints:', alternative_waypoints
 
-    def print_detailed_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None, bus_stop_names=None):
+    def print_detailed_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None,
+                                                    bus_stop_names=None, line_id=None):
         """
         Print multiple detailed_bus_stop_waypoints_documents.
 
@@ -2561,12 +2690,14 @@ class MongoConnection(object):
         :param object_ids: [ObjectId]
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         :param bus_stop_names: [string]
+        :param line_id: int
         :return: None
         """
         detailed_bus_stop_waypoints_documents = self.find_detailed_bus_stop_waypoints_documents(
             object_ids=object_ids,
             bus_stops=bus_stops,
-            bus_stop_names=bus_stop_names
+            bus_stop_names=bus_stop_names,
+            line_id=line_id
         )
         for detailed_bus_stop_waypoints_document in detailed_bus_stop_waypoints_documents:
             if detailed_bus_stop_waypoints_document is not None:
@@ -2574,97 +2705,61 @@ class MongoConnection(object):
                     detailed_bus_stop_waypoints_document=detailed_bus_stop_waypoints_document
                 )
 
-    def print_bus_line_waypoints(self, line_id):
+    @staticmethod
+    def print_traffic_density_document(traffic_density_document):
         """
-        :param line_id: int
-        """
-        # {'_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
-        bus_line_document = self.find_bus_line_document(line_id=line_id)
-        bus_stops = bus_line_document.get('bus_stops')
+        Print a traffic_density_document.
 
-        bus_stop_names = [bus_stop.get('name') for bus_stop in bus_stops]
-        self.print_bus_stop_waypoints_documents(bus_stop_names=bus_stop_names)
-
-    def print_detailed_bus_line_waypoints(self, line_id):
+        traffic_density_document: {
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'traffic_density_values': [[{'edge_object_id', 'traffic_density'}]]
+        }
+        :param traffic_density_document
+        :return: None
         """
-        :param line_id: int
-        """
-        # {'_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
-        bus_line_document = self.find_bus_line_document(line_id=line_id)
-        bus_stops = bus_line_document.get('bus_stops')
+        if traffic_density_document is not None:
+            print '\nstarting_bus_stop:', traffic_density_document.get('starting_bus_stop')
+            print 'ending_bus_stop:', traffic_density_document.get('ending_bus_stop')
 
-        bus_stop_names = [bus_stop.get('name') for bus_stop in bus_stops]
-        self.print_detailed_bus_stop_waypoints_documents(bus_stop_names=bus_stop_names)
+            for traffic_density_values_of_path in traffic_density_document.get('traffic_density_values'):
+                print 'traffic_density_values_of_path:', traffic_density_values_of_path
 
-    def print_traffic_density_between_two_bus_stops(self, starting_bus_stop_name, ending_bus_stop_name):
+    def print_traffic_density_documents(self, bus_stops=None, bus_stop_names=None):
         """
+        Print multiple traffic_density_documents.
 
-        :param starting_bus_stop_name: string
-        :param ending_bus_stop_name: string
-        :return:
+        traffic_density_document: {
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'traffic_density_values': [[{'edge_object_id', 'traffic_density'}]]
+        }
+        :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        :param bus_stop_names: [string]
+        :return: None
         """
-        bus_stop_waypoints = self.get_traffic_density_between_two_bus_stop_names(
-            starting_bus_stop_name=starting_bus_stop_name,
-            ending_bus_stop_name=ending_bus_stop_name
+        traffic_density_documents = self.get_traffic_density_documents(
+            bus_stops=bus_stops,
+            bus_stop_names=bus_stop_names
         )
-        # {'_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        #  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        #  'waypoints': [[{'edge_object_id', 'traffic_density'}]]}
+        for traffic_density_document in traffic_density_documents:
+            self.print_traffic_density_document(traffic_density_document=traffic_density_document)
 
-        starting_bus_stop = bus_stop_waypoints.get('starting_bus_stop')
-        ending_bus_stop = bus_stop_waypoints.get('ending_bus_stop')
-        waypoints = bus_stop_waypoints.get('waypoints')
-
-        print '\nstarting_bus_stop: ' + str(starting_bus_stop) + \
-              '\nending_bus_stop: ' + str(ending_bus_stop)
-
-        for alternative_waypoints in waypoints:
-            print 'alternative_waypoints: ' + str(alternative_waypoints)
-
-    def get_detailed_waypoints_from_waypoints(self, bus_stop_waypoints):
+    def update_traffic_density(self, edge_object_id, new_traffic_density_value):
         """
-        Convert a bus_stop_waypoints_document to a detailed_bus_stop_waypoints document.
+        Update the traffic_density value of an edge_document.
 
-        bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_object_id]]
+        edge_document: {
+            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'max_speed', 'road_type', 'way_id', 'traffic_density'
         }
-        detailed_bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_document]]
-        }
-        :param bus_stop_waypoints: bus_stop_waypoints_document
-        :return: detailed_bus_stop_waypoints: detailed_bus_stop_waypoints_document
-        """
-        lists_of_edge_object_ids = bus_stop_waypoints.get('waypoints')
-        lists_of_detailed_edges = []
-
-        for list_of_edge_object_ids in lists_of_edge_object_ids:
-            list_of_detailed_edge_object_ids = [ObjectId(i) for i in list_of_edge_object_ids]
-            list_of_detailed_edges = [
-                self.edges_collection.find_one({'_id': i}) for i in list_of_detailed_edge_object_ids
-                ]
-            lists_of_detailed_edges.append(list_of_detailed_edges)
-
-        detailed_bus_stop_waypoints = bus_stop_waypoints
-        detailed_bus_stop_waypoints['waypoints'] = lists_of_detailed_edges
-        return detailed_bus_stop_waypoints
-
-    def update_traffic_density(self, edge_object_id, new_traffic_density):
-        """
-        Update the traffic_density value of an edge document.
-        edge_document: {'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                        'max_speed', 'road_type', 'way_id', 'traffic_density'}
-
         :param edge_object_id: ObjectId of edge document
-        :param new_traffic_density: float [0, 1]
+        :param new_traffic_density_value: float [0, 1]
         :return: True if an edge_document was updated, otherwise False.
         """
         key = {'_id': ObjectId(edge_object_id)}
-        data = {'$set': {'traffic_density': new_traffic_density}}
+        data = {'$set': {'traffic_density': new_traffic_density_value}}
         result = self.edges_collection.update_one(key, data, upsert=False)
         return result.modified_count == 1
 

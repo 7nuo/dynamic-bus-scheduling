@@ -57,7 +57,7 @@ class TrafficDataSimulatorTester(object):
 
     def print_traffic_density_between_two_bus_stops(self, starting_bus_stop_name, ending_bus_stop_name):
         log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='print_traffic_density_between_two_bus_stops: starting')
+            log_message='print_traffic_density_documents: starting')
         self.start_time = time.time()
         self.traffic_data_simulator.print_traffic_density_between_two_bus_stops(
             starting_bus_stop_name=starting_bus_stop_name,
@@ -65,7 +65,7 @@ class TrafficDataSimulatorTester(object):
         )
         self.elapsed_time = time.time() - self.start_time
         log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='print_traffic_density_between_two_bus_stops: finished - elapsed_time = ' +
+            log_message='print_traffic_density_documents: finished - elapsed_time = ' +
                         str(self.elapsed_time) + ' sec')
 
 
@@ -79,7 +79,7 @@ if __name__ == '__main__':
 
     # tester.clear_traffic_density()
 
-    # tester.print_traffic_density_between_two_bus_stops(
+    # tester.print_traffic_density_documents(
     #     starting_bus_stop_name='Ekebyhus',
     #     ending_bus_stop_name='Sernanders väg'
     # )
@@ -96,7 +96,7 @@ if __name__ == '__main__':
     #     waypoints_index=1,
     #     new_traffic_density=0.10
     # )
-    # tester.print_traffic_density_between_two_bus_stops(
+    # tester.print_traffic_density_documents(
     #     starting_bus_stop_name='Ekebyhus',
     #     ending_bus_stop_name='Sernanders väg'
     # )

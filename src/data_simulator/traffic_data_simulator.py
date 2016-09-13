@@ -50,10 +50,10 @@ class TrafficDataSimulator(object):
 
         for edge_object_id in edge_object_ids:
             self.connection.update_traffic_density(edge_object_id=edge_object_id,
-                                                   new_traffic_density=new_traffic_density)
+                                                   new_traffic_density_value=new_traffic_density)
 
     def print_traffic_density_between_two_bus_stops(self, starting_bus_stop_name, ending_bus_stop_name):
-        self.connection.print_traffic_density_between_two_bus_stops(
+        self.connection.print_traffic_density_documents(
             starting_bus_stop_name=starting_bus_stop_name,
             ending_bus_stop_name=ending_bus_stop_name
         )

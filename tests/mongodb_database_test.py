@@ -47,12 +47,12 @@ class MongodbDatabaseTester(object):
         self.mongo.print_bus_line_document(line_id=line_id)
 
     def print_bus_line_waypoints(self, line_id):
-        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_line_waypoints')
-        self.mongo.print_bus_line_waypoints(line_id=line_id)
+        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_stop_waypoints_documents')
+        self.mongo.print_bus_stop_waypoints_documents(line_id=line_id)
 
     def print_detailed_bus_line_waypoints(self, line_id):
-        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_detailed_bus_line_waypoints')
-        self.mongo.print_detailed_bus_line_waypoints(line_id=line_id)
+        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_detailed_bus_stop_waypoints_documents')
+        self.mongo.print_detailed_bus_stop_waypoints_documents(line_id=line_id)
 
     def print_bus_stops(self, counter):
         log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_stop_documents')
@@ -79,6 +79,6 @@ if __name__ == '__main__':
     # tester.print_bus_stop_documents(counter=200)
     # tester.print_edge_documents(counter=200)
     # tester.print_bus_line_document(line_id=1)
-    # tester.print_bus_line_waypoints(line_id=1)
-    # tester.print_detailed_bus_line_waypoints(line_id=1)
+    # tester.print_bus_stop_waypoints_documents(line_id=1)
+    # tester.print_detailed_bus_stop_waypoints_documents(line_id=1)
     # tester.print_travel_request_documents(counter=10000)
