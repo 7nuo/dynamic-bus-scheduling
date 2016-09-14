@@ -45,20 +45,21 @@ class LookAheadHandlerTester(object):
             log_message='test_generate_bus_line: finished - elapsed_time = '
                         + str(elapsed_time) + ' sec')
 
-    def test_generate_timetables_for_bus_line_id(self, line_id):
+    def test_generate_timetables_for_bus_line(self, bus_line=None, line_id=None):
         log(module_name='look_ahead_handler_test', log_type='INFO',
-            log_message='generate_timetables_for_bus_line_id: starting')
+            log_message='generate_timetables_for_bus_line: starting')
         self.start_time = time.time()
-        self.look_ahead_handler.generate_timetables_for_bus_line_id(
-            line_id=line_id,
+        self.look_ahead_handler.generate_timetables_for_bus_line(
             timetables_starting_datetime=timetables_starting_datetime_testing_value,
             timetables_ending_datetime=timetables_ending_datetime_testing_value,
             requests_min_departure_datetime=requests_min_departure_datetime_testing_value,
             requests_max_departure_datetime=requests_max_departure_datetime_testing_value,
+            bus_line=bus_line,
+            line_id=line_id
         )
         self.elapsed_time = time.time() - self.start_time
         log(module_name='look_ahead_handler_test', log_type='INFO',
-            log_message='generate_timetables_for_bus_line_id: finished - elapsed_time = '
+            log_message='generate_timetables_for_bus_line: finished - elapsed_time = '
                         + str(self.elapsed_time) + ' sec')
 
     def test_generate_timetables_for_bus_lines(self):
@@ -76,36 +77,30 @@ class LookAheadHandlerTester(object):
             log_message='generate_timetables_for_bus_lines: finished - elapsed_time = '
                         + str(self.elapsed_time) + ' sec')
 
-    def test_update_timetables_for_bus_line_id(self, line_id):
+    def test_update_timetables_of_bus_line(self, bus_line=None, line_id=None):
         log(module_name='look_ahead_handler_test', log_type='INFO',
-            log_message='test_update_timetables_for_bus_line_id: starting')
+            log_message='test_update_timetables_of_bus_line: starting')
         self.start_time = time.time()
-        self.look_ahead_handler.update_timetables_of_bus_line_id(line_id=line_id)
+        self.look_ahead_handler.update_timetables_of_bus_line(bus_line=bus_line, line_id=line_id)
         self.elapsed_time = time.time() - self.start_time
         log(module_name='look_ahead_handler_test', log_type='INFO',
-            log_message='test_update_timetables_for_bus_line_id: finished - elapsed_time = '
+            log_message='test_update_timetables_of_bus_line: finished - elapsed_time = '
                         + str(self.elapsed_time) + ' sec')
 
-    def test_update_timetables_for_bus_lines(self):
+    def test_update_timetables_of_bus_lines(self):
         log(module_name='look_ahead_handler_test', log_type='INFO',
-            log_message='test_update_timetables_for_bus_lines: starting')
+            log_message='test_update_timetables_of_bus_lines: starting')
         self.start_time = time.time()
         self.look_ahead_handler.update_timetables_of_bus_lines()
         self.elapsed_time = time.time() - self.start_time
         log(module_name='look_ahead_handler_test', log_type='INFO',
-            log_message='test_update_timetables_for_bus_lines: finished - elapsed_time = '
+            log_message='test_update_timetables_of_bus_lines: finished - elapsed_time = '
                         + str(self.elapsed_time) + ' sec')
 
 
 if __name__ == '__main__':
-    bus_stop_names = [
-        'Centralstationen', 'Stadshuset', 'Skolgatan', 'Ekonomikum', 'Studentstaden', 'Rickomberga',
-        'Oslogatan', 'Reykjaviksgatan', 'Ekebyhus', 'Sernanders väg', 'Flogsta centrum', 'Sernanders väg',
-        'Ekebyhus', 'Reykjaviksgatan', 'Oslogatan', 'Rickomberga', 'Studentstaden', 'Ekonomikum',
-        'Skolgatan', 'Stadshuset', 'Centralstationen'
-    ]
     tester = LookAheadHandlerTester()
-    tester.test_generate_timetables_for_bus_line_id(line_id=1)
+    tester.test_generate_timetables_for_bus_line(line_id=1)
     # tester.test_generate_timetables_for_bus_lines()
-    # tester.test_update_timetables_for_bus_line_id(line_id=1)
-    # tester.test_update_timetables_for_bus_lines()
+    # tester.test_update_timetables_of_bus_line(line_id=1)
+    # tester.test_update_timetables_of_bus_lines()

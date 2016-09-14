@@ -20,7 +20,7 @@ from src.look_ahead.timetable_updater import *
 
 class LookAheadHandler(object):
     def __init__(self):
-        self.connection = MongoConnection(host=mongodb_host, port=mongodb_port)
+        self.connection = MongodbDatabaseConnection(host=mongodb_host, port=mongodb_port)
         log(module_name='look_ahead_handler', log_type='DEBUG',
             log_message='mongodb_database_connection: established')
 
@@ -40,7 +40,7 @@ class LookAheadHandler(object):
         # 1: The inputs: line_id and bus_stop_names are provided to the function, so as as a bus_line
         #    with the corresponding line_id and bus_stops to be generated.
 
-        log(module_name='look_ahead_handler', log_type='DEBUG',
+        log(module_name='look_ahead_handler_tester', log_type='DEBUG',
             log_message='get_waypoints_between_multiple_bus_stops (route_generator): starting')
 
         # 2: The Look Ahead sends a request to the Route Generator so as to select the corresponding bus_stops
@@ -56,7 +56,7 @@ class LookAheadHandler(object):
         #
         route_generator_response = get_waypoints_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
 
-        log(module_name='look_ahead_handler', log_type='DEBUG',
+        log(module_name='look_ahead_handler_tester', log_type='DEBUG',
             log_message='get_waypoints_between_multiple_bus_stops (route_generator): finished')
 
         # 3: The Look Ahead processes the response of the Route Generator, extracting the bus_stops
@@ -102,7 +102,7 @@ class LookAheadHandler(object):
 
             bus_stops.append(ending_bus_stop)
 
-        log(module_name='look_ahead_handler', log_type='DEBUG',
+        log(module_name='look_ahead_handler_tester', log_type='DEBUG',
             log_message='insert_bus_stop_waypoints_document (mongodb_database): ok')
 
         # 5: The Look Ahead stores the generated bus_line, which is consisted of the line_id and
@@ -111,30 +111,41 @@ class LookAheadHandler(object):
         bus_line_document = {'line_id': line_id, 'bus_stops': bus_stops}
         self.connection.insert_bus_line_document(bus_line_document=bus_line_document)
 
-        log(module_name='look_ahead_handler', log_type='DEBUG',
+        log(module_name='look_ahead_handler_tester', log_type='DEBUG',
             log_message='insert_bus_line_document (mongodb_database): ok')
 
-    def generate_timetables_for_bus_line(self, bus_line, timetables_starting_datetime, timetables_ending_datetime,
-                                         requests_min_departure_datetime, requests_max_departure_datetime):
+    def generate_timetables_for_bus_line(self, timetables_starting_datetime, timetables_ending_datetime,
+                                         requests_min_departure_datetime, requests_max_departure_datetime,
+                                         bus_line=None, line_id=None):
         """
         Generate timetables for a bus_line, for a selected datetime period,
         evaluating travel_requests of a specific datetime period.
 
-        :param bus_line: {
-                   '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
+        bus_line_document: {
+            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        }
         :param timetables_starting_datetime: datetime
         :param timetables_ending_datetime: datetime
         :param requests_min_departure_datetime: datetime
         :param requests_max_departure_datetime: datetime
+        :param bus_line: bus_line_document
+        :param line_id: int
         :return: None
         """
 
-        # 1: The input: bus_line is provided to the function, so as timetables for the corresponding bus_line
-        # to be generated. The Look Ahead retrieves the list of bus_stops which correspond to the selected bus_line.
+        # 1: The inputs: bus_line or line_id are provided to the function, so as timetables for the corresponding
+        #    bus_line to be generated. The Look Ahead retrieves the list of bus_stops which correspond
+        #    to the selected bus_line.
         #
         # bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
         #
-        line_id = bus_line.get('line_id')
+        if bus_line is None and line_id is None:
+            return None
+        elif bus_line is None:
+            bus_line = self.connection.find_bus_line_document(line_id=line_id)
+        else:
+            line_id = bus_line.get('line_id')
+
         bus_stops = bus_line.get('bus_stops')
 
         # 2: The inputs: timetable_starting_datetime and timetable_ending_datetime are provided to the function,
@@ -145,14 +156,16 @@ class LookAheadHandler(object):
         #    The Look Ahead retrieves from the System Database the requests with
         #    departure_datetime between these values.
         #
-        # travel_requests: [{'_id', 'client_id', 'bus_line_id',
-        #                    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        #                    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        #                    'departure_datetime', 'arrival_datetime',
-        #                    'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
+        # travel_request_document: {
+        #     '_id', 'client_id', 'line_id',
+        #     'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        #     'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        #     'departure_datetime', 'arrival_datetime'
+        # }
+        # travel_requests: [travel_request_document]
         #
-        travel_requests = self.connection.get_travel_requests_list_based_on_bus_line_id_and_departure_datetime(
-            line_id=line_id,
+        travel_requests = self.connection.find_travel_request_documents(
+            line_ids=[line_id],
             min_departure_datetime=requests_min_departure_datetime,
             max_departure_datetime=requests_max_departure_datetime
         )
@@ -170,6 +183,7 @@ class LookAheadHandler(object):
         # The list of bus_stops of a bus_line might contain the same bus_stop_osm_ids more than once.
         # For this reason, each travel_request needs to be related with the correct index in the bus_stops list.
         # So, the values 'starting_timetable_entry_index' and 'ending_timetable_entry_index' are estimated.
+        #
         correspond_travel_requests_to_bus_stops(
             travel_requests=timetable_generator.travel_requests,
             bus_stops=timetable_generator.bus_stops
@@ -263,37 +277,7 @@ class LookAheadHandler(object):
 
         print_timetables(timetables=timetable_generator.timetables)
 
-        # self.connection.insert_timetable_documents(timetables=timetable_generator.timetables)
-
-    def generate_timetables_for_bus_line_id(self, line_id, timetables_starting_datetime, timetables_ending_datetime,
-                                            requests_min_departure_datetime, requests_max_departure_datetime):
-        """
-        Generate timetables for a bus_line, for a selected datetime period,
-        evaluating travel_requests of a specific datetime period.
-
-        :param line_id: int
-        :param timetables_starting_datetime: datetime
-        :param timetables_ending_datetime: datetime
-        :param requests_min_departure_datetime: datetime
-        :param requests_max_departure_datetime: datetime
-        :return: None
-        """
-
-        # 1: The input: line_id is provided to the function, so as timetables for the corresponding
-        #    bus_line to be generated. The Look Ahead retrieves from the System Database the bus_line
-        #    which corresponds to the selected line_id.
-        #
-        # bus_line: {'_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
-        # bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
-        #
-        bus_line = self.connection.find_bus_line_document(line_id=line_id)
-        self.generate_timetables_for_bus_line(
-            bus_line=bus_line,
-            timetables_starting_datetime=timetables_starting_datetime,
-            timetables_ending_datetime=timetables_ending_datetime,
-            requests_min_departure_datetime=requests_min_departure_datetime,
-            requests_max_departure_datetime=requests_max_departure_datetime
-        )
+        # self.mongodb_database_connection_tester.insert_timetable_documents(timetables=timetable_generator.timetables)
 
     def generate_timetables_for_bus_lines(self, timetables_starting_datetime, timetables_ending_datetime,
                                           requests_min_departure_datetime, requests_max_departure_datetime):
@@ -318,15 +302,24 @@ class LookAheadHandler(object):
                 requests_max_departure_datetime=requests_max_departure_datetime
             )
 
-    def update_timetables_of_bus_line(self, bus_line):
+    def update_timetables_of_bus_line(self, bus_line=None, line_id=None):
         """
         Update the timetables of a bus_line, taking into consideration the current levels of traffic_density.
 
-        :param bus_line: {
+        bus_line_document: {
                    '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
+
+        :param bus_line: bus_line_document
+        :param line_id: int
         :return: None
         """
-        line_id = bus_line.get('line_id')
+        if bus_line is None and line_id is None:
+            return None
+        elif bus_line is None:
+            bus_line = self.connection.find_bus_line_document(line_id=line_id)
+        else:
+            line_id = bus_line.get('line_id')
+
         bus_stops = bus_line.get('bus_stops')
         timetables = self.connection.find_timetable_documents(line_ids=[line_id])
 
@@ -336,17 +329,7 @@ class LookAheadHandler(object):
             timetables=timetable_updater.timetables,
             route_generator_response=timetable_updater.route_generator_response
         )
-        # self.connection.insert_timetable_documents(timetables=timetable_updater.timetables)
-
-    def update_timetables_of_bus_line_id(self, line_id):
-        """
-        Update the timetables of a bus_line, taking into consideration the current levels of traffic_density.
-
-        :param line_id: int
-        :return: None
-        """
-        bus_line = self.connection.find_bus_line_document(line_id=line_id)
-        self.update_timetables_of_bus_line(bus_line=bus_line)
+        # self.mongodb_database_connection_tester.insert_timetable_documents(timetables=timetable_updater.timetables)
 
     def update_timetables_of_bus_lines(self):
         """

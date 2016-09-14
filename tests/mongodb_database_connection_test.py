@@ -15,29 +15,29 @@ CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
 import time
-from src.mongodb_database.mongo_connection import MongoConnection
+from src.mongodb_database.mongodb_database_connection import MongodbDatabaseConnection
 from src.common.logger import log
 from src.common.variables import mongodb_host, mongodb_port
 
 
-class MongodbDatabaseTester(object):
+class MongodbDatabaseConnectionTester(object):
     def __init__(self):
-        log(module_name='mongodb_database_test', log_type='INFO',
-            log_message='initialize_database_connection: starting')
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='initialize_mongodb_database_connection: starting')
         self.start_time = time.time()
-        self.mongo = MongoConnection(host=mongodb_host, port=mongodb_port)
+        self.mongodb_database_connection = MongodbDatabaseConnection(host=mongodb_host, port=mongodb_port)
         self.elapsed_time = time.time() - self.start_time
-        log(module_name='mongodb_database_test', log_type='INFO',
-            log_message='initialize_database_connection: finished - elapsed_time = ' +
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='initialize_mongodb_database_connection: finished - elapsed_time = ' +
                         str(self.elapsed_time) + ' sec')
 
     def clear_all_collections(self):
-        log(module_name='mongodb_database_test', log_type='INFO',
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
             log_message='clear_all_collections: starting')
         self.start_time = time.time()
-        self.mongo.clear_all_collections()
+        self.mongodb_database_connection.clear_all_collections()
         self.elapsed_time = time.time() - self.start_time
-        log(module_name='mongodb_database_test', log_type='INFO',
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
             log_message='clear_all_collections: finished - elapsed_time = ' +
                         str(self.elapsed_time) + ' sec')
 
@@ -53,8 +53,9 @@ class MongodbDatabaseTester(object):
         :param counter: int
         :return: None
         """
-        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_address_documents')
-        self.mongo.print_address_documents(
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='print_address_documents')
+        self.mongodb_database_connection.print_address_documents(
             object_ids=object_ids,
             names=names,
             node_ids=node_ids,
@@ -73,8 +74,9 @@ class MongodbDatabaseTester(object):
         :param counter: int
         :return: None
         """
-        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_line_documents')
-        self.mongo.print_bus_line_documents(
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='print_bus_line_documents')
+        self.mongodb_database_connection.print_bus_line_documents(
             object_ids=object_ids,
             line_ids=line_ids,
             counter=counter
@@ -92,8 +94,9 @@ class MongodbDatabaseTester(object):
         :param counter: int
         :return: None
         """
-        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_stop_documents')
-        self.mongo.print_bus_stop_documents(
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='print_bus_stop_documents')
+        self.mongodb_database_connection.print_bus_stop_documents(
             object_ids=object_ids,
             osm_ids=osm_ids,
             names=names,
@@ -115,8 +118,9 @@ class MongodbDatabaseTester(object):
         :param counter: int
         :return: None
         """
-        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_edge_documents')
-        self.mongo.print_edge_documents(
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='print_edge_documents')
+        self.mongodb_database_connection.print_edge_documents(
             object_ids=object_ids,
             starting_node_osm_id=starting_node_osm_id,
             ending_node_osm_id=ending_node_osm_id,
@@ -134,8 +138,9 @@ class MongodbDatabaseTester(object):
         :param counter: int
         :return: None
         """
-        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_node_documents')
-        self.mongo.print_node_documents(
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='print_node_documents')
+        self.mongodb_database_connection.print_node_documents(
             object_ids=object_ids,
             osm_ids=osm_ids,
             counter=counter
@@ -152,8 +157,9 @@ class MongodbDatabaseTester(object):
         :param counter: int
         :return: None
         """
-        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_point_documents')
-        self.mongo.print_point_documents(
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='print_point_documents')
+        self.mongodb_database_connection.print_point_documents(
             object_ids=object_ids,
             osm_ids=osm_ids,
             counter=counter
@@ -177,8 +183,9 @@ class MongodbDatabaseTester(object):
         :param counter: int
         :return: None
         """
-        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_travel_request_documents')
-        self.mongo.print_travel_request_documents(
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='print_travel_request_documents')
+        self.mongodb_database_connection.print_travel_request_documents(
             object_ids=object_ids,
             line_ids=line_ids,
             min_departure_datetime=min_departure_datetime,
@@ -197,8 +204,9 @@ class MongodbDatabaseTester(object):
         :param counter: int
         :return: None
         """
-        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_way_documents')
-        self.mongo.print_way_documents(
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='print_way_documents')
+        self.mongodb_database_connection.print_way_documents(
             object_ids=object_ids,
             osm_ids=osm_ids,
             counter=counter
@@ -219,8 +227,9 @@ class MongodbDatabaseTester(object):
         :param line_id: int
         :return: None
         """
-        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_stop_waypoints_documents')
-        self.mongo.print_bus_stop_waypoints_documents(
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='print_bus_stop_waypoints_documents')
+        self.mongodb_database_connection.print_bus_stop_waypoints_documents(
             object_ids=object_ids,
             bus_stops=bus_stops,
             bus_stop_names=bus_stop_names,
@@ -253,9 +262,9 @@ class MongodbDatabaseTester(object):
         :param line_id: int
         :return: None
         """
-        log(module_name='mongodb_database_test', log_type='INFO',
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
             log_message='print_detailed_bus_stop_waypoints_documents')
-        self.mongo.print_detailed_bus_stop_waypoints_documents(
+        self.mongodb_database_connection.print_detailed_bus_stop_waypoints_documents(
             object_ids=object_ids,
             bus_stops=bus_stops,
             bus_stop_names=bus_stop_names,
@@ -275,14 +284,15 @@ class MongodbDatabaseTester(object):
         :param bus_stop_names: [string]
         :return: None
         """
-        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_traffic_density_documents')
-        self.mongo.print_traffic_density_documents(
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='print_traffic_density_documents')
+        self.mongodb_database_connection.print_traffic_density_documents(
             bus_stops=bus_stops,
             bus_stop_names=bus_stop_names
         )
 
 if __name__ == '__main__':
-    tester = MongodbDatabaseTester()
+    tester = MongodbDatabaseConnectionTester()
     # tester.clear_all_collections()
     # tester.print_address_documents()
     # tester.print_bus_line_documents()

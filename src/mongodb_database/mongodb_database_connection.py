@@ -18,7 +18,7 @@ from bson import ObjectId
 from pymongo import MongoClient
 
 
-class MongoConnection(object):
+class MongodbDatabaseConnection(object):
     def __init__(self, host, port):
         self.mongo_client = MongoClient(host, port)
         self.db = self.mongo_client.monad

@@ -20,15 +20,15 @@ from src.common.logger import log
 from src.common.variables import mongodb_host, mongodb_port, route_generator_edges_updater_timeout, \
     route_generator_edges_updater_max_operation_timeout
 from src.geospatial_data.point import distance, Point
-from src.mongodb_database.mongo_connection import MongoConnection
+from src.mongodb_database.mongodb_database_connection import MongodbDatabaseConnection
 from multiprocessing import Process
 import time
 
 
 class Router(object):
     def __init__(self):
-        self.connection = MongoConnection(host=mongodb_host, port=mongodb_port)
-        log(module_name='Router', log_type='DEBUG', log_message='connection ok')
+        self.connection = MongodbDatabaseConnection(host=mongodb_host, port=mongodb_port)
+        log(module_name='Router', log_type='DEBUG', log_message='mongodb_database_connection_tester ok')
         self.bus_stops_dictionary = {}
         self.edges_dictionary = {}
         self.points_dictionary = {}

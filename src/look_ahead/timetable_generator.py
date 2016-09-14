@@ -14,7 +14,7 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from src.mongodb_database.mongo_connection import MongoConnection
+from src.mongodb_database.mongodb_database_connection import MongodbDatabaseConnection
 from src.common.logger import log
 from src.common.variables import mongodb_host, mongodb_port, maximum_bus_capacity, average_waiting_time_threshold, \
     individual_waiting_time_threshold, minimum_number_of_passengers_in_timetable

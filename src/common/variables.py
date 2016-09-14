@@ -41,3 +41,12 @@ timetables_starting_datetime_testing_value = datetime(2016, 8, 26, 0, 0, 0, 0000
 timetables_ending_datetime_testing_value = datetime(2016, 8, 27, 0, 0, 0, 00000)
 requests_min_departure_datetime_testing_value = datetime(2016, 8, 26, 0, 0, 0, 00000)
 requests_max_departure_datetime_testing_value = datetime(2016, 8, 27, 0, 0, 0, 00000)
+
+testing_osm_filename = '../resources/osm_files/uppsala.osm'
+
+testing_bus_stop_names = [
+    'Centralstationen', 'Stadshuset', 'Skolgatan', 'Ekonomikum', 'Studentstaden', 'Rickomberga',
+    'Oslogatan', 'Reykjaviksgatan', 'Ekebyhus', 'Sernanders väg', 'Flogsta centrum', 'Sernanders väg',
+    'Ekebyhus', 'Reykjaviksgatan', 'Oslogatan', 'Rickomberga', 'Studentstaden', 'Ekonomikum',
+    'Skolgatan', 'Stadshuset', 'Centralstationen'
+]

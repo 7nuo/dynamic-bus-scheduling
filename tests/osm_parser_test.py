@@ -16,39 +16,44 @@ specific language governing permissions and limitations under the License.
 """
 import os
 import time
-from src.osm_parser.parser import Parser
+from src.osm_parser.osm_parser import OsmParser
 from src.common.logger import log
+from src.common.variables import testing_osm_filename
 
 
-class OSMParserTester(object):
+class OsmParserTester(object):
     def __init__(self, osm_filename):
-        log(module_name='osm_parser', log_type='INFO', log_message='init: starting')
+        log(module_name='osm_parser_test', log_type='INFO',
+            log_message='initialize_osm_parser: starting')
         self.start_time = time.time()
-        self.parser = Parser(osm_filename=osm_filename)
+        self.osm_parser = OsmParser(osm_filename=osm_filename)
         self.elapsed_time = time.time() - self.start_time
-        log(module_name='osm_parser', log_type='INFO',
-            log_message='init: finished - elapsed time = ' + str(self.elapsed_time) + ' sec')
+        log(module_name='osm_parser_test', log_type='INFO',
+            log_message='initialize_osm_parser: finished - elapsed time = '
+                        + str(self.elapsed_time) + ' sec')
 
-    def parse(self):
-        log(module_name='osm_parser', log_type='INFO', log_message='parse: starting')
+    def test_parse_osm_file(self):
+        log(module_name='osm_parser_test', log_type='INFO',
+            log_message='test_parse_osm_file: starting')
         self.start_time = time.time()
-        self.parser.parse()
+        self.osm_parser.parse_osm_file()
         self.elapsed_time = time.time() - self.start_time
-        log(module_name='osm_parser', log_type='INFO',
-            log_message='parse: finished - elapsed time = ' + str(self.elapsed_time) + ' sec')
+        log(module_name='osm_parser_test', log_type='INFO',
+            log_message='test_parse_osm_file: finished - elapsed time = '
+                        + str(self.elapsed_time) + ' sec')
 
-    def populate_all_collections(self):
-        log(module_name='osm_parser', log_type='INFO', log_message='populate_all_collections: starting')
+    def test_populate_all_collections(self):
+        log(module_name='osm_parser_test', log_type='INFO',
+            log_message='test_populate_all_collections: starting')
         self.start_time = time.time()
-        self.parser.populate_all_collections()
+        self.osm_parser.populate_all_collections()
         self.elapsed_time = time.time() - self.start_time
-        log(module_name='osm_parser', log_type='INFO',
-            log_message='populate_all_collections: finished - elapsed time = ' +
+        log(module_name='osm_parser_test', log_type='INFO',
+            log_message='test_populate_all_collections: finished - elapsed time = ' +
                         str(self.elapsed_time) + ' sec')
 
 
 if __name__ == '__main__':
-    tester = OSMParserTester(osm_filename=os.path.join(os.path.dirname(__file__),
-                                                       '../resources/osm_files/uppsala.osm'))
-    # tester.parse()
-    # tester.populate_all_collections()
+    tester = OsmParserTester(osm_filename=os.path.join(os.path.dirname(__file__), testing_osm_filename))
+    # tester.test_parse_osm_file()
+    # tester.test_populate_all_collections()

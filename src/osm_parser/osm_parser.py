@@ -18,12 +18,12 @@ from imposm.parser import OSMParser
 from src.common.variables import bus_road_types, standard_speed, mongodb_host, mongodb_port
 from src.geospatial_data.point import Point
 from src.geospatial_data.address import Address
-from src.mongodb_database.mongo_connection import MongoConnection
+from src.mongodb_database.mongodb_database_connection import MongodbDatabaseConnection
 from src.common.logger import log
 import re
 
 
-class Parser(object):
+class OsmParser(object):
     relations = None
     ways_filter = None
     nodes_filter = None
@@ -41,8 +41,9 @@ class Parser(object):
         self.bus_stops = {}
         self.edges = {}
         self.address_book = {}
-        self.connection = MongoConnection(host=mongodb_host, port=mongodb_port)
-        log(module_name='osm_parser', log_type='DEBUG', log_message='mongo_db_connection ok')
+        self.connection = MongodbDatabaseConnection(host=mongodb_host, port=mongodb_port)
+        log(module_name='osm_parser', log_type='DEBUG',
+            log_message='mongodb_database_connection: established')
 
     def add_address(self, name, node_id, point):
         """
@@ -265,8 +266,8 @@ class Parser(object):
 
         return point_coordinates
 
-    def parse(self):
-        parser = OSMParser(
+    def parse_osm_file(self):
+        osm_parser = OSMParser(
             concurrency=2,
             coords_callback=self.parse_points,
             nodes_callback=self.parse_nodes,
@@ -276,7 +277,7 @@ class Parser(object):
             # ways_tag_filter=self.ways_filter,
             # relations_tag_filter=self.relations_filter
         )
-        parser.parse(self.osm_filename)
+        osm_parser.parse(self.osm_filename)
 
     def parse_address(self, osm_id, tags, point):
         """
@@ -386,32 +387,32 @@ class Parser(object):
 
     def populate_address_book(self):
         self.connection.insert_address_documents(address_documents=self.get_list_of_addresses())
-        log(module_name='Parser', log_type='DEBUG',
+        log(module_name='osm_parser_tester', log_type='DEBUG',
             log_message='populate_address_book collection (mongodb_database) ok')
 
     def populate_edges(self):
         self.connection.insert_edge_documents(edge_documents=self.get_list_of_edges())
-        log(module_name='Parser', log_type='DEBUG',
+        log(module_name='osm_parser_tester', log_type='DEBUG',
             log_message='populate_edges collection (mongodb_database) ok')
 
     def populate_nodes(self):
         self.connection.insert_node_documents(node_documents=self.get_list_of_nodes())
-        log(module_name='Parser', log_type='DEBUG',
+        log(module_name='osm_parser_tester', log_type='DEBUG',
             log_message='populate_nodes collection (mongodb_database) ok')
 
     def populate_points(self):
         self.connection.insert_point_documents(point_documents=self.get_list_of_points())
-        log(module_name='Parser', log_type='DEBUG',
+        log(module_name='osm_parser_tester', log_type='DEBUG',
             log_message='populate_points collection (mongodb_database) ok')
 
     def populate_bus_stops(self):
         self.connection.insert_bus_stop_documents(bus_stop_documents=self.get_list_of_bus_stops())
-        log(module_name='Parser', log_type='DEBUG',
+        log(module_name='osm_parser_tester', log_type='DEBUG',
             log_message='populate_bus_stops collection (mongodb_database) ok')
 
     def populate_ways(self):
         self.connection.insert_way_documents(way_documents=self.get_list_of_ways())
-        log(module_name='Parser', log_type='DEBUG',
+        log(module_name='osm_parser_tester', log_type='DEBUG',
             log_message='populate_ways collection (mongodb_database) ok')
 
     def populate_all_collections(self):

@@ -14,18 +14,19 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
-from src.mongodb_database.mongo_connection import MongoConnection
+from src.mongodb_database.mongodb_database_connection import MongodbDatabaseConnection
 from src.common.logger import log
 from src.common.variables import mongodb_host, mongodb_port
 
 
 class TrafficDataSimulator(object):
     def __init__(self):
-        self.connection = MongoConnection(host=mongodb_host, port=mongodb_port)
-        log(module_name='traffic_data_simulator', log_type='DEBUG', log_message='mongodb_database_connection ok')
+        self.mongodb_database_connection = MongodbDatabaseConnection(host=mongodb_host, port=mongodb_port)
+        log(module_name='traffic_data_simulator', log_type='DEBUG',
+            log_message='mongodb_database_connection: established')
 
     def clear_traffic_density(self):
-        self.connection.clear_traffic_density()
+        self.mongodb_database_connection.clear_traffic_density()
 
     def generate_traffic_between_bus_stop_names(self, starting_bus_stop_name, ending_bus_stop_name,
                                                 waypoints_index, new_traffic_density):
@@ -41,7 +42,7 @@ class TrafficDataSimulator(object):
         #  'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         #  'waypoints': [[edge_object_id]]}
 
-        bus_stop_waypoints = self.connection.find_bus_stop_waypoints_document(
+        bus_stop_waypoints = self.mongodb_database_connection.find_bus_stop_waypoints_document(
             starting_bus_stop_name=starting_bus_stop_name,
             ending_bus_stop_name=ending_bus_stop_name
         )
@@ -49,11 +50,11 @@ class TrafficDataSimulator(object):
         edge_object_ids = bus_stop_waypoints.get('waypoints')[waypoints_index]
 
         for edge_object_id in edge_object_ids:
-            self.connection.update_traffic_density(edge_object_id=edge_object_id,
-                                                   new_traffic_density_value=new_traffic_density)
+            self.mongodb_database_connection.update_traffic_density(edge_object_id=edge_object_id,
+                                                                    new_traffic_density_value=new_traffic_density)
 
     def print_traffic_density_between_two_bus_stops(self, starting_bus_stop_name, ending_bus_stop_name):
-        self.connection.print_traffic_density_documents(
+        self.mongodb_database_connection.print_traffic_density_documents(
             starting_bus_stop_name=starting_bus_stop_name,
             ending_bus_stop_name=ending_bus_stop_name
         )
