@@ -2469,7 +2469,7 @@ class MongoConnection(object):
         print travel_request_document
 
     def print_travel_request_documents(self, object_ids=None, line_ids=None, min_departure_datetime=None,
-                                      max_departure_datetime=None, counter=None):
+                                       max_departure_datetime=None, counter=None):
         """
         Print multiple travel_request_documents.
 
@@ -2762,6 +2762,3 @@ class MongoConnection(object):
         data = {'$set': {'traffic_density': new_traffic_density_value}}
         result = self.edges_collection.update_one(key, data, upsert=False)
         return result.modified_count == 1
-
-    def test(self):
-        print 'Test'

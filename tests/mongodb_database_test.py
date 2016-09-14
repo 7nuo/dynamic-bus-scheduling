@@ -18,7 +18,6 @@ import time
 from src.mongodb_database.mongo_connection import MongoConnection
 from src.common.logger import log
 from src.common.variables import mongodb_host, mongodb_port
-import os
 
 
 class MongodbDatabaseTester(object):
@@ -42,43 +41,257 @@ class MongodbDatabaseTester(object):
             log_message='clear_all_collections: finished - elapsed_time = ' +
                         str(self.elapsed_time) + ' sec')
 
-    def print_bus_line(self, line_id):
-        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_line_document')
-        self.mongo.print_bus_line_document(line_id=line_id)
+    def print_address_documents(self, object_ids=None, names=None, node_ids=None, counter=None):
+        """
+        Print multiple address_documents.
 
-    def print_bus_line_waypoints(self, line_id):
-        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_stop_waypoints_documents')
-        self.mongo.print_bus_stop_waypoints_documents(line_id=line_id)
+        address_document: {'_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}}
 
-    def print_detailed_bus_line_waypoints(self, line_id):
-        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_detailed_bus_stop_waypoints_documents')
-        self.mongo.print_detailed_bus_stop_waypoints_documents(line_id=line_id)
+        :param object_ids: [ObjectId]
+        :param names: [string]
+        :param node_ids: [int]
+        :param counter: int
+        :return: None
+        """
+        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_address_documents')
+        self.mongo.print_address_documents(
+            object_ids=object_ids,
+            names=names,
+            node_ids=node_ids,
+            counter=counter
+        )
 
-    def print_bus_stops(self, counter):
+    def print_bus_line_documents(self, object_ids=None, line_ids=None, counter=None):
+        """
+        Print multiple bus_line_documents.
+
+        bus_line_document: {
+            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        }
+        :param object_ids: [ObjectId]
+        :param line_ids: [int]
+        :param counter: int
+        :return: None
+        """
+        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_line_documents')
+        self.mongo.print_bus_line_documents(
+            object_ids=object_ids,
+            line_ids=line_ids,
+            counter=counter
+        )
+
+    def print_bus_stop_documents(self, object_ids=None, osm_ids=None, names=None, counter=None):
+        """
+        Print multiple bus_stop_documents.
+
+        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+
+        :param object_ids: [ObjectId]
+        :param osm_ids: [int]
+        :param names: [string]
+        :param counter: int
+        :return: None
+        """
         log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_stop_documents')
-        self.mongo.print_bus_stop_documents(counter=counter)
+        self.mongo.print_bus_stop_documents(
+            object_ids=object_ids,
+            osm_ids=osm_ids,
+            names=names,
+            counter=counter
+        )
 
-    def print_edges(self, counter):
+    def print_edge_documents(self, object_ids=None, starting_node_osm_id=None, ending_node_osm_id=None, counter=None):
+        """
+        Print multiple edge_documents.
+
+        edge_document: {
+            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'max_speed', 'road_type', 'way_id', 'traffic_density'
+        }
+        :param object_ids: [ObjectId]
+        :param starting_node_osm_id: int
+        :param ending_node_osm_id: int
+        :param counter: int
+        :return: None
+        """
         log(module_name='mongodb_database_test', log_type='INFO', log_message='print_edge_documents')
-        self.mongo.print_edge_documents(counter=counter)
+        self.mongo.print_edge_documents(
+            object_ids=object_ids,
+            starting_node_osm_id=starting_node_osm_id,
+            ending_node_osm_id=ending_node_osm_id,
+            counter=counter
+        )
 
-    def print_nodes(self, counter):
+    def print_node_documents(self, object_ids=None, osm_ids=None, counter=None):
+        """
+        Print multiple node_documents.
+
+        node_document: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
+
+        :param object_ids: [ObjectId]
+        :param osm_ids: [int]
+        :param counter: int
+        :return: None
+        """
         log(module_name='mongodb_database_test', log_type='INFO', log_message='print_node_documents')
-        self.mongo.print_node_documents(counter=counter)
+        self.mongo.print_node_documents(
+            object_ids=object_ids,
+            osm_ids=osm_ids,
+            counter=counter
+        )
 
-    def print_travel_request_documents(self, counter):
+    def print_point_documents(self, object_ids=None, osm_ids=None, counter=None):
+        """
+        Print multiple point_documents.
+
+        point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
+
+        :param object_ids: [ObjectId]
+        :param osm_ids: [int]
+        :param counter: int
+        :return: None
+        """
+        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_point_documents')
+        self.mongo.print_point_documents(
+            object_ids=object_ids,
+            osm_ids=osm_ids,
+            counter=counter
+        )
+
+    def print_travel_request_documents(self, object_ids=None, line_ids=None, min_departure_datetime=None,
+                                       max_departure_datetime=None, counter=None):
+        """
+        Print multiple travel_request_documents.
+
+        travel_request_document: {
+            '_id', 'client_id', 'line_id',
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'departure_datetime', 'arrival_datetime'
+        }
+        :param object_ids: [ObjectId]
+        :param line_ids: [int]
+        :param min_departure_datetime: datetime
+        :param max_departure_datetime: datetime
+        :param counter: int
+        :return: None
+        """
         log(module_name='mongodb_database_test', log_type='INFO', log_message='print_travel_request_documents')
-        self.mongo.print_travel_request_documents(counter=counter)
+        self.mongo.print_travel_request_documents(
+            object_ids=object_ids,
+            line_ids=line_ids,
+            min_departure_datetime=min_departure_datetime,
+            max_departure_datetime=max_departure_datetime,
+            counter=counter
+        )
 
+    def print_way_documents(self, object_ids=None, osm_ids=None, counter=None):
+        """
+        Print multiple way_documents.
+
+        way_document: {'_id', 'osm_id', 'tags', 'references'}
+
+        :param object_ids: [ObjectId]
+        :param osm_ids: [int]
+        :param counter: int
+        :return: None
+        """
+        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_way_documents')
+        self.mongo.print_way_documents(
+            object_ids=object_ids,
+            osm_ids=osm_ids,
+            counter=counter
+        )
+
+    def print_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None, bus_stop_names=None, line_id=None):
+        """
+        Print multiple bus_stop_waypoints_documents.
+
+        bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_object_id]]
+        }
+        :param object_ids: [ObjectId]
+        :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        :param bus_stop_names: [string]
+        :param line_id: int
+        :return: None
+        """
+        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_bus_stop_waypoints_documents')
+        self.mongo.print_bus_stop_waypoints_documents(
+            object_ids=object_ids,
+            bus_stops=bus_stops,
+            bus_stop_names=bus_stop_names,
+            line_id=line_id
+        )
+
+    def print_detailed_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None,
+                                                    bus_stop_names=None, line_id=None):
+        """
+        Print multiple detailed_bus_stop_waypoints_documents.
+
+        edge_document: {
+            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'max_speed', 'road_type', 'way_id', 'traffic_density'
+        }
+        bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_object_id]]
+        }
+        detailed_bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_document]]
+        }
+        :param object_ids: [ObjectId]
+        :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        :param bus_stop_names: [string]
+        :param line_id: int
+        :return: None
+        """
+        log(module_name='mongodb_database_test', log_type='INFO',
+            log_message='print_detailed_bus_stop_waypoints_documents')
+        self.mongo.print_detailed_bus_stop_waypoints_documents(
+            object_ids=object_ids,
+            bus_stops=bus_stops,
+            bus_stop_names=bus_stop_names,
+            line_id=line_id
+        )
+
+    def print_traffic_density_documents(self, bus_stops=None, bus_stop_names=None):
+        """
+        Print multiple traffic_density_documents.
+
+        traffic_density_document: {
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'traffic_density_values': [[{'edge_object_id', 'traffic_density'}]]
+        }
+        :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        :param bus_stop_names: [string]
+        :return: None
+        """
+        log(module_name='mongodb_database_test', log_type='INFO', log_message='print_traffic_density_documents')
+        self.mongo.print_traffic_density_documents(
+            bus_stops=bus_stops,
+            bus_stop_names=bus_stop_names
+        )
 
 if __name__ == '__main__':
     tester = MongodbDatabaseTester()
-    tester.mongo.test()
     # tester.clear_all_collections()
-    # tester.print_node_documents(counter=200)
-    # tester.print_bus_stop_documents(counter=200)
-    # tester.print_edge_documents(counter=200)
-    # tester.print_bus_line_document(line_id=1)
-    # tester.print_bus_stop_waypoints_documents(line_id=1)
-    # tester.print_detailed_bus_stop_waypoints_documents(line_id=1)
-    # tester.print_travel_request_documents(counter=10000)
+    # tester.print_address_documents()
+    # tester.print_bus_line_documents()
+    # tester.print_bus_stop_documents()
+    # tester.print_edge_documents()
+    # tester.print_node_documents()
+    # tester.print_point_documents()
+    # tester.print_travel_request_documents()
+    # tester.print_way_documents()
+    # tester.print_bus_stop_waypoints_documents()
+    # tester.print_detailed_bus_stop_waypoints_documents()
+    # tester.print_traffic_density_documents()
