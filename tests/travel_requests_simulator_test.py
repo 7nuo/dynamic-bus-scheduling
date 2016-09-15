@@ -16,7 +16,6 @@ specific language governing permissions and limitations under the License.
 """
 from src.data_simulator.travel_requests_simulator import TravelRequestsSimulator
 from src.common.logger import log
-from datetime import datetime
 import time
 
 
@@ -31,69 +30,75 @@ class TravelRequestsSimulatorTester(object):
             log_message='initialize_travel_requests_simulator: finished - elapsed_time = ' +
                         str(self.elapsed_time) + ' sec')
 
-    def clear_travel_requests(self):
+    def test_clear_travel_requests_collection(self):
         log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='clear_travel_requests: starting')
+            log_message='test_clear_travel_requests_collection: starting')
         self.start_time = time.time()
-        self.travel_requests_simulator.clear_travel_requests()
+        self.travel_requests_simulator.clear_travel_requests_collection()
         self.elapsed_time = time.time() - self.start_time
         log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='clear_travel_requests: finished - elapsed_time = ' +
+            log_message='test_clear_travel_requests_collection: finished - elapsed_time = ' +
                         str(self.elapsed_time) + ' sec')
 
-    def delete_travel_requests_based_on_bus_line_id(self, bus_line_id):
-        log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='delete_travel_request_documents: starting')
-        self.start_time = time.time()
-        self.travel_requests_simulator.delete_travel_requests_based_on_line_id(line_id=bus_line_id)
-        self.elapsed_time = time.time() - self.start_time
-        log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='delete_travel_request_documents: finished - elapsed_time = ' +
-                        str(self.elapsed_time) + ' sec')
+    def test_delete_travel_request_documents(self, object_ids=None, client_ids=None, line_ids=None,
+                                             min_departure_datetime=None, max_departure_datetime=None):
+        """
+        Delete multiple travel_request_documents.
 
-    def delete_travel_requests_based_on_departure_datetime(self, min_departure_datetime, max_departure_datetime):
+        travel_request_document: {
+            '_id', 'client_id', 'line_id',
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'departure_datetime', 'arrival_datetime',
+            'starting_timetable_entry_index', 'ending_timetable_entry_index'
+        }
+        :param object_ids: [ObjectId]
+        :param client_ids: [int]
+        :param line_ids: [int]
+        :param min_departure_datetime: datetime
+        :param max_departure_datetime
+        :return: None
+        """
         log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='delete_travel_request_documents: starting')
+            log_message='test_delete_travel_request_documents: starting')
         self.start_time = time.time()
-        self.travel_requests_simulator.delete_travel_requests_based_on_departure_datetime(
+        self.travel_requests_simulator.delete_travel_request_documents(
+            object_ids=object_ids,
+            client_ids=client_ids,
+            line_ids=line_ids,
             min_departure_datetime=min_departure_datetime,
             max_departure_datetime=max_departure_datetime
         )
         self.elapsed_time = time.time() - self.start_time
         log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='delete_travel_request_documents: finished - elapsed_time = ' +
+            log_message='test_delete_travel_request_documents: finished - elapsed_time = ' +
                         str(self.elapsed_time) + ' sec')
 
-    def generate_travel_requests(self, bus_line_id, initial_datetime, number_of_requests):
+    def test_generate_travel_request_documents(self, line_id, initial_datetime, number_of_travel_request_documents):
+        """
+        Generate a specific number of travel_request_documents, for the selected bus_line,
+        for a 24hour period starting from a selected datetime, and store them at the
+        corresponding collection of the System Database.
+
+        :param line_id: int
+        :param initial_datetime: datetime
+        :param number_of_travel_request_documents: int
+        :return: None
+        """
         log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='generate_travel_requests: starting')
+            log_message='test_generate_travel_request_documents: starting')
         self.start_time = time.time()
-        self.travel_requests_simulator.generate_travel_requests(
-            line_id=bus_line_id,
+        self.travel_requests_simulator.generate_travel_request_documents(
+            line_id=line_id,
             initial_datetime=initial_datetime,
-            number_of_requests=number_of_requests
+            number_of_travel_request_documents=number_of_travel_request_documents
         )
         self.elapsed_time = time.time() - self.start_time
         log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='generate_travel_requests: finished - elapsed_time = ' + str(self.elapsed_time) + ' sec')
+            log_message='test_generate_travel_request_documents: finished - elapsed_time = '
+                        + str(self.elapsed_time) + ' sec')
 
 
 if __name__ == '__main__':
     tester = TravelRequestsSimulatorTester()
-
-    tester.clear_travel_requests()
-
-    tester.generate_travel_requests(
-        bus_line_id=1,
-        initial_datetime=datetime(2016, 8, 26, 0, 0, 0, 00000),
-        number_of_requests=10000
-    )
-
-    # tester.delete_travel_request_documents(bus_line_id=1)
-
-    # tester.delete_travel_request_documents(
-    #     min_departure_datetime=datetime(2016, 6, 30, 0, 0, 0, 00000),
-    #     max_departure_datetime=datetime(2016, 7, 1, 0, 0, 0, 00000)
-    # )
-
-
+    # tester.test_clear_travel_requests_collection()

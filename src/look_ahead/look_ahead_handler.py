@@ -170,6 +170,8 @@ class LookAheadHandler(object):
             max_departure_datetime=requests_max_departure_datetime
         )
 
+        print len(travel_requests)
+
         # 4: (TimetableGenerator is initialized) The Look Ahead sends a request to the Route Generator so as
         #    to identify the less time-consuming bus_route between the the bus_stops of the bus_line,
         #    while taking into consideration the current levels of traffic density.
@@ -188,6 +190,8 @@ class LookAheadHandler(object):
             travel_requests=timetable_generator.travel_requests,
             bus_stops=timetable_generator.bus_stops
         )
+
+        print_timetables(timetables=timetable_generator.timetables)
 
         # 5: Based on the response of the Route Generator, which includes details about the followed bus_route,
         #    and using only one bus vehicle, the Look Ahead generates some initial timetables which cover the

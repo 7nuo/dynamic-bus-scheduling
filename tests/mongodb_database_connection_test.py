@@ -165,8 +165,9 @@ class MongodbDatabaseConnectionTester(object):
             counter=counter
         )
 
-    def print_travel_request_documents(self, object_ids=None, line_ids=None, min_departure_datetime=None,
-                                       max_departure_datetime=None, counter=None):
+    def print_travel_request_documents(self, object_ids=None, client_ids=None, line_ids=None,
+                                       min_departure_datetime=None, max_departure_datetime=None,
+                                       counter=None):
         """
         Print multiple travel_request_documents.
 
@@ -174,9 +175,11 @@ class MongodbDatabaseConnectionTester(object):
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime'
+            'departure_datetime', 'arrival_datetime',
+            'starting_timetable_entry_index', 'ending_timetable_entry_index'
         }
         :param object_ids: [ObjectId]
+        :param client_ids: [int]
         :param line_ids: [int]
         :param min_departure_datetime: datetime
         :param max_departure_datetime: datetime
@@ -187,6 +190,7 @@ class MongodbDatabaseConnectionTester(object):
             log_message='print_travel_request_documents')
         self.mongodb_database_connection.print_travel_request_documents(
             object_ids=object_ids,
+            client_ids=client_ids,
             line_ids=line_ids,
             min_departure_datetime=min_departure_datetime,
             max_departure_datetime=max_departure_datetime,

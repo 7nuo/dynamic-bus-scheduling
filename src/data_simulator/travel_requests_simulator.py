@@ -23,65 +23,61 @@ from datetime import timedelta
 
 class TravelRequestsSimulator(object):
     def __init__(self):
-        self.connection = MongodbDatabaseConnection(host=mongodb_host, port=mongodb_port)
+        self.mongodb_database_connection = MongodbDatabaseConnection(host=mongodb_host, port=mongodb_port)
         log(module_name='travel_requests_simulator', log_type='DEBUG',
             log_message='mongodb_database_connection: established')
 
-    def clear_travel_requests(self):
+    def clear_travel_requests_collection(self):
         """
         Clear all the documents of the TravelRequests collection.
 
         :return: None
         """
-        self.connection.clear_travel_requests()
+        self.mongodb_database_connection.clear_travel_requests_collection()
         log(module_name='travel_requests_simulator', log_type='DEBUG',
-            log_message='clear_travel_requests ok')
+            log_message='clear_travel_requests_collection: ok')
 
-    def delete_travel_requests_based_on_line_id(self, line_id):
+    def delete_travel_request_documents(self, object_ids=None, client_ids=None, line_ids=None,
+                                        min_departure_datetime=None, max_departure_datetime=None):
         """
-        Delete the travel_request documents with the selected line_id.
+        Delete multiple travel_request_documents.
 
-        travel_request_document: {'_id', 'client_id', 'line_id', 'starting_bus_stop_id',
-                                  'ending_bus_stop_id', 'departure_datetime', 'arrival_datetime'}
-
-        :param line_id: int
-        :return: None
-        """
-        self.connection.delete_travel_request_documents(line_id=line_id)
-        log(module_name='travel_requests_simulator', log_type='DEBUG',
-            log_message='delete_travel_request_documents ok')
-
-    def delete_travel_requests_based_on_departure_datetime(self, min_departure_datetime, max_departure_datetime):
-        """
-        Delete the travel_request documents with departure_datetime between
-        min_departure_datetime and max_departure_datetime.
-
-        travel_request_document: {'_id', 'client_id', 'line_id', 'starting_bus_stop_id',
-                                  'ending_bus_stop_id', 'departure_datetime', 'arrival_datetime'}
-
+        travel_request_document: {
+            '_id', 'client_id', 'line_id',
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'departure_datetime', 'arrival_datetime',
+            'starting_timetable_entry_index', 'ending_timetable_entry_index'
+        }
+        :param object_ids: [ObjectId]
+        :param client_ids: [int]
+        :param line_ids: [int]
         :param min_departure_datetime: datetime
-        :param max_departure_datetime: datetime
+        :param max_departure_datetime
         :return: None
         """
-        self.connection.delete_travel_request_documents(
+        self.mongodb_database_connection.delete_travel_request_documents(
+            object_ids=object_ids,
+            client_ids=client_ids,
+            line_ids=line_ids,
             min_departure_datetime=min_departure_datetime,
             max_departure_datetime=max_departure_datetime
         )
         log(module_name='travel_requests_simulator', log_type='DEBUG',
-            log_message='delete_travel_request_documents ok')
+            log_message='delete_travel_request_documents: ok')
 
-    def generate_travel_requests(self, line_id, initial_datetime, number_of_requests):
+    def generate_travel_request_documents(self, line_id, initial_datetime, number_of_travel_request_documents):
         """
-        Generate a specific number of travel_request documents, for the selected bus_line,
+        Generate a specific number of travel_request_documents, for the selected bus_line,
         for a 24hour period starting from a selected datetime, and store them at the
         corresponding collection of the System Database.
 
         :param line_id: int
         :param initial_datetime: datetime
-        :param number_of_requests: int
+        :param number_of_travel_request_documents: int
         :return: None
         """
-        # 1: The inputs: line_id, initial_datetime, and number_of_requests are provided to
+        # 1: The inputs: line_id, initial_datetime, and number_of_travel_request_documents are provided to
         #    the Travel Requests Simulator, so as a specific number of travel_request documents
         #    to be generated, for the selected bus_line, for a 24hour period starting from
         #    the selected datetime.
@@ -91,7 +87,7 @@ class TravelRequestsSimulator(object):
         #
         # bus_line: {'_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
         #
-        bus_line = self.connection.find_bus_line_document(line_id=line_id)
+        bus_line = self.mongodb_database_connection.find_bus_line_document(line_id=line_id)
         bus_stops = bus_line.get('bus_stops')
         number_of_bus_stops = len(bus_stops)
 
@@ -127,7 +123,7 @@ class TravelRequestsSimulator(object):
         datetime_population = [val for val, cnt in weighted_datetimes for i in range(cnt)]
         travel_request_documents = []
 
-        for i in range(0, number_of_requests):
+        for i in range(0, number_of_travel_request_documents):
             client_id = i
             starting_bus_stop_index = random.randint(0, number_of_bus_stops - 2)
             starting_bus_stop = bus_stops[starting_bus_stop_index]
@@ -143,11 +139,15 @@ class TravelRequestsSimulator(object):
                 'starting_bus_stop': starting_bus_stop,
                 'ending_bus_stop': ending_bus_stop,
                 'departure_datetime': departure_datetime,
-                'arrival_datetime': None
+                'arrival_datetime': None,
+                'starting_timetable_entry_index': None,
+                'ending_timetable_entry_index': None
             }
             travel_request_documents.append(travel_request_document)
 
-        # 4: The generated travel_request documents are stored at the
+        # 4: The generated travel_request_documents are stored at the
         #    TravelRequests collection of the System Database.
         #
-        self.connection.insert_travel_request_documents(travel_request_documents=travel_request_documents)
+        self.mongodb_database_connection.insert_travel_request_documents(
+            travel_request_documents=travel_request_documents
+        )

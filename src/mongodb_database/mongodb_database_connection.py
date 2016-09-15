@@ -34,18 +34,18 @@ class MongodbDatabaseConnection(object):
         self.ways_collection = self.db.Ways
 
     def clear_all_collections(self):
-        self.clear_nodes()
-        self.clear_points()
-        self.clear_ways()
-        self.clear_bus_stops()
-        self.clear_edges()
-        self.clear_address_book()
-        self.clear_bus_lines()
-        self.clear_bus_stop_waypoints()
-        self.clear_travel_requests()
-        self.clear_timetables()
+        self.clear_nodes_collection()
+        self.clear_points_collection()
+        self.clear_ways_collection()
+        self.clear_bus_stops_collection()
+        self.clear_edges_collection()
+        self.clear_address_book_collection()
+        self.clear_bus_lines_collection()
+        self.clear_bus_stop_waypoints_collection()
+        self.clear_travel_requests_collection()
+        self.clear_timetables_collection()
 
-    def clear_address_book(self):
+    def clear_address_book_collection(self):
         """
         Delete all the documents of the AddressBook collection.
 
@@ -54,7 +54,7 @@ class MongodbDatabaseConnection(object):
         result = self.address_book_collection.delete_many({})
         return result.deleted_count
 
-    def clear_bus_lines(self):
+    def clear_bus_lines_collection(self):
         """
         Delete all the documents of the BusLines collection.
 
@@ -63,7 +63,7 @@ class MongodbDatabaseConnection(object):
         result = self.bus_lines_collection.delete_many({})
         return result.deleted_count
 
-    def clear_bus_stop_waypoints(self):
+    def clear_bus_stop_waypoints_collection(self):
         """
         Delete all the documents of the BusStopWaypoints collection.
 
@@ -72,7 +72,7 @@ class MongodbDatabaseConnection(object):
         result = self.bus_stop_waypoints_collection.delete_many({})
         return result.deleted_count
 
-    def clear_bus_stops(self):
+    def clear_bus_stops_collection(self):
         """
         Delete all the documents of the BusStops collection.
 
@@ -81,7 +81,7 @@ class MongodbDatabaseConnection(object):
         result = self.bus_stops_collection.delete_many({})
         return result.deleted_count
 
-    def clear_edges(self):
+    def clear_edges_collection(self):
         """
         Delete all the documents of the Edges collection.
 
@@ -90,7 +90,7 @@ class MongodbDatabaseConnection(object):
         result = self.edges_collection.delete_many({})
         return result.deleted_count
 
-    def clear_nodes(self):
+    def clear_nodes_collection(self):
         """
         Delete all the documents of the Nodes collection.
 
@@ -99,7 +99,7 @@ class MongodbDatabaseConnection(object):
         result = self.nodes_collection.delete_many({})
         return result.deleted_count
 
-    def clear_points(self):
+    def clear_points_collection(self):
         """
         Delete all the documents of the Points collection.
 
@@ -108,7 +108,7 @@ class MongodbDatabaseConnection(object):
         result = self.points_collection.delete_many({})
         return result.deleted_count
 
-    def clear_timetables(self):
+    def clear_timetables_collection(self):
         """
         Delete all the documents of the Timetables collection.
 
@@ -125,7 +125,7 @@ class MongodbDatabaseConnection(object):
         data = {'$set': {'traffic_density': 0}}
         self.edges_collection.update_many(key, data, upsert=False)
 
-    def clear_travel_requests(self):
+    def clear_travel_requests_collection(self):
         """
         Delete all the documents of the TravelRequests collection.
 
@@ -134,7 +134,7 @@ class MongodbDatabaseConnection(object):
         result = self.travel_requests_collection.delete_many({})
         return result.deleted_count
 
-    def clear_ways(self):
+    def clear_ways_collection(self):
         """
         Delete all the documents of the Ways collection.
 
@@ -537,7 +537,8 @@ class MongodbDatabaseConnection(object):
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime'
+            'departure_datetime', 'arrival_datetime',
+            'starting_timetable_entry_index', 'ending_timetable_entry_index'
         }
         :param object_id: ObjectId
         :return: True if the travel_request_document was successfully deleted, otherwise False.
@@ -545,8 +546,8 @@ class MongodbDatabaseConnection(object):
         result = self.travel_requests_collection.delete_one({'_id': ObjectId(object_id)})
         return result.deleted_count == 1
 
-    def delete_travel_request_documents(self, object_ids=None, line_ids=None, min_departure_datetime=None,
-                                        max_departure_datetime=None):
+    def delete_travel_request_documents(self, object_ids=None, client_ids=None, line_ids=None,
+                                        min_departure_datetime=None, max_departure_datetime=None):
         """
         Delete multiple travel_request_documents.
 
@@ -554,9 +555,11 @@ class MongodbDatabaseConnection(object):
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime'
+            'departure_datetime', 'arrival_datetime',
+            'starting_timetable_entry_index', 'ending_timetable_entry_index'
         }
         :param object_ids: [ObjectId]
+        :param client_ids: [int]
         :param line_ids: [int]
         :param min_departure_datetime: datetime
         :param max_departure_datetime
@@ -565,18 +568,26 @@ class MongodbDatabaseConnection(object):
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
             result = self.travel_requests_collection.delete_many({'_id': {'$in': processed_object_ids}})
+        elif client_ids is not None and min_departure_datetime is not None and max_departure_datetime is not None:
+            result = self.travel_requests_collection.delete_many({
+                'client_id': {'$in': client_ids},
+                'departure_datetime': {'$gt': min_departure_datetime},
+                'departure_datetime': {'$lt': max_departure_datetime}
+            })
         elif line_ids is not None and min_departure_datetime is not None and max_departure_datetime is not None:
             result = self.travel_requests_collection.delete_many({
                 'line_id': {'$in': line_ids},
-                'departure_time': {'$gt': min_departure_datetime},
-                'departure_time': {'$lt': max_departure_datetime}
+                'departure_datetime': {'$gt': min_departure_datetime},
+                'departure_datetime': {'$lt': max_departure_datetime}
             })
+        elif client_ids is not None:
+            result = self.travel_requests_collection.delete_many({'client_id': {'$in': client_ids}})
         elif line_ids is not None:
             result = self.travel_requests_collection.delete_many({'line_id': {'$in': line_ids}})
         elif min_departure_datetime is not None and max_departure_datetime is not None:
             result = self.travel_requests_collection.delete_many({
-                'departure_time': {'$gt': min_departure_datetime},
-                'departure_time': {'$lt': max_departure_datetime}
+                'departure_datetime': {'$gt': min_departure_datetime},
+                'departure_datetime': {'$lt': max_departure_datetime}
             })
         else:
             return 0
@@ -1164,7 +1175,8 @@ class MongodbDatabaseConnection(object):
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime'
+            'departure_datetime', 'arrival_datetime',
+            'starting_timetable_entry_index', 'ending_timetable_entry_index'
         }
         :param object_id: ObjectId
         :return: travel_request_document
@@ -1172,8 +1184,8 @@ class MongodbDatabaseConnection(object):
         travel_request_document = self.travel_requests_collection.find_one({'_id': ObjectId(object_id)})
         return travel_request_document
 
-    def find_travel_request_documents(self, object_ids=None, line_ids=None, min_departure_datetime=None,
-                                      max_departure_datetime=None):
+    def find_travel_request_documents(self, object_ids=None, client_ids=None, line_ids=None,
+                                      min_departure_datetime=None, max_departure_datetime=None):
         """
         Retrieve multiple travel_request_documents.
 
@@ -1181,9 +1193,11 @@ class MongodbDatabaseConnection(object):
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime'
+            'departure_datetime', 'arrival_datetime',
+            'starting_timetable_entry_index', 'ending_timetable_entry_index'
         }
         :param object_ids: [ObjectId]
+        :param client_ids: [int]
         :param line_ids: [int]
         :param min_departure_datetime: datetime
         :param max_departure_datetime
@@ -1192,18 +1206,26 @@ class MongodbDatabaseConnection(object):
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
             travel_requests_cursor = self.travel_requests_collection.find({'_id': {'$in': processed_object_ids}})
+        elif client_ids is not None and min_departure_datetime is not None and max_departure_datetime is not None:
+            travel_requests_cursor = self.travel_requests_collection.find({
+                'client_id': {'$in': client_ids},
+                'departure_datetime': {'$gt': min_departure_datetime},
+                'departure_datetime': {'$lt': max_departure_datetime}
+            })
         elif line_ids is not None and min_departure_datetime is not None and max_departure_datetime is not None:
             travel_requests_cursor = self.travel_requests_collection.find({
                 'line_id': {'$in': line_ids},
-                'departure_time': {'$gt': min_departure_datetime},
-                'departure_time': {'$lt': max_departure_datetime}
+                'departure_datetime': {'$gt': min_departure_datetime},
+                'departure_datetime': {'$lt': max_departure_datetime}
             })
+        elif client_ids is not None:
+            travel_requests_cursor = self.travel_requests_collection.find({'client_id': {'$in': client_ids}})
         elif line_ids is not None:
             travel_requests_cursor = self.travel_requests_collection.find({'line_id': {'$in': line_ids}})
         elif min_departure_datetime is not None and max_departure_datetime is not None:
             travel_requests_cursor = self.travel_requests_collection.find({
-                'departure_time': {'$gt': min_departure_datetime},
-                'departure_time': {'$lt': max_departure_datetime}
+                'departure_datetime': {'$gt': min_departure_datetime},
+                'departure_datetime': {'$lt': max_departure_datetime}
             })
         else:
             travel_requests_cursor = self.travel_requests_collection.find({})
@@ -1698,7 +1720,8 @@ class MongodbDatabaseConnection(object):
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime'
+            'departure_datetime', 'arrival_datetime',
+            'starting_timetable_entry_index', 'ending_timetable_entry_index'
         }
         :return: travel_request_documents_cursor
         """
@@ -1713,7 +1736,8 @@ class MongodbDatabaseConnection(object):
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime'
+            'departure_datetime', 'arrival_datetime',
+            'starting_timetable_entry_index', 'ending_timetable_entry_index'
         }
         :return: travel_request_documents_list: [travel_request_document]
         """
@@ -2074,7 +2098,8 @@ class MongodbDatabaseConnection(object):
 
     def insert_travel_request_document(self, travel_request_document=None, client_id=None, line_id=None,
                                        starting_bus_stop=None, ending_bus_stop=None,
-                                       departure_datetime=None, arrival_datetime=None):
+                                       departure_datetime=None, arrival_datetime=None,
+                                       starting_timetable_entry_index=None, ending_timetable_entry_index=None):
         """
         Insert a travel_request_document.
 
@@ -2082,7 +2107,8 @@ class MongodbDatabaseConnection(object):
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime'
+            'departure_datetime', 'arrival_datetime',
+            'starting_timetable_entry_index', 'ending_timetable_entry_index'
         }
         :param travel_request_document
         :param client_id: int
@@ -2091,13 +2117,20 @@ class MongodbDatabaseConnection(object):
         :param ending_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
         :param departure_datetime: datetime
         :param arrival_datetime: datetime
+        :param starting_timetable_entry_index: int
+        :param ending_timetable_entry_index: int
         :return: new_object_id: ObjectId
         """
         if travel_request_document is None:
             travel_request_document = {
-                'client_id': client_id, 'line_id': line_id,
-                'starting_bus_stop': starting_bus_stop, 'ending_bus_stop': ending_bus_stop,
-                'departure_datetime': departure_datetime, 'arrival_datetime': arrival_datetime
+                'client_id': client_id,
+                'line_id': line_id,
+                'starting_bus_stop': starting_bus_stop,
+                'ending_bus_stop': ending_bus_stop,
+                'departure_datetime': departure_datetime,
+                'arrival_datetime': arrival_datetime,
+                'starting_timetable_entry_index': starting_timetable_entry_index,
+                'ending_timetable_entry_index': ending_timetable_entry_index
             }
 
         result = self.travel_requests_collection.insert_one(travel_request_document)
@@ -2112,7 +2145,8 @@ class MongodbDatabaseConnection(object):
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime'
+            'departure_datetime', 'arrival_datetime',
+            'starting_timetable_entry_index', 'ending_timetable_entry_index'
         }
         :param travel_request_documents: [travel_request_document]
         :return: new_object_ids: [ObjectId]
@@ -2460,7 +2494,8 @@ class MongodbDatabaseConnection(object):
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime'
+            'departure_datetime', 'arrival_datetime',
+            'starting_timetable_entry_index', 'ending_timetable_entry_index'
         }
         :param object_id: ObjectId
         :return: None
@@ -2468,8 +2503,9 @@ class MongodbDatabaseConnection(object):
         travel_request_document = self.find_travel_request_document(object_id=object_id)
         print travel_request_document
 
-    def print_travel_request_documents(self, object_ids=None, line_ids=None, min_departure_datetime=None,
-                                       max_departure_datetime=None, counter=None):
+    def print_travel_request_documents(self, object_ids=None, client_ids=None, line_ids=None,
+                                       min_departure_datetime=None, max_departure_datetime=None,
+                                       counter=None):
         """
         Print multiple travel_request_documents.
 
@@ -2477,9 +2513,11 @@ class MongodbDatabaseConnection(object):
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime'
+            'departure_datetime', 'arrival_datetime',
+            'starting_timetable_entry_index', 'ending_timetable_entry_index'
         }
         :param object_ids: [ObjectId]
+        :param client_ids: [int]
         :param line_ids: [int]
         :param min_departure_datetime: datetime
         :param max_departure_datetime: datetime
@@ -2488,6 +2526,7 @@ class MongodbDatabaseConnection(object):
         """
         travel_request_documents_list = self.find_travel_request_documents(
             object_ids=object_ids,
+            client_ids=client_ids,
             line_ids=line_ids,
             min_departure_datetime=min_departure_datetime,
             max_departure_datetime=max_departure_datetime

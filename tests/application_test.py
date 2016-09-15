@@ -17,7 +17,8 @@ specific language governing permissions and limitations under the License.
 import time
 import os
 
-from common.variables import testing_osm_filename
+from common.variables import testing_osm_filename, requests_min_departure_datetime_testing_value, \
+    testing_bus_stop_names, requests_max_departure_datetime_testing_value
 from src.common.logger import log
 from tests.look_ahead_test import LookAheadHandlerTester
 from tests.mongodb_database_connection_test import MongodbDatabaseConnectionTester
@@ -44,98 +45,62 @@ class ApplicationTester(object):
                         + str(self.elapsed_time) + ' sec')
 
     @staticmethod
+    def initialize_look_ahead_handler_tester():
+        look_ahead_handler_tester = LookAheadHandlerTester()
+        return look_ahead_handler_tester
+
+    @staticmethod
     def initialize_mongodb_database_connection_tester():
-        # log(module_name='application_test', log_type='INFO',
-        #     log_message='initialize_mongodb_database_connection_tester: starting')
-        # start_time = time.time()
         mongodb_database_connection_tester = MongodbDatabaseConnectionTester()
-        # elapsed_time = time.time() - start_time
-        # log(module_name='application_test', log_type='INFO',
-        #     log_message='initialize_mongodb_database_connection_tester: finished - elapsed time = '
-        #                 + str(elapsed_time) + ' sec')
         return mongodb_database_connection_tester
 
     @staticmethod
     def initialize_osm_parser_tester():
-        # log(module_name='application_test', log_type='INFO',
-        #     log_message='initialize_osm_parser_tester: starting')
-        # start_time = time.time()
         osm_parser_tester = OsmParserTester(
             osm_filename=os.path.join(os.path.dirname(__file__), testing_osm_filename)
         )
-        # elapsed_time = time.time() - start_time
-        # log(module_name='application_test', log_type='INFO',
-        #     log_message='initialize_osm_parser_tester: finished - elapsed time = '
-        #                 + str(elapsed_time) + ' sec')
         return osm_parser_tester
 
     @staticmethod
-    def initialize_look_ahead_handler_tester():
-        # log(module_name='application_test', log_type='INFO',
-        #     log_message='initialize_look_ahead_handler_tester: starting')
-        # start_time = time.time()
-        look_ahead_handler_tester = LookAheadHandlerTester()
-        # elapsed_time = time.time() - start_time
-        # log(module_name='application_test', log_type='INFO',
-        #     log_message='initialize_look_ahead_handler_tester: finished - elapsed time = '
-        #                 + str(elapsed_time) + ' sec')
-        return look_ahead_handler_tester
+    def initialize_traffic_data_simulator_tester():
+        traffic_data_simulator_tester = TrafficDataSimulatorTester()
+        return traffic_data_simulator_tester
 
     @staticmethod
     def initialize_travel_requests_simulator_tester():
-        # log(module_name='application_test', log_type='INFO',
-        #     log_message='initialize_travel_requests_simulator_tester: starting')
-        # start_time = time.time()
         travel_requests_simulator_tester = TravelRequestsSimulatorTester()
-        # elapsed_time = time.time() - start_time
-        # log(module_name='application_test', log_type='INFO',
-        #     log_message='initialize_travel_requests_simulator_tester: finished - elapsed time = '
-        #                 + str(elapsed_time) + ' sec')
         return travel_requests_simulator_tester
-
-    @staticmethod
-    def initialize_traffic_data_simulator_tester():
-        # log(module_name='application_test', log_type='INFO',
-        #     log_message='initialize_traffic_data_simulator_tester: starting')
-        # start_time = time.time()
-        traffic_data_simulator_tester = TrafficDataSimulatorTester()
-        # elapsed_time = time.time() - start_time
-        # log(module_name='application_test', log_type='INFO',
-        #     log_message='initialize_traffic_data_simulator_tester: finished - elapsed time = '
-        #                 + str(elapsed_time) + ' sec')
-        return traffic_data_simulator_tester
-
-    # def osm_parser_parse_osm_file(self):
-    #     log(module_name='application_test', log_type='INFO',
-    #         log_message='osm_parser_tester: parse_osm_file: starting')
-    #     start_time = time.time()
-    #     self.osm_parser_tester.parse_osm_file()
-    #     elapsed_time = time.time() - start_time
-    #     log(module_name='application_test', log_type='INFO',
-    #         log_message='osm_parser_tester: parse_osm_file: finished - elapsed time = '
-    #                     + str(elapsed_time) + ' sec')
-
-    # def osm_parser_populate_all_connections(self):
-    #     log(module_name='application_test', log_type='INFO',
-    #         log_message='osm_parser_tester: populate_all_connections: starting')
-    #     start_time = time.time()
-    #     self.osm_parser_tester.populate_all_collections()
-    #     elapsed_time = time.time() - start_time
-    #     log(module_name='application_test', log_type='INFO',
-    #         log_message='osm_parser_tester: populate_all_connections: finished - elapsed time = '
-    #                     + str(elapsed_time) + ' sec')
-
-    # def foo(self):
-    #     log(module_name='application_test', log_type='INFO', log_message=': starting')
-    #     start_time = time.time()
-    #
-    #     elapsed_time = time.time() - start_time
-    #     log(module_name='application_test', log_type='INFO',
-    #         log_message=': finished - elapsed time = ' + str(elapsed_time) + ' sec')
 
 
 if __name__ == '__main__':
     application_tester = ApplicationTester()
+
     # application_tester.mongodb_database_connection_tester.clear_all_collections()
-    # application_tester.osm_parser_parse_osm_file()
-    # application_tester.osm_parser_populate_all_connections()
+    #
+    # application_tester.osm_parser_tester.test_parse_osm_file()
+    # application_tester.osm_parser_tester.test_populate_all_collections()
+    #
+    # application_tester.look_ahead_handler_tester.test_generate_bus_line(
+    #     line_id=1,
+    #     bus_stop_names=testing_bus_stop_names
+    # )
+    #
+    # application_tester.mongodb_database_connection_tester.print_bus_line_documents()
+    #
+    # application_tester.travel_requests_simulator_tester.test_generate_travel_request_documents(
+    #     line_id=1,
+    #     initial_datetime=requests_min_departure_datetime_testing_value,
+    #     number_of_travel_request_documents=10000
+    # )
+
+    # application_tester.mongodb_database_connection_tester.print_travel_request_documents(
+    #     line_ids=[1],
+    #     min_departure_datetime=requests_min_departure_datetime_testing_value,
+    #     max_departure_datetime=requests_max_departure_datetime_testing_value,
+    #     counter=10
+    # )
+
+    # application_tester.look_ahead_handler_tester.test_generate_timetables_for_bus_line(
+    #     line_id=1
+    # )
+
