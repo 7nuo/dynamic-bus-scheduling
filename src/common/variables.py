@@ -33,9 +33,9 @@ bus_road_types = ('motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary',
                   'secondary_link', 'tertiary', 'tertiary_link', 'unclassified', 'residential', 'bus_road')
 
 maximum_bus_capacity = 100
-average_waiting_time_threshold = 200
+average_waiting_time_threshold = 50
 individual_waiting_time_threshold = 200
-minimum_number_of_passengers_in_timetable = 20
+minimum_number_of_passengers_in_timetable = 30
 
 timetables_starting_datetime_testing_value = datetime(2016, 9, 15, 0, 0, 0, 00000)
 timetables_ending_datetime_testing_value = datetime(2016, 9, 16, 0, 0, 0, 00000)
