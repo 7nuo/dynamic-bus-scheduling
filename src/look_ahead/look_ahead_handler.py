@@ -14,6 +14,10 @@ under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
 """
+from common.variables import mongodb_host, mongodb_port
+from mongodb_database.mongodb_database_connection import MongodbDatabaseConnection
+from route_generator.route_generator_client import get_waypoints_between_multiple_bus_stops
+from src.common.logger import log
 from src.look_ahead.timetable_generator import *
 from src.look_ahead.timetable_updater import *
 
@@ -364,9 +368,30 @@ class LookAheadHandler(object):
     def test(self, travel_requests, current_timetables, timetable_generator):
         """
 
-        :param travel_requests:
-        :param current_timetables:
-        :return:
+        travel_request_document: {
+            '_id', 'client_id', 'line_id',
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'departure_datetime', 'arrival_datetime',
+            'starting_timetable_entry_index', 'ending_timetable_entry_index'
+        }
+        timetable_document: {
+            '_id', 'line_id',
+            'timetable_entries': [{
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
+                'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'travel_requests': [{
+                '_id', 'client_id', 'line_id',
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime',
+                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
+        }
+        :param travel_requests: [travel_request_document]
+        :param current_timetables: [timetable_document]
+        :return: new_timetables: [timetable_document]
         """
         new_timetables = generate_additional_timetables(timetables=current_timetables)
 
@@ -445,8 +470,4 @@ class LookAheadHandler(object):
         calculate_number_of_passengers_of_timetables(timetables=new_timetables)
         adjust_departure_datetimes_of_timetables(timetables=new_timetables)
 
-        # print calculate_total_number_of_travel_requests_in_timetables(timetables=timetable_generator.timetables)
         return new_timetables
-
-
-
