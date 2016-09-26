@@ -30,6 +30,7 @@ class MongodbDatabaseConnection(object):
         self.nodes_collection = self.db.Nodes
         self.points_collection = self.db.Points
         self.timetables_collection = self.db.Timetables
+        self.traffic_events_collection = self.db.TrafficEvents
         self.travel_requests_collection = self.db.TravelRequests
         self.ways_collection = self.db.Ways
 
@@ -124,6 +125,15 @@ class MongodbDatabaseConnection(object):
         key = {}
         data = {'$set': {'traffic_density': 0}}
         self.edges_collection.update_many(key, data, upsert=False)
+
+    def clear_traffic_events_collection(self):
+        """
+        Delete all the documents of the TrafficEvents collection.
+
+        :return: The number of deleted documents.
+        """
+        result = self.traffic_events_collection.delete_many({})
+        return result.deleted_count
 
     def clear_travel_requests_collection(self):
         """
@@ -524,6 +534,47 @@ class MongodbDatabaseConnection(object):
             result = self.timetables_collection.delete_many({'_id': {'$in': processed_object_ids}})
         elif line_id is not None:
             result = self.timetables_collection.delete_many({'line_id': line_id})
+        else:
+            return 0
+
+        return result.deleted_count
+
+    def delete_traffic_event_document(self, object_id=None, event_id=None):
+        """
+        Delete a traffic_event_document.
+
+        traffic_event_document: {
+            '_id', 'event_id', 'event_type', 'severity_level', 'longitude', 'latitude', 'date'
+        }
+        :param object_id: ObjectId
+        :param event_id: string
+        :return: True if the traffic_event_document was successfully deleted, otherwise False.
+        """
+        if object_id is not None:
+            result = self.traffic_events_collection.delete_one({'_id': ObjectId(object_id)})
+        elif event_id is not None:
+            result = self.traffic_events_collection.delete_one({'event_id': event_id})
+        else:
+            return False
+
+        return result.deleted_count == 1
+
+    def delete_traffic_event_documents(self, object_ids=None, event_ids=None):
+        """
+        Delete multiple traffic_event_documents.
+
+        traffic_event_document: {
+            '_id', 'event_id', 'event_type', 'severity_level', 'longitude', 'latitude', 'date'
+        }
+        :param object_ids: [ObjectId]
+        :param event_ids: [string]
+        :return: The number of deleted documents.
+        """
+        if object_ids is not None:
+            processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
+            result = self.traffic_events_collection.delete_many({'_id': {'$in': processed_object_ids}})
+        elif event_ids is not None:
+            result = self.traffic_events_collection.delete_many({'event_id': {'$in': event_ids}})
         else:
             return 0
 
@@ -1166,6 +1217,48 @@ class MongodbDatabaseConnection(object):
 
         timetable_documents = list(timetable_documents_cursor)
         return timetable_documents
+
+    def find_traffic_event_document(self, object_id=None, event_id=None):
+        """
+        Retrieve a traffic_event_document.
+
+        traffic_event_document: {
+            '_id', 'event_id', 'event_type', 'severity_level', 'longitude', 'latitude', 'date'
+        }
+        :param object_id: ObjectId
+        :param event_id: string
+        :return: traffic_event_document
+        """
+        if object_id is not None:
+            traffic_event_document = self.traffic_events_collection.find_one({'_id': ObjectId(object_id)})
+        elif event_id is not None:
+            traffic_event_document = self.traffic_events_collection.find_one({'event_id': event_id})
+        else:
+            return None
+
+        return traffic_event_document
+
+    def find_traffic_event_documents(self, object_ids=None, event_ids=None):
+        """
+        Retrieve a traffic_event_document.
+
+        traffic_event_document: {
+            '_id', 'event_id', 'event_type', 'severity_level', 'longitude', 'latitude', 'date'
+        }
+        :param object_ids: [ObjectId]
+        :param event_ids: [string]
+        :return: traffic_event_documents: [traffic_event_document]
+        """
+        if object_ids is not None:
+            processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
+            traffic_event_documents_cursor = self.traffic_events_collection.find({'_id': {'$in': processed_object_ids}})
+        elif event_ids is not None:
+            traffic_event_documents_cursor = self.traffic_events_collection.find({'event_id': {'$in': event_ids}})
+        else:
+            traffic_event_documents_cursor = self.traffic_events_collection.find({})
+
+        traffic_event_documents = list(traffic_event_documents_cursor)
+        return traffic_event_documents
 
     def find_travel_request_document(self, object_id):
         """
@@ -2092,6 +2185,48 @@ class MongodbDatabaseConnection(object):
 
         for timetable in timetable_documents:
             new_object_id = self.insert_timetable_document(timetable=timetable)
+            new_object_ids.append(new_object_id)
+
+        return new_object_ids
+
+    def insert_traffic_event_document(self, traffic_event_document):
+        """
+        Insert a new traffic_event_document or update, if it already exists in the database.
+
+        traffic_event_document: {
+            '_id', 'event_id', 'event_type', 'severity_level', 'longitude', 'latitude', 'date'
+        }
+        :param traffic_event_document
+        :return: new_object_id: ObjectId
+        """
+        key = {'event_id': traffic_event_document.get('event_id')}
+        data = {'$set': {
+            'event_type': traffic_event_document.get('event_type'),
+            'severity_level': traffic_event_document.get('severity_level'),
+            'longitude': traffic_event_document.get('longitude'),
+            'latitude': traffic_event_document.get('latitude'),
+            'date': traffic_event_document.get('date')
+        }}
+        result = self.traffic_events_collection.update_one(key, data, upsert=True)
+        new_object_id = result.upserted_id
+        return new_object_id
+
+    def insert_traffic_event_documents(self, traffic_event_documents):
+        """
+        Insert multiple new traffic_event_documents or update, if they already exist in the database.
+
+        traffic_event_document: {
+            '_id', 'event_id', 'event_type', 'severity_level', 'longitude', 'latitude', 'date'
+        }
+        :param traffic_event_documents: [traffic_event_document]
+        :return: new_object_ids: [ObjectId]
+        """
+        new_object_ids = []
+
+        for traffic_event_document in traffic_event_documents:
+            new_object_id = self.insert_traffic_event_document(
+                traffic_event_document=traffic_event_document
+            )
             new_object_ids.append(new_object_id)
 
         return new_object_ids

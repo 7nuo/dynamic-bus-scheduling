@@ -12,7 +12,7 @@
 // specific language governing permissions and limitations under the License.
 
 var amqp = require('amqplib/callback_api');
-var amqpEndpoint = 'amqp://';
+var amqpEndpoint = 'amqp://guest:guest@131.227.92.55:8007/';
 var ampqConnection = null;
 
 var queueName = 'dynamic-bus-scheduling';
