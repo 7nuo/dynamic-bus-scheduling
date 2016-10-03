@@ -66,32 +66,69 @@ class TravelRequestsSimulator(object):
         log(module_name='travel_requests_simulator', log_type='DEBUG',
             log_message='delete_travel_request_documents: ok')
 
-    def generate_travel_request_documents(self, line_id, initial_datetime, number_of_travel_request_documents):
+    def generate_random_travel_request_documents(self, initial_datetime, min_number_of_travel_request_documents,
+                                                 max_number_of_travel_request_documents):
+        """
+        Generate random number of travel_request_documents for each bus_line,
+        for a 24hour period starting from a selected datetime, and store them at the
+        corresponding collection of the System Database.
+
+        bus_line_document: {
+            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        }
+        :param initial_datetime: datetime
+        :param min_number_of_travel_request_documents: int
+        :param max_number_of_travel_request_documents: int
+        :return: None
+        """
+        bus_lines = self.mongodb_database_connection.find_bus_line_documents()
+
+        for bus_line in bus_lines:
+            number_of_travel_request_documents = random.randint(
+                min_number_of_travel_request_documents,
+                max_number_of_travel_request_documents
+            )
+            self.generate_travel_request_documents(
+                initial_datetime=initial_datetime,
+                number_of_travel_request_documents=number_of_travel_request_documents,
+                bus_line=bus_line
+            )
+
+    def generate_travel_request_documents(self, initial_datetime, number_of_travel_request_documents,
+                                          bus_line=None, line_id=None):
         """
         Generate a specific number of travel_request_documents, for the selected bus_line,
         for a 24hour period starting from a selected datetime, and store them at the
         corresponding collection of the System Database.
 
-        :param line_id: int
+        bus_line_document: {
+            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        }
         :param initial_datetime: datetime
         :param number_of_travel_request_documents: int
+        :param bus_line: bus_line_document
+        :param line_id: int
         :return: None
         """
-        # 1: The inputs: line_id, initial_datetime, and number_of_travel_request_documents are provided to
-        #    the Travel Requests Simulator, so as a specific number of travel_request documents
+        # 1: The inputs: initial_datetime, number_of_travel_request_documents, and (bus_line or line_id)
+        #    are provided to the Travel Requests Simulator, so as a specific number of travel_request_documents
         #    to be generated, for the selected bus_line, for a 24hour period starting from
         #    the selected datetime.
+        #
+        # 2: If the provided bus_line is None, then the Travel Requests Simulator retrieves from the System Database
+        #    the bus_line which corresponds to the provided line_id.
+        #
+        if bus_line is None and line_id is None:
+            return None
+        elif bus_line is None:
+            bus_line = self.mongodb_database_connection.find_bus_line_document(line_id=line_id)
+        else:
+            pass
 
-        # 2: The Travel Requests Simulator retrieves from the System Database the bus_line which
-        #    corresponds to the selected line_id.
-        #
-        # bus_line: {'_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
-        #
-        bus_line = self.mongodb_database_connection.find_bus_line_document(line_id=line_id)
         bus_stops = bus_line.get('bus_stops')
         number_of_bus_stops = len(bus_stops)
 
-        # 3: The Travel Requests Simulator generates the travel_request documents, taking into consideration
+        # 3: The Travel Requests Simulator generates the travel_request_documents, taking into consideration
         #    the variation of transportation demand during the hours of the day.
         #
         weighted_datetimes = [

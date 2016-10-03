@@ -17,8 +17,9 @@ specific language governing permissions and limitations under the License.
 import time
 import os
 
-from common.variables import testing_osm_filename, requests_min_departure_datetime_testing_value, \
-    testing_bus_stop_names, requests_max_departure_datetime_testing_value
+from common.variables import testing_osm_filename, testing_bus_stop_names, \
+    travel_requests_min_departure_datetime_testing_value, travel_requests_max_departure_datetime_testing_value, \
+    travel_requests_generator_min_number_of_documents, travel_requests_generator_max_number_of_documents
 from src.common.logger import log
 from tests.look_ahead_test import LookAheadHandlerTester
 from tests.mongodb_database_connection_test import MongodbDatabaseConnectionTester
@@ -71,6 +72,12 @@ class ApplicationTester(object):
         travel_requests_simulator_tester = TravelRequestsSimulatorTester()
         return travel_requests_simulator_tester
 
+    def start_traffic_data_simulator_tester(self, bus_line=None, line_id=None):
+        self.traffic_data_simulator_tester.test_generate_traffic_data_for_bus_line(
+            bus_line=bus_line,
+            line_id=line_id
+        )
+
 
 if __name__ == '__main__':
     application_tester = ApplicationTester()
@@ -89,18 +96,37 @@ if __name__ == '__main__':
     #
     # application_tester.travel_requests_simulator_tester.test_generate_travel_request_documents(
     #     line_id=1,
-    #     initial_datetime=requests_min_departure_datetime_testing_value,
+    #     initial_datetime=travel_requests_min_departure_datetime_testing_value,
     #     number_of_travel_request_documents=10000
     # )
-
+    #
     # application_tester.mongodb_database_connection_tester.print_travel_request_documents(
     #     line_ids=[1],
-    #     min_departure_datetime=requests_min_departure_datetime_testing_value,
-    #     max_departure_datetime=requests_max_departure_datetime_testing_value,
+    #     min_departure_datetime=travel_requests_min_departure_datetime_testing_value,
+    #     max_departure_datetime=travel_requests_max_departure_datetime_testing_value,
     #     counter=10
     # )
-
+    #
     # application_tester.look_ahead_handler_tester.test_generate_timetables_for_bus_line(
     #     line_id=1
     # )
+    #
+    # application_tester.look_ahead_handler_tester.test_update_timetables_of_bus_line(
+    #     line_id=1
+    # )
+    #
+    # application_tester.look_ahead_handler_tester.start_timetables_generator_process()
+    # application_tester.look_ahead_handler_tester.terminate_timetables_generator_process()
+    #
+    # application_tester.look_ahead_handler_tester.start_timetables_updater_process()
+    # application_tester.look_ahead_handler_tester.terminate_timetables_updater_process()
+    #
+    # application_tester.travel_requests_simulator_tester.start_travel_requests_generator_process(
+    #     initial_datetime=travel_requests_min_departure_datetime_testing_value,
+    #     min_number_of_travel_request_documents=travel_requests_generator_min_number_of_documents,
+    #     max_number_of_travel_request_documents=travel_requests_generator_max_number_of_documents
+    # )
+    #
+    # application_tester.travel_requests_simulator_tester.terminate_travel_requests_generator_process()
+
 

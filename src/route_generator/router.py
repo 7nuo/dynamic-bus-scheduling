@@ -28,32 +28,15 @@ import time
 class Router(object):
     def __init__(self):
         self.connection = MongodbDatabaseConnection(host=mongodb_host, port=mongodb_port)
-        log(module_name='Router', log_type='DEBUG', log_message='mongodb_database_connection_tester ok')
+        log(module_name='Router', log_type='DEBUG', log_message='mongodb_database_connection: established')
         self.bus_stops_dictionary = {}
         self.edges_dictionary = {}
         self.points_dictionary = {}
         self.initialize_dictionaries()
+        log(module_name='Router', log_type='DEBUG', log_message='initialize_dictionaries: ok')
         self.edges_updater_process = Process(target=self.update_edges_dictionary, args=())
-        self.edges_updater_process.start()
-        log(module_name='Router', log_type='DEBUG', log_message='initialize_dictionaries ok')
-
-    def update_edges_dictionary(self):
-        """
-        Update the edges dictionary periodically, based on route_generator_edges_updater_timeout parameter.
-        The function stops execution, after route_generator_edges_updater_max_operation_timeout seconds.
-
-        :return: None
-        """
-        time_difference = 0
-        initial_time = time.time()
-
-        while time_difference < route_generator_edges_updater_max_operation_timeout:
-            self.edges_dictionary = self.get_edges_dictionary()
-            log(module_name='Router', log_type='DEBUG', log_message='edges_dictionary updated')
-            time.sleep(route_generator_edges_updater_timeout)
-            time_difference = time.time() - initial_time
-
-        self.edges_updater_process.join()
+        log(module_name='Router', log_type='DEBUG', log_message='initialize_edges_updater_process: ok')
+        self.start_edges_updater_process()
 
     def initialize_dictionaries(self):
         self.bus_stops_dictionary = self.get_bus_stops_dictionary()
@@ -357,3 +340,30 @@ class Router(object):
             response.append(intermediate_response)
 
         return response
+
+    def start_edges_updater_process(self):
+        self.edges_updater_process.start()
+        log(module_name='Router', log_type='DEBUG', log_message='edges_updater_process: started')
+
+    def terminate_edges_updater_process(self):
+        self.edges_updater_process.terminate()
+        self.edges_updater_process.join()
+        log(module_name='Router', log_type='DEBUG', log_message='edges_updater_process: finished')
+
+    def update_edges_dictionary(self):
+        """
+        Update the edges dictionary periodically, based on route_generator_edges_updater_timeout parameter.
+        The function stops execution, after route_generator_edges_updater_max_operation_timeout seconds.
+
+        :return: None
+        """
+        time_difference = 0
+        initial_time = time.time()
+
+        while time_difference < route_generator_edges_updater_max_operation_timeout:
+            self.edges_dictionary = self.get_edges_dictionary()
+            log(module_name='Router', log_type='DEBUG', log_message='edges_dictionary updated')
+            time.sleep(route_generator_edges_updater_timeout)
+            time_difference = time.time() - initial_time
+
+        log(module_name='Router', log_type='DEBUG', log_message='edges_updater_process: finished')

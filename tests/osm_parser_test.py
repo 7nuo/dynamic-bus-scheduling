@@ -55,5 +55,5 @@ class OsmParserTester(object):
 
 if __name__ == '__main__':
     tester = OsmParserTester(osm_filename=os.path.join(os.path.dirname(__file__), testing_osm_filename))
-    # tester.test_parse_osm_file()
-    # tester.test_populate_all_collections()
+    # travel_requests_simulator_tester.test_parse_osm_file()
+    # travel_requests_simulator_tester.test_populate_all_collections()

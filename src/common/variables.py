@@ -23,8 +23,22 @@ mongodb_port = 27017
 route_generator_host = '127.0.0.1'
 route_generator_port = '2000'
 route_generator_request_timeout = 30
-route_generator_edges_updater_timeout = 100
+route_generator_edges_updater_timeout = 60
 route_generator_edges_updater_max_operation_timeout = 600
+
+traffic_data_parser_updater_timeout = 100
+traffic_data_parser_updater_max_operation_timeout = 600
+
+look_ahead_timetables_generator_timeout = 100
+look_ahead_timetables_generator_max_operation_timeout = 600
+
+look_ahead_timetables_updater_timeout = 100
+look_ahead_timetables_updater_max_operation_timeout = 600
+
+travel_requests_generator_timeout = 100
+travel_requests_generator_max_operation_timeout = 600
+travel_requests_generator_min_number_of_documents = 10
+travel_requests_generator_max_number_of_documents = 100
 
 # Maximum amount of speed for roads without a predefined value
 standard_speed = 50
@@ -40,8 +54,8 @@ minimum_number_of_passengers_in_timetable = 30
 timetables_starting_datetime_testing_value = datetime(2016, 9, 15, 0, 0, 0, 00000)
 timetables_ending_datetime_testing_value = datetime(2016, 9, 16, 0, 0, 0, 00000)
 
-requests_min_departure_datetime_testing_value = datetime(2016, 9, 15, 0, 0, 0, 00000)
-requests_max_departure_datetime_testing_value = datetime(2016, 9, 16, 0, 0, 0, 00000)
+travel_requests_min_departure_datetime_testing_value = datetime(2016, 9, 15, 0, 0, 0, 00000)
+travel_requests_max_departure_datetime_testing_value = datetime(2016, 9, 16, 0, 0, 0, 00000)
 
 testing_osm_filename = '../resources/osm_files/uppsala.osm'
 

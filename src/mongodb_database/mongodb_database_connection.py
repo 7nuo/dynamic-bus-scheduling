@@ -1504,7 +1504,7 @@ class MongodbDatabaseConnection(object):
         edge_documents_list = list(edge_documents_cursor)
         return edge_documents_list
 
-    def get_edges_list_of_bus_line(self, line_id):
+    def get_edge_documents_included_in_bus_line(self, bus_line=None, line_id=None):
         """
         Get a list containing all the edge_documents which are contained in the waypoints of a bus_line.
 
@@ -1521,11 +1521,72 @@ class MongodbDatabaseConnection(object):
             'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
             'max_speed', 'road_type', 'way_id', 'traffic_density'
         }
+        :param bus_line: bus_line_document
         :param line_id: int
-        :return: edges_list: [edge_document]
+        :return: edge_documents: [edge_document]
         """
-        edge_object_ids_list = []
-        bus_line = self.find_bus_line_document(line_id=line_id)
+        edge_object_ids = self.get_edge_object_ids_included_in_bus_line(
+            bus_line=bus_line,
+            line_id=line_id
+        )
+        edge_documents = self.find_edge_documents(object_ids=edge_object_ids)
+        return edge_documents
+
+    def get_edge_documents_included_in_bus_stop_waypoints(self, bus_stop_waypoints):
+        """
+        Get a list containing all the edge_documents which are included in a bus_stop_waypoints document.
+
+        bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_object_id]]
+        }
+        edge_document: {
+            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'max_speed', 'road_type', 'way_id', 'traffic_density'
+        }
+        :param bus_stop_waypoints: bus_stop_waypoints_document
+        :return: edge_documents: [edge_document]
+        """
+
+        edge_object_ids = self.get_edge_object_ids_included_in_bus_stop_waypoints(
+            bus_stop_waypoints=bus_stop_waypoints
+        )
+        edge_documents = self.find_edge_documents(object_ids=edge_object_ids)
+        return edge_documents
+
+    def get_edge_object_ids_included_in_bus_line(self, bus_line=None, line_id=None):
+        """
+        Get a list containing the object_ids of the edge_documents,
+        which are included in the waypoints of a bus_line.
+
+        bus_line_document: {
+            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        }
+        bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_object_id]]
+        }
+        edge_document: {
+            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'max_speed', 'road_type', 'way_id', 'traffic_density'
+        }
+        :param bus_line: bus_line_document
+        :param line_id: int
+        :return: edge_object_ids: [edge_object_id]
+        """
+        edge_object_ids = []
+
+        if bus_line is None and line_id is None:
+            return edge_object_ids
+        elif bus_line is None:
+            bus_line = self.find_bus_line_document(line_id=line_id)
+        else:
+            pass
+
         bus_stops = bus_line.get('bus_stops')
         number_of_bus_stops = len(bus_stops)
 
@@ -1537,66 +1598,17 @@ class MongodbDatabaseConnection(object):
                 starting_bus_stop=starting_bus_stop,
                 ending_bus_stop=ending_bus_stop
             )
-            edge_object_ids = self.get_edge_object_ids_list_of_bus_stop_waypoints(
+            edge_object_ids_included_in_bus_stop_waypoints = self.get_edge_object_ids_included_in_bus_stop_waypoints(
                 bus_stop_waypoints=bus_stop_waypoints
             )
-            for edge_object_id in edge_object_ids:
-                if edge_object_id not in edge_object_ids_list:
-                    edge_object_ids_list.append(edge_object_id)
+            for edge_object_id in edge_object_ids_included_in_bus_stop_waypoints:
+                if edge_object_id not in edge_object_ids:
+                    edge_object_ids.append(edge_object_id)
 
-        edges_list = self.get_edges_list_from_edge_object_ids_list(
-            edge_object_ids_list=edge_object_ids_list
-        )
-        return edges_list
-
-    def get_edges_list_of_bus_stop_waypoints(self, bus_stop_waypoints):
-        """
-        Get a list containing all the edge_documents which are included in a bus_stop_waypoints document.
-
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
-        bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_object_id]]
-        }
-        :param bus_stop_waypoints: bus_stop_waypoints_document
-        :return: edges_list: [edge_document]
-        """
-
-        list_of_all_edge_object_ids = self.get_edge_object_ids_list_of_bus_stop_waypoints(
-            bus_stop_waypoints=bus_stop_waypoints
-        )
-        edges_list = self.get_edges_list_from_edge_object_ids_list(
-            edge_object_ids_list=list_of_all_edge_object_ids
-        )
-        return edges_list
-
-    def get_edges_list_from_edge_object_ids_list(self, edge_object_ids_list):
-        """
-        Get a list of edge_documents, based on their object_ids.
-
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
-        :param edge_object_ids_list: [edge_object_id]
-        :return: edges_list: [edge_document]
-        """
-        edges_list = []
-
-        for edge_object_id in edge_object_ids_list:
-            edge = self.find_edge_document(object_id=edge_object_id)
-            edges_list.append(edge)
-
-        return edges_list
+        return edge_object_ids
 
     @staticmethod
-    def get_edge_object_ids_list_of_bus_stop_waypoints(bus_stop_waypoints):
+    def get_edge_object_ids_included_in_bus_stop_waypoints(bus_stop_waypoints):
         """
         Get a list containing all the object_ids of the edge_documents,
         which are included in a bus_stop_waypoints document.
@@ -1607,17 +1619,17 @@ class MongodbDatabaseConnection(object):
             'waypoints': [[edge_object_id]]
         }
         :param bus_stop_waypoints: bus_stop_waypoints_document
-        :return: list_of_all_edge_object_ids: [edge_object_id]
+        :return: edge_object_ids: [edge_object_id]
         """
-        list_of_all_edge_object_ids = []
+        edge_object_ids = []
         lists_of_edge_object_ids = bus_stop_waypoints.get('waypoints')
 
         for list_of_edge_object_ids in lists_of_edge_object_ids:
             for edge_object_id in list_of_edge_object_ids:
-                if edge_object_id not in list_of_all_edge_object_ids:
-                    list_of_all_edge_object_ids.append(edge_object_id)
+                if edge_object_id not in edge_object_ids:
+                    edge_object_ids.append(edge_object_id)
 
-        return list_of_all_edge_object_ids
+        return edge_object_ids
 
     def get_ending_nodes_of_edges_dictionary(self):
         """

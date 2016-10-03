@@ -30,30 +30,44 @@ class TrafficDataSimulatorTester(object):
             log_message='initialize_traffic_data_simulator: finished - elapsed_time = ' +
                         str(self.elapsed_time) + ' sec')
 
-    def clear_traffic_density(self):
+    def test_clear_traffic_density(self):
         log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='clear_traffic_density: starting')
+            log_message='test_clear_traffic_density: starting')
         self.start_time = time.time()
         self.traffic_data_simulator.clear_traffic_density()
         self.elapsed_time = time.time() - self.start_time
         log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='clear_traffic_density: finished - elapsed_time = ' + str(self.elapsed_time) + ' sec')
+            log_message='test_clear_traffic_density: finished - elapsed_time = '
+                        + str(self.elapsed_time) + ' sec')
 
-    def generate_traffic_between_bus_stop_names(self, starting_bus_stop_name, ending_bus_stop_name,
-                                                waypoints_index, new_traffic_density):
+    def test_generate_traffic_data_for_bus_line(self, bus_line=None, line_id=None):
         log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='generate_traffic_between_bus_stop_names: starting')
+            log_message='test_generate_traffic_data_for_bus_line: starting')
         self.start_time = time.time()
-        self.traffic_data_simulator.generate_traffic_between_bus_stop_names(
-            starting_bus_stop_name=starting_bus_stop_name,
-            ending_bus_stop_name=ending_bus_stop_name,
-            waypoints_index=waypoints_index,
-            new_traffic_density=new_traffic_density
+        self.traffic_data_simulator.generate_traffic_data_for_bus_line(
+            bus_line=bus_line,
+            line_id=line_id
         )
         self.elapsed_time = time.time() - self.start_time
         log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='generate_traffic_between_bus_stop_names: finished - elapsed_time = ' +
-                        str(self.elapsed_time) + ' sec')
+            log_message='test_generate_traffic_data_for_bus_line: finished - elapsed_time = '
+                        + str(self.elapsed_time) + ' sec')
+
+    def test_generate_traffic_data_between_bus_stops(self, starting_bus_stop=None, ending_bus_stop=None,
+                                                     starting_bus_stop_name=None, ending_bus_stop_name=None):
+        log(module_name='traffic_data_simulator_test', log_type='INFO',
+            log_message='test_generate_traffic_data_between_bus_stops: starting')
+        self.start_time = time.time()
+        self.traffic_data_simulator.generate_traffic_data_between_bus_stops(
+            starting_bus_stop=starting_bus_stop,
+            ending_bus_stop=ending_bus_stop,
+            starting_bus_stop_name=starting_bus_stop_name,
+            ending_bus_stop_name=ending_bus_stop_name
+        )
+        self.elapsed_time = time.time() - self.start_time
+        log(module_name='traffic_data_simulator_test', log_type='INFO',
+            log_message='test_generate_traffic_data_between_bus_stops: finished - elapsed_time = '
+                        + str(self.elapsed_time) + ' sec')
 
     def print_traffic_density_between_two_bus_stops(self, starting_bus_stop_name, ending_bus_stop_name):
         log(module_name='traffic_data_simulator_test', log_type='INFO',
@@ -70,33 +84,4 @@ class TrafficDataSimulatorTester(object):
 
 
 if __name__ == '__main__':
-    # bus_stop_names = ['Centralstationen', 'Stadshuset', 'Skolgatan', 'Ekonomikum', 'Studentstaden', 'Rickomberga',
-    #                   'Oslogatan', 'Reykjaviksgatan', 'Ekebyhus', 'Sernanders väg', 'Flogsta centrum',
-    #                   'Sernanders väg', 'Ekebyhus', 'Reykjaviksgatan', 'Oslogatan', 'Rickomberga',
-    #                   'Studentstaden', 'Ekonomikum','Skolgatan', 'Stadshuset', 'Centralstationen']
-
     tester = TrafficDataSimulatorTester()
-
-    # tester.clear_traffic_density()
-
-    # tester.print_traffic_density_documents(
-    #     starting_bus_stop_name='Ekebyhus',
-    #     ending_bus_stop_name='Sernanders väg'
-    # )
-
-    # tester.generate_traffic_between_bus_stop_names(
-    #     starting_bus_stop_name='Ekebyhus',
-    #     ending_bus_stop_name='Sernanders väg',
-    #     waypoints_index=0,
-    #     new_traffic_density=0.99
-    # )
-    # tester.generate_traffic_between_bus_stop_names(
-    #     starting_bus_stop_name='Ekebyhus',
-    #     ending_bus_stop_name='Sernanders väg',
-    #     waypoints_index=1,
-    #     new_traffic_density=0.10
-    # )
-    # tester.print_traffic_density_documents(
-    #     starting_bus_stop_name='Ekebyhus',
-    #     ending_bus_stop_name='Sernanders väg'
-    # )
