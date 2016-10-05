@@ -81,52 +81,98 @@ class ApplicationTester(object):
 
 if __name__ == '__main__':
     application_tester = ApplicationTester()
+    time.sleep(0.2)
+    selection = ''
 
-    # application_tester.mongodb_database_connection_tester.clear_all_collections()
-    #
-    # application_tester.osm_parser_tester.test_parse_osm_file()
-    # application_tester.osm_parser_tester.test_populate_all_collections()
-    #
-    # application_tester.look_ahead_handler_tester.test_generate_bus_line(
-    #     line_id=1,
-    #     bus_stop_names=testing_bus_stop_names
-    # )
-    #
-    # application_tester.mongodb_database_connection_tester.print_bus_line_documents()
-    #
-    # application_tester.travel_requests_simulator_tester.test_generate_travel_request_documents(
-    #     line_id=1,
-    #     initial_datetime=travel_requests_min_departure_datetime_testing_value,
-    #     number_of_travel_request_documents=10000
-    # )
-    #
-    # application_tester.mongodb_database_connection_tester.print_travel_request_documents(
-    #     line_ids=[1],
-    #     min_departure_datetime=travel_requests_min_departure_datetime_testing_value,
-    #     max_departure_datetime=travel_requests_max_departure_datetime_testing_value,
-    #     counter=10
-    # )
-    #
-    # application_tester.look_ahead_handler_tester.test_generate_timetables_for_bus_line(
-    #     line_id=1
-    # )
-    #
-    # application_tester.look_ahead_handler_tester.test_update_timetables_of_bus_line(
-    #     line_id=1
-    # )
-    #
-    # application_tester.look_ahead_handler_tester.start_timetables_generator_process()
-    # application_tester.look_ahead_handler_tester.terminate_timetables_generator_process()
-    #
-    # application_tester.look_ahead_handler_tester.start_timetables_updater_process()
-    # application_tester.look_ahead_handler_tester.terminate_timetables_updater_process()
-    #
-    # application_tester.travel_requests_simulator_tester.start_travel_requests_generator_process(
-    #     initial_datetime=travel_requests_min_departure_datetime_testing_value,
-    #     min_number_of_travel_request_documents=travel_requests_generator_min_number_of_documents,
-    #     max_number_of_travel_request_documents=travel_requests_generator_max_number_of_documents
-    # )
-    #
-    # application_tester.travel_requests_simulator_tester.terminate_travel_requests_generator_process()
+    while True:
+        selection = raw_input(
+            '\n0.  exit'
+            '\n1.  (mongodb_database) clear_all_collections'
+            '\n2.  (osm_parser) test_parse_osm_file'
+            '\n3.  (osm_parser) test_populate_all_collections'
+            '\n4.  (look_ahead_handler) test_generate_bus_line'
+            '\n5.  (mongodb_database) print_bus_line_documents'
+            '\n6.  (travel_requests_simulator) test_generate_travel_request_documents'
+            '\n7.  (mongodb_database) print_travel_request_documents'
+            '\n8.  (look_ahead_handler) test_generate_timetables_for_bus_line'
+            '\n9.  (look_ahead_handler) test_update_timetables_of_bus_line'
+            '\n10. (look_ahead_handler) start_timetables_generator_process'
+            '\n11. (look_ahead_handler) terminate_timetables_generator_process'
+            '\n12. (look_ahead_handler) start_timetables_updater_process'
+            '\n13. (look_ahead_handler) terminate_timetables_updater_process'
+            '\n14. (travel_requests_simulator) start_travel_requests_generator_process'
+            '\n15. (travel_requests_simulator) terminate_travel_requests_generator_process'
+            '\n16. (traffic_data_simulator) start_traffic_data_generator_process'
+            '\n17. (traffic_data_simulator) terminate_traffic_data_generator_process'
+            '\nSelection: '
+        )
 
+        if selection == '0':
+            break
 
+        elif selection == '1':
+            application_tester.mongodb_database_connection_tester.clear_all_collections()
+
+        elif selection == '2':
+            application_tester.osm_parser_tester.test_parse_osm_file()
+
+        elif selection == '3':
+            application_tester.osm_parser_tester.test_populate_all_collections()
+
+        elif selection == '4':
+            application_tester.look_ahead_handler_tester.test_generate_bus_line(
+                line_id=1,
+                bus_stop_names=testing_bus_stop_names
+            )
+
+        elif selection == '5':
+            application_tester.mongodb_database_connection_tester.print_bus_line_documents()
+
+        elif selection == '6':
+            application_tester.travel_requests_simulator_tester.test_generate_travel_request_documents(
+                line_id=1,
+                initial_datetime=travel_requests_min_departure_datetime_testing_value,
+                number_of_travel_request_documents=10000
+            )
+
+        elif selection == '7':
+            application_tester.mongodb_database_connection_tester.print_travel_request_documents(
+                line_ids=[1],
+                min_departure_datetime=travel_requests_min_departure_datetime_testing_value,
+                max_departure_datetime=travel_requests_max_departure_datetime_testing_value,
+                counter=10
+            )
+
+        elif selection == '8':
+            application_tester.look_ahead_handler_tester.test_generate_timetables_for_bus_line(line_id=1)
+
+        elif selection == '9':
+            application_tester.look_ahead_handler_tester.test_update_timetables_of_bus_line(line_id=1)
+
+        elif selection == '10':
+            application_tester.look_ahead_handler_tester.start_timetables_generator_process()
+
+        elif selection == '11':
+            application_tester.look_ahead_handler_tester.terminate_timetables_generator_process()
+
+        elif selection == '12':
+            application_tester.look_ahead_handler_tester.start_timetables_updater_process()
+
+        elif selection == '13':
+            application_tester.look_ahead_handler_tester.terminate_timetables_updater_process()
+
+        elif selection == '14':
+            application_tester.travel_requests_simulator_tester.start_travel_requests_generator_process(
+                initial_datetime=travel_requests_min_departure_datetime_testing_value,
+                min_number_of_travel_request_documents=travel_requests_generator_min_number_of_documents,
+                max_number_of_travel_request_documents=travel_requests_generator_max_number_of_documents
+            )
+
+        elif selection == '15':
+            application_tester.travel_requests_simulator_tester.terminate_travel_requests_generator_process()
+
+        elif selection == '16':
+            application_tester.traffic_data_simulator_tester.start_traffic_data_generator_process()
+
+        elif selection == '17':
+            application_tester.traffic_data_simulator_tester.terminate_traffic_data_generator_process()

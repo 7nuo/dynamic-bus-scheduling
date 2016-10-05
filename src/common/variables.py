@@ -28,6 +28,8 @@ route_generator_edges_updater_max_operation_timeout = 600
 
 traffic_data_parser_updater_timeout = 100
 traffic_data_parser_updater_max_operation_timeout = 600
+traffic_data_generator_timeout = 100
+traffic_data_generator_max_operation_timeout = 600
 
 look_ahead_timetables_generator_timeout = 100
 look_ahead_timetables_generator_max_operation_timeout = 600

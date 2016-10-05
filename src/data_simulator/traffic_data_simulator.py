@@ -50,6 +50,22 @@ class TrafficDataSimulator(object):
             edge_object_ids=edge_object_ids_included_in_bus_line_document
         )
 
+    def generate_traffic_data_for_bus_lines(self, bus_lines=None):
+        """
+        Generate random traffic density values for the edge_documents which are included in a bus_line_documents.
+
+        bus_line_document: {
+            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        }
+        :param bus_lines: [bus_line_document]
+        :return: None
+        """
+        if bus_lines is None:
+            bus_lines = self.mongodb_database_connection.find_bus_line_documents()
+
+        for bus_line in bus_lines:
+            self.generate_traffic_data_for_bus_line(bus_line=bus_line)
+
     def generate_traffic_data_between_bus_stops(self, starting_bus_stop=None, ending_bus_stop=None,
                                                 starting_bus_stop_name=None, ending_bus_stop_name=None):
         """
@@ -103,9 +119,3 @@ class TrafficDataSimulator(object):
                 edge_object_id=edge_object_id,
                 new_traffic_density_value=new_traffic_density_value
             )
-
-    def print_traffic_density_between_two_bus_stops(self, starting_bus_stop_name, ending_bus_stop_name):
-        self.mongodb_database_connection.print_traffic_density_documents(
-            starting_bus_stop_name=starting_bus_stop_name,
-            ending_bus_stop_name=ending_bus_stop_name
-        )
