@@ -90,8 +90,9 @@ class ApplicationTester(object):
 
 if __name__ == '__main__':
     application_tester = ApplicationTester()
-    time.sleep(0.2)
-    selection = ''
+    time.sleep(0.01)
+    # Positive int or None
+    printing_limit = 10
 
     while True:
         selection = raw_input(
@@ -99,6 +100,7 @@ if __name__ == '__main__':
             '\n1.  (mongodb_database) clear_all_collections'
             '\n2.  (osm_parser) test_parse_osm_file'
             '\n3.  (osm_parser) test_populate_all_collections'
+            '\n4.  (mongodb_database) print_collections'
             '\n4.  (look_ahead_handler) test_generate_bus_line'
             '\n5.  (mongodb_database) print_bus_line_documents'
             '\n6.  (travel_requests_simulator) test_generate_travel_request_documents'
@@ -127,6 +129,41 @@ if __name__ == '__main__':
 
         elif selection == '3':
             application_tester.osm_parser_tester.test_populate_all_collections()
+
+        elif selection == '4':
+            inner_selection = raw_input(
+                '\n0.  back'
+                '\n1.  print_address_documents'
+                '\n2.  print_bus_stop_documents'
+                '\n3.  print_edge_documents'
+                '\n4.  print_node_documents'
+                '\n5.  print_point_documents'
+                '\n6.  print_way_documents'
+                '\nSelection: '
+            )
+            if inner_selection == '0':
+                pass
+
+            elif inner_selection == '1':
+                application_tester.mongodb_database_connection_tester.print_address_documents(counter=printing_limit)
+
+            elif inner_selection == '2':
+                application_tester.mongodb_database_connection_tester.print_bus_stop_documents(counter=printing_limit)
+
+            elif inner_selection == '3':
+                application_tester.mongodb_database_connection_tester.print_edge_documents(counter=printing_limit)
+
+            elif inner_selection == '4':
+                application_tester.mongodb_database_connection_tester.print_node_documents(counter=printing_limit)
+
+            elif inner_selection == '5':
+                application_tester.mongodb_database_connection_tester.print_point_documents(counter=printing_limit)
+
+            elif inner_selection == '6':
+                application_tester.mongodb_database_connection_tester.print_way_documents(counter=printing_limit)
+
+            else:
+                print 'Invalid input.'
 
         elif selection == '4':
             application_tester.look_ahead_handler_tester.test_generate_bus_line(

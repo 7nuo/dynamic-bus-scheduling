@@ -23,13 +23,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from common.variables import mongodb_host, mongodb_port, traffic_data_parser_updater_timeout, \
-    traffic_data_parser_updater_max_operation_timeout
+from common.variables import mongodb_host, mongodb_port
 from mongodb_database.mongodb_database_connection import MongodbDatabaseConnection
 from src.common.logger import log
 from src.geospatial_data.point import Point, distance
-from multiprocessing import Process
-import time
 
 
 class TrafficDataParser(object):
@@ -37,22 +34,8 @@ class TrafficDataParser(object):
         self.mongodb_database_connection = MongodbDatabaseConnection(host=mongodb_host, port=mongodb_port)
         self.edge_documents = []
         self.traffic_event_documents = []
-        self.traffic_data_updater_process = Process(target=self.update_traffic_data(), args=())
-        self.traffic_data_updater_process.start()
         log(module_name='traffic_data_parser', log_type='DEBUG',
             log_message='mongodb_database_connection: established')
-
-    def traffic_data_updater_process_handler(self):
-        time_difference = 0
-        initial_time = time.time()
-
-        while time_difference < traffic_data_parser_updater_max_operation_timeout:
-            self.update_traffic_data()
-            log(module_name='TrafficDataParser', log_type='DEBUG', log_message='traffic_data updated')
-            time.sleep(traffic_data_parser_updater_timeout)
-            time_difference = time.time() - initial_time
-
-        self.traffic_data_updater_process.join()
 
     def update_traffic_data(self):
         """
@@ -64,7 +47,7 @@ class TrafficDataParser(object):
         traffic_event_document: {
             '_id', 'event_id', 'event_type', 'severity_level', 'longitude', 'latitude', 'date'
         }
-        :return:
+        :return: None
         """
         self.edge_documents = self.mongodb_database_connection.find_edge_documents()
         self.traffic_event_documents = self.mongodb_database_connection.find_traffic_event_documents()

@@ -25,27 +25,39 @@ SOFTWARE.
 """
 import time
 from src.common.logger import log
-from src.route_generator.route_generator_client import get_route_between_two_bus_stop_names, \
-    get_route_between_multiple_bus_stop_names, get_waypoints_between_two_bus_stops, get_waypoints_between_multiple_bus_stops
+from src.route_generator.route_generator_client import get_route_between_two_bus_stops, \
+    get_route_between_multiple_bus_stops, get_waypoints_between_two_bus_stops, get_waypoints_between_multiple_bus_stops
 
 
-def test_get_route_between_two_bus_stop_names(starting_bus_stop_name, ending_bus_stop_name):
+def test_get_route_between_two_bus_stops(starting_bus_stop=None, ending_bus_stop=None,
+                                         starting_bus_stop_name=None, ending_bus_stop_name=None):
     """
+    bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+
+    :param starting_bus_stop: bus_stop_document
+    :param ending_bus_stop: bus_stop_document
     :param starting_bus_stop_name: string
     :param ending_bus_stop_name: string
     """
     log(module_name='route_generator_test', log_type='INFO',
-        log_message='get_route_between_two_bus_stop_names: starting')
+        log_message='get_route_between_two_bus_stops: starting')
     start_time = time.time()
 
-    # response = {'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-    #             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-    #             'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-    #                       'distances_from_starting_node', 'times_from_starting_node',
-    #                       'distances_from_previous_node', 'times_from_previous_node'}}
-    response = get_route_between_two_bus_stop_names(starting_bus_stop_name=starting_bus_stop_name,
-                                                    ending_bus_stop_name=ending_bus_stop_name)
-
+    # response = {
+    #     'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #     'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #     'route': {
+    #         'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+    #         'distances_from_starting_node', 'times_from_starting_node',
+    #         'distances_from_previous_node', 'times_from_previous_node'
+    #     }
+    # }
+    response = get_route_between_two_bus_stops(
+        starting_bus_stop=starting_bus_stop,
+        ending_bus_stop=ending_bus_stop,
+        starting_bus_stop_name=starting_bus_stop_name,
+        ending_bus_stop_name=ending_bus_stop_name
+    )
     starting_bus_stop = response.get('starting_bus_stop')
     ending_bus_stop = response.get('ending_bus_stop')
     route = response.get('route')
@@ -75,25 +87,34 @@ def test_get_route_between_two_bus_stop_names(starting_bus_stop_name, ending_bus
 
     elapsed_time = time.time() - start_time
     log(module_name='route_generator_test', log_type='INFO',
-        log_message='get_route_between_two_bus_stop_names: finished - elapsed_time = ' +
+        log_message='test_get_route_between_two_bus_stops: finished - elapsed_time = ' +
                     str(elapsed_time) + ' sec')
 
 
-def test_get_route_between_multiple_bus_stop_names(bus_stop_names):
+def test_get_route_between_multiple_bus_stops(bus_stops=None, bus_stop_names=None):
     """
+    bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+
+    :param bus_stops: [bus_stop_document]
     :param bus_stop_names: [string]
     """
     log(module_name='route_generator_test', log_type='INFO',
-        log_message='get_route_between_multiple_bus_stop_names: starting')
+        log_message='get_route_between_multiple_bus_stops: starting')
     start_time = time.time()
 
-    # response = [{'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-    #              'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-    #              'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-    #                        'distances_from_starting_node', 'times_from_starting_node',
-    #                        'distances_from_previous_node', 'times_from_previous_node'}}]
-    response = get_route_between_multiple_bus_stop_names(bus_stop_names=bus_stop_names)
-
+    # response = [{
+    #     'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #     'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #     'route': {
+    #         'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+    #         'distances_from_starting_node', 'times_from_starting_node',
+    #         'distances_from_previous_node', 'times_from_previous_node'
+    #     }
+    # }]
+    response = get_route_between_multiple_bus_stops(
+        bus_stops=bus_stops,
+        bus_stop_names=bus_stop_names
+    )
     for intermediate_response in response:
         starting_bus_stop = intermediate_response.get('starting_bus_stop')
         ending_bus_stop = intermediate_response.get('ending_bus_stop')
@@ -124,26 +145,39 @@ def test_get_route_between_multiple_bus_stop_names(bus_stop_names):
 
     elapsed_time = time.time() - start_time
     log(module_name='route_generator_test', log_type='INFO',
-        log_message='get_route_between_multiple_bus_stop_names: finished - elapsed_time = ' +
+        log_message='test_get_route_between_multiple_bus_stops: finished - elapsed_time = ' +
                     str(elapsed_time) + ' sec')
 
 
-def test_get_waypoints_between_two_bus_stops(starting_bus_stop_name, ending_bus_stop_name):
+def test_get_waypoints_between_two_bus_stops(starting_bus_stop=None, ending_bus_stop=None,
+                                             starting_bus_stop_name=None, ending_bus_stop_name=None):
     """
+    bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+
+    :param starting_bus_stop: bus_stop_document
+    :param ending_bus_stop: bus_stop_document
     :param starting_bus_stop_name: string
-    :param ending_bus_stop_name:  string
+    :param ending_bus_stop_name: string
     """
     log(module_name='route_generator_test', log_type='INFO',
-        log_message='find_bus_stop_waypoints_document: starting')
+        log_message='test_get_waypoints_between_two_bus_stops: starting')
     start_time = time.time()
 
-    # response = {'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-    #             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-    #             'waypoints': [[{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-    #                             'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-    #                             'max_speed', 'road_type', 'way_id', 'traffic_density'}]]}
-    response = get_waypoints_between_two_bus_stops(starting_bus_stop_name, ending_bus_stop_name)
-
+    # response = {
+    #     'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #     'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #     'waypoints': [[{
+    #         '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+    #         'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+    #         'max_speed', 'road_type', 'way_id', 'traffic_density'
+    #     }]]
+    # }
+    response = get_waypoints_between_two_bus_stops(
+        starting_bus_stop=starting_bus_stop,
+        ending_bus_stop=ending_bus_stop,
+        starting_bus_stop_name=starting_bus_stop_name,
+        ending_bus_stop_name=ending_bus_stop_name
+    )
     starting_bus_stop = response.get('starting_bus_stop')
     ending_bus_stop = response.get('ending_bus_stop')
     waypoints = response.get('waypoints')
@@ -157,25 +191,34 @@ def test_get_waypoints_between_two_bus_stops(starting_bus_stop_name, ending_bus_
 
     elapsed_time = time.time() - start_time
     log(module_name='route_generator_test', log_type='INFO',
-        log_message='find_bus_stop_waypoints_document: finished - elapsed_time = ' +
+        log_message='test_get_waypoints_between_two_bus_stops: finished - elapsed_time = ' +
                     str(elapsed_time) + ' sec')
 
 
-def test_get_waypoints_between_multiple_bus_stops(bus_stop_names):
+def test_get_waypoints_between_multiple_bus_stops(bus_stops=None, bus_stop_names=None):
     """
+    bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+
+    :param bus_stops: [bus_stop_document]
     :param bus_stop_names: [string]
     """
     log(module_name='route_generator_test', log_type='INFO',
-        log_message='get_waypoints_between_multiple_bus_stops: starting')
+        log_message='test_get_waypoints_between_multiple_bus_stops: starting')
     start_time = time.time()
 
-    # response = [{'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-    #              'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-    #              'waypoints': [[{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-    #                              'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-    #                              'max_speed', 'road_type', 'way_id', 'traffic_density'}]]}]
-    response = get_waypoints_between_multiple_bus_stops(bus_stop_names)
-
+    # response = [{
+    #     'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #     'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    #     'waypoints': [[{
+    #         '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+    #         'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+    #         'max_speed', 'road_type', 'way_id', 'traffic_density'
+    #     }]]
+    # }]
+    response = get_waypoints_between_multiple_bus_stops(
+        bus_stops=bus_stops,
+        bus_stop_names=bus_stop_names
+    )
     for intermediate_response in response:
         starting_bus_stop = intermediate_response.get('starting_bus_stop')
         ending_bus_stop = intermediate_response.get('ending_bus_stop')
@@ -190,7 +233,7 @@ def test_get_waypoints_between_multiple_bus_stops(bus_stop_names):
 
     elapsed_time = time.time() - start_time
     log(module_name='route_generator_test', log_type='INFO',
-        log_message='get_waypoints_between_multiple_bus_stops: finished - elapsed_time = ' +
+        log_message='test_get_waypoints_between_multiple_bus_stops: finished - elapsed_time = ' +
                     str(elapsed_time) + ' sec')
 
 
@@ -199,18 +242,3 @@ if __name__ == '__main__':
                       'Oslogatan', 'Reykjaviksgatan', 'Ekebyhus', 'Sernanders väg', 'Flogsta centrum',
                       'Sernanders väg', 'Ekebyhus', 'Reykjaviksgatan', 'Oslogatan', 'Rickomberga',
                       'Studentstaden', 'Ekonomikum', 'Skolgatan', 'Stadshuset', 'Centralstationen']
-
-    # test_get_route_between_two_bus_stop_names(
-    #     starting_bus_stop_name='Ekebyhus',
-    #     ending_bus_stop_name='Sernanders väg'
-    # )
-
-    # test_get_route_between_multiple_bus_stop_names(bus_stop_names=bus_stop_names)
-
-    # test_get_waypoints_between_two_bus_stops(
-    #     starting_bus_stop_name='Ekebyhus',
-    #     ending_bus_stop_name='Sernanders väg'
-    # )
-
-    # test_get_waypoints_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
-

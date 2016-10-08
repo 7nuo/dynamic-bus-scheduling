@@ -35,8 +35,8 @@ route_generator_request_timeout = 30
 route_generator_edges_updater_timeout = 60
 route_generator_edges_updater_max_operation_timeout = 600
 
-traffic_data_parser_updater_timeout = 100
-traffic_data_parser_updater_max_operation_timeout = 600
+traffic_data_parser_timeout = 100
+traffic_data_parser_max_operation_timeout = 600
 traffic_data_generator_timeout = 100
 traffic_data_generator_max_operation_timeout = 600
 
@@ -68,7 +68,8 @@ timetables_ending_datetime_testing_value = datetime(2016, 9, 16, 0, 0, 0, 00000)
 travel_requests_min_departure_datetime_testing_value = datetime(2016, 9, 15, 0, 0, 0, 00000)
 travel_requests_max_departure_datetime_testing_value = datetime(2016, 9, 16, 0, 0, 0, 00000)
 
-testing_osm_filename = '../resources/osm_files/uppsala.osm'
+# testing_osm_filename = '../resources/osm_files/uppsala.osm'
+testing_osm_filename = '../resources/osm_files/aarhus.osm'
 
 testing_bus_stop_names = [
     'Centralstationen', 'Stadshuset', 'Skolgatan', 'Ekonomikum', 'Studentstaden', 'Rickomberga',

@@ -139,6 +139,21 @@ class Router(object):
         bus_stop = self.get_bus_stop_from_coordinates(longitude=point.longitude, latitude=point.latitude)
         return bus_stop
 
+    def get_bus_stops(self, names):
+        """
+        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+
+        :param names: [string]
+        :return: bus_stops: [bus_stop_document]
+        """
+        bus_stops = []
+
+        for name in names:
+            bus_stop = self.get_bus_stop_from_name(name=name)
+            bus_stops.append(bus_stop)
+
+        return bus_stops
+
     def get_bus_stops_dictionary(self):
         """
         Retrieve a dictionary containing all the documents of the BusStops collection.
@@ -188,12 +203,17 @@ class Router(object):
         points_dictionary = self.connection.get_point_documents_dictionary()
         return points_dictionary
 
-    def get_route_between_two_bus_stops(self, starting_bus_stop, ending_bus_stop):
+    def get_route_between_two_bus_stops(self, starting_bus_stop=None, ending_bus_stop=None,
+                                        starting_bus_stop_name=None, ending_bus_stop_name=None):
         """
         Find a route between two bus_stops.
 
-        :param starting_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
-        :param ending_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+
+        :param starting_bus_stop: bus_stop_document
+        :param ending_bus_stop: bus_stop_document
+        :param starting_bus_stop_name: string
+        :param ending_bus_stop_name: string
         :return response: {
                     'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                     'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -201,6 +221,12 @@ class Router(object):
                               'distances_from_starting_node', 'times_from_starting_node',
                               'distances_from_previous_node', 'times_from_previous_node'}}
         """
+        if starting_bus_stop is None and starting_bus_stop_name is not None:
+            starting_bus_stop = self.get_bus_stop_from_name(name=starting_bus_stop_name)
+
+        if ending_bus_stop is None and ending_bus_stop_name is not None:
+            ending_bus_stop = self.get_bus_stop_from_name(name=ending_bus_stop_name)
+
         route = find_path_between_two_nodes(
             starting_node_osm_id=starting_bus_stop.get('osm_id'),
             ending_node_osm_id=ending_bus_stop.get('osm_id'),
@@ -214,33 +240,14 @@ class Router(object):
         }
         return response
 
-    def get_route_between_two_bus_stop_names(self, starting_bus_stop_name, ending_bus_stop_name):
-        """
-        Find a route between two bus_stops, based on their names.
-
-        :param starting_bus_stop_name: string
-        :param ending_bus_stop_name: string
-        :return response: {
-                    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                    'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                              'distances_from_starting_node', 'times_from_starting_node',
-                              'distances_from_previous_node', 'times_from_previous_node'}}
-        """
-        starting_bus_stop = self.get_bus_stop_from_name(name=starting_bus_stop_name)
-        ending_bus_stop = self.get_bus_stop_from_name(name=ending_bus_stop_name)
-
-        response = self.get_route_between_two_bus_stops(
-            starting_bus_stop=starting_bus_stop,
-            ending_bus_stop=ending_bus_stop
-        )
-        return response
-
-    def get_route_between_multiple_bus_stops(self, bus_stops):
+    def get_route_between_multiple_bus_stops(self, bus_stops=None, bus_stop_names=None):
         """
         Find a route between multiple bus_stop, based on their names.
 
+        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        :param bus_stop_names: string
         :return response: [{
                     'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                     'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -249,6 +256,9 @@ class Router(object):
                               'distances_from_previous_node', 'times_from_previous_node'}}]
         """
         response = []
+
+        if bus_stops is None and bus_stop_names is not None:
+            bus_stops = self.get_bus_stops(names=bus_stop_names)
 
         for i in range(0, len(bus_stops) - 1):
             starting_bus_stop = bus_stops[i]
@@ -262,36 +272,15 @@ class Router(object):
 
         return response
 
-    def get_route_between_multiple_bus_stop_names(self, bus_stop_names):
-        """
-        Find a route between multiple bus_stop, based on their names.
-
-        :param bus_stop_names: [string]
-        :return response: [{
-                    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                    'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                              'distances_from_starting_node', 'times_from_starting_node',
-                              'distances_from_previous_node', 'times_from_previous_node'}}]
-        """
-        response = []
-
-        for i in range(0, len(bus_stop_names) - 1):
-            starting_bus_stop_name = bus_stop_names[i]
-            ending_bus_stop_name = bus_stop_names[i + 1]
-
-            intermediate_route = self.get_route_between_two_bus_stop_names(
-                starting_bus_stop_name=starting_bus_stop_name,
-                ending_bus_stop_name=ending_bus_stop_name
-            )
-            response.append(intermediate_route)
-
-        return response
-
-    def get_waypoints_between_two_bus_stops(self, starting_bus_stop_name, ending_bus_stop_name):
+    def get_waypoints_between_two_bus_stops(self, starting_bus_stop=None, ending_bus_stop=None,
+                                            starting_bus_stop_name=None, ending_bus_stop_name=None):
         """
         Find the waypoints of all possible routes between two bus_stops, based on their names.
 
+        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+
+        :param starting_bus_stop: bus_stop_document
+        :param ending_bus_stop: bus_stop_document
         :param starting_bus_stop_name: string
         :param ending_bus_stop_name: string
         :return response: {
@@ -301,8 +290,11 @@ class Router(object):
                                     'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
                                     'max_speed', 'road_type', 'way_id', 'traffic_density'}]]}
         """
-        starting_bus_stop = self.get_bus_stop_from_name(name=starting_bus_stop_name)
-        ending_bus_stop = self.get_bus_stop_from_name(name=ending_bus_stop_name)
+        if starting_bus_stop is None and starting_bus_stop_name is not None:
+            starting_bus_stop = self.get_bus_stop_from_name(name=starting_bus_stop_name)
+
+        if ending_bus_stop is None and ending_bus_stop_name is not None:
+            ending_bus_stop = self.get_bus_stop_from_name(name=ending_bus_stop_name)
 
         waypoints = find_waypoints_between_two_nodes(
             starting_node_osm_id=starting_bus_stop.get('osm_id'),
@@ -316,11 +308,14 @@ class Router(object):
         }
         return response
 
-    def get_waypoints_between_multiple_bus_stops(self, bus_stop_names):
+    def get_waypoints_between_multiple_bus_stops(self, bus_stops=None, bus_stop_names=None):
         """
         Find the waypoints of all possible routes between multiple bus_stops, based on their names.
 
-        :param bus_stop_names: [string]
+        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+
+        :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        :param bus_stop_names: string
         :return response: [{
                     'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                     'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -330,11 +325,12 @@ class Router(object):
         """
         response = []
 
+        if bus_stops is None and bus_stop_names is not None:
+            bus_stops = self.get_bus_stops(names=bus_stop_names)
+
         for i in range(0, len(bus_stop_names) - 1):
-            starting_bus_stop_name = bus_stop_names[i]
-            starting_bus_stop = self.get_bus_stop_from_name(name=starting_bus_stop_name)
-            ending_bus_stop_name = bus_stop_names[i + 1]
-            ending_bus_stop = self.get_bus_stop_from_name(name=ending_bus_stop_name)
+            starting_bus_stop = bus_stops[i]
+            ending_bus_stop = bus_stops[i + 1]
 
             waypoints = find_waypoints_between_two_nodes(
                 starting_node_osm_id=starting_bus_stop.get('osm_id'),

@@ -166,4 +166,4 @@ class TrafficDataSimulatorTester(object):
 
 
 if __name__ == '__main__':
-    tester = TrafficDataSimulatorTester()
+    traffic_data_simulator_tester = TrafficDataSimulatorTester()
