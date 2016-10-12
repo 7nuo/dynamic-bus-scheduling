@@ -31,6 +31,7 @@ from src.common.variables import route_generator_host, route_generator_port
 
 
 bind = route_generator_host + ':' + route_generator_port
-workers = multiprocessing.cpu_count() * 2 + 1
+# workers = multiprocessing.cpu_count() * 2 + 1
+workers = 1
 worker_class = "gevent"
 backlog = 2048  # Number of requests to keep in the backlog if every worker is busy

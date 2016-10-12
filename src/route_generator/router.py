@@ -125,7 +125,6 @@ class Router(object):
         :type name: string
         :return bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
         """
-        name = name.decode('utf-8')
         bus_stop = self.bus_stops_dictionary.get(name)
         return bus_stop
 
@@ -160,7 +159,7 @@ class Router(object):
 
         :return: bus_stops_dictionary: {name -> {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}}
         """
-        bus_stops_dictionary = self.connection.get_bus_stop_documents_dictionary()
+        bus_stops_dictionary = self.connection.get_bus_stops()
         return bus_stops_dictionary
 
     def get_bus_stops_list(self):
@@ -180,7 +179,7 @@ class Router(object):
                                             'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
                                             'max_speed', 'road_type', 'way_id', 'traffic_density'}]}
         """
-        edges_dictionary = self.connection.get_edge_documents_dictionary()
+        edges_dictionary = self.connection.get_edges()
         return edges_dictionary
 
     def get_edges_list(self):
@@ -200,7 +199,7 @@ class Router(object):
 
         :return points_dictionary: {osm_id -> {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}}
         """
-        points_dictionary = self.connection.get_point_documents_dictionary()
+        points_dictionary = self.connection.get_points()
         return points_dictionary
 
     def get_route_between_two_bus_stops(self, starting_bus_stop=None, ending_bus_stop=None,
@@ -328,7 +327,7 @@ class Router(object):
         if bus_stops is None and bus_stop_names is not None:
             bus_stops = self.get_bus_stops(names=bus_stop_names)
 
-        for i in range(0, len(bus_stop_names) - 1):
+        for i in range(0, len(bus_stops) - 1):
             starting_bus_stop = bus_stops[i]
             ending_bus_stop = bus_stops[i + 1]
 

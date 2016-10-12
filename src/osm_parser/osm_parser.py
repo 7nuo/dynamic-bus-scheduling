@@ -44,52 +44,52 @@ class OsmParser(object):
         :type osm_filename: string
         """
         self.osm_filename = osm_filename
-        self.points = {}
-        self.nodes = {}
-        self.ways = {}
-        self.bus_stops = {}
-        self.edges = {}
-        self.address_book = {}
-        self.connection = MongodbDatabaseConnection(host=mongodb_host, port=mongodb_port)
+        self.address_documents_dictionary = {}
+        self.bus_stop_documents_dictionary = {}
+        self.edge_documents_dictionary = {}
+        self.node_documents_dictionary = {}
+        self.point_documents_dictionary = {}
+        self.way_documents_dictionary = {}
+        self.mongodb_database_connection = MongodbDatabaseConnection(host=mongodb_host, port=mongodb_port)
         log(module_name='osm_parser', log_type='DEBUG',
             log_message='mongodb_database_connection: established')
 
     def add_address(self, name, node_id, point):
         """
-        Add an address to the address_book dictionary.
+        Add an address to the address_documents_dictionary.
 
         :type name: string
-        :type node_id: integer
+        :type node_id: int
         :type point: Point
         """
         if name is None or name == '' or node_id is None or point is None:
             return
 
-        if name not in self.address_book:
-            self.address_book[name] = Address(name, node_id, point)
+        if name not in self.address_documents_dictionary:
+            self.address_documents_dictionary[name] = Address(name, node_id, point)
         else:
-            self.address_book[name].add_node(node_id=node_id, point=point)
+            self.address_documents_dictionary[name].add_node(node_id=node_id, point=point)
 
     def add_bus_stop(self, osm_id, name, point):
         """
         Add a bus_stop to the bus_stop_names dictionary.
 
-        :type osm_id: integer
+        :type osm_id: int
         :type name: string
         :type point: {'longitude', 'latitude'}
         """
         bus_stop_document = {'osm_id': osm_id, 'name': name, 'point': point}
-        self.bus_stops[osm_id] = bus_stop_document
+        self.bus_stop_documents_dictionary[osm_id] = bus_stop_document
 
     def add_edge(self, starting_node, ending_node, max_speed, road_type, way_id, traffic_density=None):
         """
-        Add an edge to the edges dictionary.
+        Add an edge to the edge_documents_dictionary.
 
         :param starting_node: {'osm_id', 'point': {'longitude', 'latitude'}}
         :param ending_node: {'osm_id', 'point': {'longitude', 'latitude'}}
-        :type max_speed: float or integer
+        :type max_speed: float or int
         :type road_type: string
-        :param way_id: osm_id: integer
+        :param way_id: osm_id: int
         :param traffic_density: A value between 0 and 1 indicating the density of traffic: float
         """
         if traffic_density is None:
@@ -99,42 +99,42 @@ class OsmParser(object):
         edge_document = {'starting_node': starting_node, 'ending_node': ending_node, 'max_speed': max_speed,
                          'road_type': road_type, 'way_id': way_id, 'traffic_density': traffic_density}
 
-        if starting_node_osm_id in self.edges:
-            self.edges[starting_node_osm_id].append(edge_document)
+        if starting_node_osm_id in self.edge_documents_dictionary:
+            self.edge_documents_dictionary[starting_node_osm_id].append(edge_document)
         else:
-            self.edges[starting_node_osm_id] = [edge_document]
+            self.edge_documents_dictionary[starting_node_osm_id] = [edge_document]
 
     def add_node(self, osm_id, tags, point):
         """
-        Add a node to the nodes dictionary.
+        Add a node to the node_documents_dictionary.
 
-        :type osm_id: integer
+        :type osm_id: int
         :type tags: {}
         :type point: {'longitude', 'latitude'}
         """
         node_document = {'osm_id': osm_id, 'tags': tags, 'point': point}
-        self.nodes[osm_id] = node_document
+        self.node_documents_dictionary[osm_id] = node_document
 
     def add_point(self, osm_id, point):
         """
-        Add a point to the points dictionary.
+        Add a point to the point_documents_dictionary.
 
-        :type osm_id: integer
+        :type osm_id: int
         :type point: {'longitude': longitude, 'latitude': latitude}
         """
         point_document = {'osm_id': osm_id, 'point': point}
-        self.points[osm_id] = point_document
+        self.point_documents_dictionary[osm_id] = point_document
 
     def add_way(self, osm_id, tags, references):
         """
-        Add a way to the ways dictionary.
+        Add a way to the way_documents_dictionary.
 
-        :type osm_id: integer
+        :type osm_id: int
         :type tags: {}
         :param references: [osm_id]
         """
         way_document = {'osm_id': osm_id, 'tags': tags, 'references': references}
-        self.ways[osm_id] = way_document
+        self.way_documents_dictionary[osm_id] = way_document
 
     @staticmethod
     def address_range(number):
@@ -182,7 +182,7 @@ class OsmParser(object):
     def get_list_of_addresses(self):
         list_of_addresses = []
 
-        for name, address in self.address_book.iteritems():
+        for name, address in self.address_documents_dictionary.iteritems():
             for node_id, point in address.nodes:
                 document = {'name': name, 'node_id': node_id,
                             'point': {'longitude': point.longitude, 'latitude': point.latitude}}
@@ -196,12 +196,12 @@ class OsmParser(object):
 
         :return: [{'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         """
-        list_of_bus_stops = self.bus_stops.values()
+        list_of_bus_stops = self.bus_stop_documents_dictionary.values()
         return list_of_bus_stops
 
     def get_list_of_edges(self):
         """
-        Retrieve a list containing all the edges documents.
+        Retrieve a list containing all the edge_documents_dictionary documents.
 
         :return: [{'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
                    'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
@@ -209,7 +209,7 @@ class OsmParser(object):
         """
         list_of_edges = []
 
-        for starting_node_edges in self.edges.values():
+        for starting_node_edges in self.edge_documents_dictionary.values():
             for edge in starting_node_edges:
                 list_of_edges.append(edge)
 
@@ -221,7 +221,7 @@ class OsmParser(object):
 
         :return: [{'osm_id', 'tags', 'point': {'longitude', 'latitude'}}]
         """
-        list_of_nodes = self.nodes.values()
+        list_of_nodes = self.node_documents_dictionary.values()
         return list_of_nodes
 
     def get_list_of_points(self):
@@ -230,7 +230,7 @@ class OsmParser(object):
 
         :return: [{'osm_id', 'point': {'longitude', 'latitude'}}]
         """
-        list_of_points = self.points.values()
+        list_of_points = self.point_documents_dictionary.values()
         return list_of_points
 
     def get_list_of_ways(self):
@@ -239,19 +239,19 @@ class OsmParser(object):
 
         :return: [{'osm_id', 'tags', 'references'}]
         """
-        list_of_ways = self.ways.values()
+        list_of_ways = self.way_documents_dictionary.values()
         return list_of_ways
 
     def get_point_from_osm_id(self, osm_id):
         """
         Retrieve the point which corresponds to a specific osm_id.
 
-        :type osm_id: integer
+        :type osm_id: int
         :return: Point
         """
         point = None
         # {'osm_id', 'point': {'longitude', 'latitude'}}
-        point_document = self.points.get(osm_id)
+        point_document = self.point_documents_dictionary.get(osm_id)
 
         if point_document is not None:
             point_entry = point_document.get('point')
@@ -263,12 +263,12 @@ class OsmParser(object):
         """
         Retrieve the {'longitude', 'latitude'} values which correspond to a specific osm_id.
 
-        :type osm_id: integer
+        :type osm_id: int
         :return: {'longitude', 'latitude'}
         """
         point_coordinates = None
         # {'osm_id', 'point': {'longitude', 'latitude'}}
-        point_document = self.points.get(osm_id)
+        point_document = self.point_documents_dictionary.get(osm_id)
 
         if point_document is not None:
             point_coordinates = point_document.get('point')
@@ -291,9 +291,9 @@ class OsmParser(object):
     def parse_address(self, osm_id, tags, point):
         """
         Parse the name, the street, and the house numbers which are related to an address, and add them to the
-        address_book dictionary along with their corresponding osm_id val and points.
+        address_documents_dictionary along with their corresponding osm_id and point.
 
-        :type osm_id: integer
+        :type osm_id: int
         :param tags: {}
         :param point: Point
         """
@@ -306,18 +306,23 @@ class OsmParser(object):
 
         if street != '' and house_number != '':
             for num in self.address_range(house_number):
-                address = street + ' ' + str(num)
+                # num = str(num)
+                try:
+                    num = str(num)
+                except UnicodeEncodeError:
+                    num = ''
+                address = street + ' ' + num
                 self.add_address(name=address, node_id=osm_id, point=point)
 
     def parse_edges(self, osm_id, tags, references):
         """
-        Parse the edges which connect the nodes, bus_stop_names, and points of the map.
+        Parse the edges which connect the nodes, bus_stops, and points of the map.
 
         :param osm_id: Corresponds to the osm_id of the way.
-        :type osm_id: integer
+        :type osm_id: int
         :type tags: {}
         :param references: [osm_id] The list of osm_id objects which are connected to each other.
-        :type references: [integer]
+        :type references: [int]
         """
         oneway = tags.get('oneway', '') in ('yes', 'true', '1')
         max_speed = tags.get('maxspeed', standard_speed)
@@ -353,11 +358,17 @@ class OsmParser(object):
         """
         for node in nodes:
             osm_id, tags, (longitude, latitude) = node
-            point = {'longitude': longitude, 'latitude': latitude}
 
+            point = {'longitude': longitude, 'latitude': latitude}
             self.add_node(osm_id=osm_id, tags=tags, point=point)
 
-            if all(term in tags for term in ['bus', 'name']):
+            bus = tags.get('bus')
+            highway = tags.get('highway')
+            name = tags.get('name')
+            public_transport = tags.get('public_transport')
+
+            if (bus == 'yes' or highway == 'bus_stop' or public_transport == 'platform' or
+                        public_transport == 'stop_area') and name:
                 self.add_bus_stop(osm_id=osm_id, name=tags.get('name'), point=point)
 
             point = Point(longitude=longitude, latitude=latitude)
@@ -365,10 +376,10 @@ class OsmParser(object):
 
     def parse_points(self, coordinates):
         """
-        Parse the list of points and populate the corresponding dictionary.
+        Parse the list of point_documents_dictionary and populate the corresponding dictionary.
 
         :param coordinates: [(osm_id, longitude, latitude)]
-        :type coordinates: [(integer, float, float)]
+        :type coordinates: [(int, float, float)]
         """
         for osm_id, longitude, latitude in coordinates:
             point = {'longitude': longitude, 'latitude': latitude}
@@ -376,7 +387,7 @@ class OsmParser(object):
 
     def parse_ways(self, ways):
         """
-        Parse the list of ways and populate the corresponding dictionary
+        Parse the list of way_documents_dictionary and populate the corresponding dictionary
         with the ones that can be accessed by bus vehicles.
 
         :type ways: [()]
@@ -394,40 +405,64 @@ class OsmParser(object):
                     point = self.get_point_from_osm_id(osm_id=reference)
                     self.add_address(name=name, node_id=reference, point=point)
 
-    def populate_address_book(self):
-        self.connection.insert_address_documents(address_documents=self.get_list_of_addresses())
+    def populate_address_documents_collection(self):
+        address_documents = self.get_list_of_addresses()
+        number_of_address_documents = len(address_documents)
+        self.mongodb_database_connection.insert_address_documents(address_documents=address_documents)
+        self.address_documents_dictionary = {}
         log(module_name='osm_parser_tester', log_type='DEBUG',
-            log_message='populate_address_book collection (mongodb_database) ok')
+            log_message='populate_address_documents_collection (mongodb_database) ok - '
+                        'Number of new address_documents: ' + str(number_of_address_documents))
 
-    def populate_edges(self):
-        self.connection.insert_edge_documents(edge_documents=self.get_list_of_edges())
+    def populate_bus_stop_documents_collection(self):
+        bus_stop_documents = self.get_list_of_bus_stops()
+        number_of_bus_stop_documents = len(bus_stop_documents)
+        self.mongodb_database_connection.insert_bus_stop_documents(bus_stop_documents=bus_stop_documents)
+        self.bus_stop_documents_dictionary = {}
         log(module_name='osm_parser_tester', log_type='DEBUG',
-            log_message='populate_edges collection (mongodb_database) ok')
+            log_message='populate_bus_stop_documents_collection (mongodb_database) ok - '
+                        'Number of new bus_stop_documents: ' + str(number_of_bus_stop_documents))
 
-    def populate_nodes(self):
-        self.connection.insert_node_documents(node_documents=self.get_list_of_nodes())
+    def populate_edge_documents_collection(self):
+        edge_documents = self.get_list_of_edges()
+        number_of_edge_documents = len(edge_documents)
+        self.mongodb_database_connection.insert_edge_documents(edge_documents=edge_documents)
+        self.edge_documents_dictionary = {}
         log(module_name='osm_parser_tester', log_type='DEBUG',
-            log_message='populate_nodes collection (mongodb_database) ok')
+            log_message='populate_edge_documents_collection (mongodb_database) ok - '
+                        'Number of new edge_documents: ' + str(number_of_edge_documents))
 
-    def populate_points(self):
-        self.connection.insert_point_documents(point_documents=self.get_list_of_points())
+    def populate_node_documents_collection(self):
+        node_documents = self.get_list_of_nodes()
+        number_of_node_documents = len(node_documents)
+        self.mongodb_database_connection.insert_node_documents(node_documents=node_documents)
+        self.node_documents_dictionary = {}
         log(module_name='osm_parser_tester', log_type='DEBUG',
-            log_message='populate_points collection (mongodb_database) ok')
+            log_message='populate_node_documents_collection (mongodb_database) ok - '
+                        'Number of new node_documents: ' + str(number_of_node_documents))
 
-    def populate_bus_stops(self):
-        self.connection.insert_bus_stop_documents(bus_stop_documents=self.get_list_of_bus_stops())
+    def populate_point_documents_collection(self):
+        point_documents = self.get_list_of_points()
+        number_of_point_documents = len(point_documents)
+        self.mongodb_database_connection.insert_point_documents(point_documents=point_documents)
+        self.point_documents_dictionary = {}
         log(module_name='osm_parser_tester', log_type='DEBUG',
-            log_message='populate_bus_stops collection (mongodb_database) ok')
+            log_message='populate_point_documents_collection (mongodb_database) ok - '
+                        'Number of new point_documents: ' + str(number_of_point_documents))
 
-    def populate_ways(self):
-        self.connection.insert_way_documents(way_documents=self.get_list_of_ways())
+    def populate_way_documents_collection(self):
+        way_documents = self.get_list_of_ways()
+        number_of_way_documents = len(way_documents)
+        self.mongodb_database_connection.insert_way_documents(way_documents=way_documents)
+        self.way_documents_dictionary = {}
         log(module_name='osm_parser_tester', log_type='DEBUG',
-            log_message='populate_ways collection (mongodb_database) ok')
+            log_message='populate_way_documents_collection (mongodb_database) ok - '
+                        'Number of new way_documents: ' + str(number_of_way_documents))
 
     def populate_all_collections(self):
-        self.populate_points()
-        self.populate_nodes()
-        self.populate_ways()
-        self.populate_bus_stops()
-        self.populate_edges()
-        self.populate_address_book()
+        self.populate_address_documents_collection()
+        self.populate_bus_stop_documents_collection()
+        self.populate_edge_documents_collection()
+        self.populate_node_documents_collection()
+        self.populate_point_documents_collection()
+        self.populate_way_documents_collection()

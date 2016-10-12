@@ -92,7 +92,7 @@ class MultiplePathsSet(object):
 
 def find_waypoints_between_two_nodes(starting_node_osm_id, ending_node_osm_id, edges_dictionary):
     """
-    Find all the possible list of edges which connect two nodes.
+    Find all the possible lists of edges which connect two nodes.
 
     :param starting_node_osm_id: integer
     :param ending_node_osm_id: integer

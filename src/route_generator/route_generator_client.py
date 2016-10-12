@@ -55,7 +55,8 @@ def get_route_between_two_bus_stops(starting_bus_stop=None, ending_bus_stop=None
                         'distances_from_previous_node', 'times_from_previous_node'}}
     """
     url = 'http://' + route_generator_host + ':' + route_generator_port + '/get_route_between_two_bus_stops'
-    headers = {'content-type': 'application/x-www-form-urlencoded'}
+    # headers = {'content-type': 'application/x-www-form-urlencoded'}
+    headers = {'content-type': 'application/json'}
     data = {
         'starting_bus_stop': starting_bus_stop,
         'ending_bus_stop': ending_bus_stop,
@@ -81,6 +82,7 @@ def get_route_between_multiple_bus_stops(bus_stops=None, bus_stop_names=None):
                          'distances_from_previous_node', 'times_from_previous_node'}}]
     """
     url = 'http://' + route_generator_host + ':' + route_generator_port + '/get_route_between_multiple_bus_stops'
+    # headers = {'content-type': 'application/x-www-form-urlencoded'}
     headers = {'content-type': 'application/json'}
     data = {
         'bus_stops': bus_stops,
@@ -108,14 +110,16 @@ def get_waypoints_between_two_bus_stops(starting_bus_stop=None, ending_bus_stop=
                               'max_speed', 'road_type', 'way_id', 'traffic_density'}]]}
     """
     url = 'http://' + route_generator_host + ':' + route_generator_port + '/get_waypoints_between_two_bus_stops'
-    headers = {'content-type': 'application/x-www-form-urlencoded'}
+    # headers = {'content-type': 'application/x-www-form-urlencoded'}
+    headers = {'content-type': 'application/json'}
     data = {
         'starting_bus_stop': starting_bus_stop,
         'ending_bus_stop': ending_bus_stop,
         'starting_bus_stop_name': starting_bus_stop_name,
         'ending_bus_stop_name': ending_bus_stop_name
     }
-    request = requests.post(url, data=data, headers=headers, timeout=route_generator_request_timeout)
+    json_data = json.dumps(data, cls=JSONResponseEncoder)
+    request = requests.post(url, data=json_data, headers=headers, timeout=route_generator_request_timeout)
     response = json.loads(request.text)
     return response
 
@@ -133,11 +137,13 @@ def get_waypoints_between_multiple_bus_stops(bus_stops=None, bus_stop_names=None
                                'max_speed', 'road_type', 'way_id', 'traffic_density'}]]}]
     """
     url = 'http://' + route_generator_host + ':' + route_generator_port + '/get_waypoints_between_multiple_bus_stops'
-    headers = {'content-type': 'application/x-www-form-urlencoded'}
+    # headers = {'content-type': 'application/x-www-form-urlencoded'}
+    headers = {'content-type': 'application/json'}
     data = {
         'bus_stops': bus_stops,
         'bus_stop_names': bus_stop_names
     }
-    request = requests.post(url, data=data, headers=headers, timeout=route_generator_request_timeout)
+    json_data = json.dumps(data, cls=JSONResponseEncoder)
+    request = requests.post(url, data=json_data, headers=headers, timeout=route_generator_request_timeout)
     response = json.loads(request.text)
     return response

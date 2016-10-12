@@ -25,6 +25,7 @@ SOFTWARE.
 """
 import time
 from src.common.logger import log
+from src.common.variables import testing_bus_stop_names
 from src.route_generator.route_generator_client import get_route_between_two_bus_stops, \
     get_route_between_multiple_bus_stops, get_waypoints_between_two_bus_stops, get_waypoints_between_multiple_bus_stops
 
@@ -238,7 +239,42 @@ def test_get_waypoints_between_multiple_bus_stops(bus_stops=None, bus_stop_names
 
 
 if __name__ == '__main__':
-    bus_stop_names = ['Centralstationen', 'Stadshuset', 'Skolgatan', 'Ekonomikum', 'Studentstaden', 'Rickomberga',
-                      'Oslogatan', 'Reykjaviksgatan', 'Ekebyhus', 'Sernanders väg', 'Flogsta centrum',
-                      'Sernanders väg', 'Ekebyhus', 'Reykjaviksgatan', 'Oslogatan', 'Rickomberga',
-                      'Studentstaden', 'Ekonomikum', 'Skolgatan', 'Stadshuset', 'Centralstationen']
+    selection = ''
+
+    while True:
+        selection = raw_input(
+            '\n0.  exit'
+            '\n1.  test_get_route_between_two_bus_stops'
+            '\n2.  test_get_route_between_multiple_bus_stops'
+            '\n3.  test_get_waypoints_between_two_bus_stops'
+            '\n4.  test_get_waypoints_between_multiple_bus_stops'
+            '\nSelection: '
+        )
+
+        if selection == '0':
+            break
+
+        elif selection == '1':
+            test_get_route_between_two_bus_stops(
+                starting_bus_stop_name=testing_bus_stop_names[0],
+                ending_bus_stop_name=testing_bus_stop_names[1]
+            )
+
+        elif selection == '2':
+            test_get_route_between_multiple_bus_stops(
+                bus_stop_names=testing_bus_stop_names
+            )
+
+        elif selection == '3':
+            test_get_waypoints_between_two_bus_stops(
+                starting_bus_stop_name=testing_bus_stop_names[0],
+                ending_bus_stop_name=testing_bus_stop_names[1]
+            )
+
+        elif selection == '4':
+            test_get_waypoints_between_multiple_bus_stops(
+                bus_stop_names=testing_bus_stop_names
+            )
+
+        else:
+            print 'Invalid input'

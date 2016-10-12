@@ -68,8 +68,9 @@ timetables_ending_datetime_testing_value = datetime(2016, 9, 16, 0, 0, 0, 00000)
 travel_requests_min_departure_datetime_testing_value = datetime(2016, 9, 15, 0, 0, 0, 00000)
 travel_requests_max_departure_datetime_testing_value = datetime(2016, 9, 16, 0, 0, 0, 00000)
 
-# testing_osm_filename = '../resources/osm_files/uppsala.osm'
-testing_osm_filename = '../resources/osm_files/aarhus.osm'
+testing_osm_filename = '../resources/osm_files/uppsala.osm'
+# testing_osm_filename = '../resources/osm_files/aarhus.osm'
+# testing_osm_filename = '../resources/osm_files/stockholm.osm'
 
 testing_bus_stop_names = [
     'Centralstationen', 'Stadshuset', 'Skolgatan', 'Ekonomikum', 'Studentstaden', 'Rickomberga',

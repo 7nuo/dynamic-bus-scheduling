@@ -1387,23 +1387,23 @@ class MongodbDatabaseConnection(object):
         bus_line_documents_cursor = self.bus_lines_collection.find({})
         return bus_line_documents_cursor
 
-    def get_bus_line_documents_dictionary(self):
+    def get_bus_lines(self):
         """
         Retrieve a dictionary containing all the bus_line_documents.
 
         bus_line_document: {
             '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         }
-        :return: bus_line_documents_dictionary: {line_id -> bus_line_document}
+        :return: bus_lines: {line_id -> bus_line_document}
         """
-        bus_line_documents_dictionary = {}
+        bus_lines = {}
         bus_line_documents_cursor = self.get_bus_line_documents_cursor()
 
         for bus_line_document in bus_line_documents_cursor:
             line_id = bus_line_document.get('line_id')
-            bus_line_documents_dictionary[line_id] = bus_line_document
+            bus_lines[line_id] = bus_line_document
 
-        return bus_line_documents_dictionary
+        return bus_lines
 
     def get_bus_line_documents_list(self):
         """
@@ -1429,24 +1429,24 @@ class MongodbDatabaseConnection(object):
         bus_stop_documents_cursor = self.bus_stops_collection.find({})
         return bus_stop_documents_cursor
 
-    def get_bus_stop_documents_dictionary(self):
+    def get_bus_stops(self):
         """
         Retrieve a dictionary containing all the bus_stop_documents.
 
         bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
 
-        :return: bus_stop_documents_dictionary: {name -> bus_stop_document}
+        :return: bus_stops: {name -> bus_stop_document}
         """
-        bus_stop_documents_dictionary = {}
+        bus_stops = {}
         bus_stop_documents_cursor = self.get_bus_stop_documents_cursor()
 
         for bus_stop_document in bus_stop_documents_cursor:
             name = bus_stop_document.get('name')
 
-            if name not in bus_stop_documents_dictionary:
-                bus_stop_documents_dictionary[name] = bus_stop_document
+            if name not in bus_stops:
+                bus_stops[name] = bus_stop_document
 
-        return bus_stop_documents_dictionary
+        return bus_stops
 
     def get_bus_stop_documents_list(self):
         """
@@ -1474,7 +1474,7 @@ class MongodbDatabaseConnection(object):
         edge_documents_cursor = self.edges_collection.find({})
         return edge_documents_cursor
 
-    def get_edge_documents_dictionary(self):
+    def get_edges(self):
         """
         Retrieve a dictionary containing all the edge_documents.
 
@@ -1483,20 +1483,20 @@ class MongodbDatabaseConnection(object):
             'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
             'max_speed', 'road_type', 'way_id', 'traffic_density'
         }
-        :return: edge_documents_dictionary: {starting_node_osm_id -> [edge_document]}
+        :return: edges: {starting_node_osm_id -> [edge_document]}
         """
-        edge_documents_dictionary = {}
+        edges = {}
         edge_documents_cursor = self.get_edge_documents_cursor()
 
         for edge_document in edge_documents_cursor:
             starting_node_osm_id = edge_document.get('starting_node').get('osm_id')
 
-            if starting_node_osm_id in edge_documents_dictionary:
-                edge_documents_dictionary[starting_node_osm_id].append(edge_document)
+            if starting_node_osm_id in edges:
+                edges[starting_node_osm_id].append(edge_document)
             else:
-                edge_documents_dictionary[starting_node_osm_id] = [edge_document]
+                edges[starting_node_osm_id] = [edge_document]
 
-        return edge_documents_dictionary
+        return edges
 
     def get_edge_documents_list(self):
         """
@@ -1698,22 +1698,22 @@ class MongodbDatabaseConnection(object):
         point_documents_cursor = self.points_collection.find({})
         return point_documents_cursor
 
-    def get_point_documents_dictionary(self):
+    def get_points(self):
         """
         Retrieve a dictionary containing all the point_documents.
 
         point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
 
-        :return points_documents_dictionary: {osm_id -> point_document}
+        :return pointss: {osm_id -> point_document}
         """
-        points_documents_dictionary = {}
+        pointss = {}
         point_documents_cursor = self.get_point_documents_cursor()
 
         for point_document in point_documents_cursor:
             osm_id = point_document.get('osm_id')
-            points_documents_dictionary[osm_id] = point_document
+            pointss[osm_id] = point_document
 
-        return points_documents_dictionary
+        return pointss
 
     def get_point_documents_list(self):
         """
@@ -1910,8 +1910,12 @@ class MongodbDatabaseConnection(object):
         :param address_documents: [address_document]
         :return: new_object_ids: [ObjectId]
         """
-        result = self.address_book_collection.insert_many(address_documents)
-        new_object_ids = result.inserted_ids
+        new_object_ids = []
+
+        if address_documents:
+            result = self.address_book_collection.insert_many(address_documents)
+            new_object_ids = result.inserted_ids
+
         return new_object_ids
 
     def insert_bus_line_document(self, bus_line_document=None, line_id=None, bus_stops=None):
@@ -1993,8 +1997,12 @@ class MongodbDatabaseConnection(object):
         :param bus_stop_documents: [bus_stop_document]
         :return: new_object_ids: [ObjectId]
         """
-        result = self.bus_stops_collection.insert_many(bus_stop_documents)
-        new_object_ids = result.inserted_ids
+        new_object_ids = []
+
+        if bus_stop_documents:
+            result = self.bus_stops_collection.insert_many(bus_stop_documents)
+            new_object_ids = result.inserted_ids
+
         return new_object_ids
 
     def insert_bus_stop_waypoints_document(self, bus_stop_waypoints_document=None, starting_bus_stop=None,
@@ -2077,8 +2085,12 @@ class MongodbDatabaseConnection(object):
         :param edge_documents: [edge_document]
         :return: new_object_ids: [ObjectId]
         """
-        result = self.edges_collection.insert_many(edge_documents)
-        new_object_ids = result.inserted_ids
+        new_object_ids = []
+
+        if edge_documents:
+            result = self.edges_collection.insert_many(edge_documents)
+            new_object_ids = result.inserted_ids
+
         return new_object_ids
 
     def insert_node_document(self, node_document=None, osm_id=None, tags=None, point=None):
@@ -2112,8 +2124,12 @@ class MongodbDatabaseConnection(object):
         :param node_documents: [node_document]
         :return: new_object_ids: [ObjectId]
         """
-        result = self.nodes_collection.insert_many(node_documents)
-        new_object_ids = result.inserted_ids
+        new_object_ids = []
+
+        if node_documents:
+            result = self.nodes_collection.insert_many(node_documents)
+            new_object_ids = result.inserted_ids
+
         return new_object_ids
 
     def insert_point_document(self, point_document=None, osm_id=None, point=None):
@@ -2146,8 +2162,12 @@ class MongodbDatabaseConnection(object):
         :param point_documents: [point_document]
         :return: new_object_ids: [ObjectId]
         """
-        result = self.points_collection.insert_many(point_documents)
-        new_object_ids = result.inserted_ids
+        new_object_ids = []
+
+        if point_documents:
+            result = self.points_collection.insert_many(point_documents)
+            new_object_ids = result.inserted_ids
+
         return new_object_ids
 
     def insert_timetable_document(self, timetable):
@@ -2307,8 +2327,12 @@ class MongodbDatabaseConnection(object):
         :param travel_request_documents: [travel_request_document]
         :return: new_object_ids: [ObjectId]
         """
-        result = self.travel_requests_collection.insert_many(travel_request_documents)
-        new_object_ids = result.inserted_ids
+        new_object_ids = []
+
+        if travel_request_documents:
+            result = self.travel_requests_collection.insert_many(travel_request_documents)
+            new_object_ids = result.inserted_ids
+
         return new_object_ids
 
     def insert_way_document(self, way_document=None, osm_id=None, tags=None, references=None):
@@ -2339,8 +2363,12 @@ class MongodbDatabaseConnection(object):
         :param way_documents: [way_documents]
         :return: new_object_ids: [ObjectId]
         """
-        result = self.ways_collection.insert_many(way_documents)
-        new_object_ids = result.inserted_ids
+        new_object_ids = []
+
+        if way_documents:
+            result = self.ways_collection.insert_many(way_documents)
+            new_object_ids = result.inserted_ids
+
         return new_object_ids
 
     def print_address_document(self, object_id=None, name=None, node_id=None, longitude=None, latitude=None):

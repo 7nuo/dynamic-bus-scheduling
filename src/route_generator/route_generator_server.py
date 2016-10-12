@@ -54,6 +54,9 @@ def application(env, start_response):
             # form = cgi.FieldStorage(fp=env['wsgi.input'], environ=data_env)
             # starting_bus_stop = form.getvalue('starting_bus_stop')
             # ending_bus_stop = form.getvalue('ending_bus_stop')
+            # starting_bus_stop_name = form.getvalue('starting_bus_stop_name')
+            # ending_bus_stop_name = form.getvalue('ending_bus_stop_name')
+
             request_body_size = int(env.get('CONTENT_LENGTH', 0))
             request_body = env['wsgi.input'].read(request_body_size)
             json_request_body = json.loads(request_body)
@@ -76,10 +79,14 @@ def application(env, start_response):
         elif path_info == '/get_route_between_multiple_bus_stops':
             # form = cgi.FieldStorage(fp=env['wsgi.input'], environ=data_env)
             # bus_stops = form.getvalue('bus_stops')
+            # bus_stop_names = form.getvalue('bus_stop_names')
+
             request_body_size = int(env.get('CONTENT_LENGTH', 0))
             request_body = env['wsgi.input'].read(request_body_size)
-            bus_stops = json.loads(request_body).get('bus_stops')
-            bus_stop_names = json.loads(request_body).get('bus_stop_names')
+            json_request_body = json.loads(request_body)
+
+            bus_stops = json_request_body.get('bus_stops')
+            bus_stop_names = json_request_body.get('bus_stop_names')
 
             result = router.get_route_between_multiple_bus_stops(
                 bus_stops=bus_stops,
@@ -90,12 +97,21 @@ def application(env, start_response):
             response = json.dumps(result, cls=JSONResponseEncoder)
 
         elif path_info == '/get_waypoints_between_two_bus_stops':
-            form = cgi.FieldStorage(fp=env['wsgi.input'], environ=data_env)
+            # form = cgi.FieldStorage(fp=env['wsgi.input'], environ=data_env)
+            # starting_bus_stop = form.getvalue('starting_bus_stop')
+            # ending_bus_stop = form.getvalue('ending_bus_stop')
+            # starting_bus_stop_name = form.getvalue('starting_bus_stop_name')
+            # ending_bus_stop_name = form.getvalue('ending_bus_stop_name')
 
-            starting_bus_stop = form.getvalue('starting_bus_stop')
-            ending_bus_stop = form.getvalue('ending_bus_stop')
-            starting_bus_stop_name = form.getvalue('starting_bus_stop_name')
-            ending_bus_stop_name = form.getvalue('ending_bus_stop_name')
+            request_body_size = int(env.get('CONTENT_LENGTH', 0))
+            request_body = env['wsgi.input'].read(request_body_size)
+            json_request_body = json.loads(request_body)
+
+            starting_bus_stop = json_request_body.get('starting_bus_stop')
+            ending_bus_stop = json_request_body.get('ending_bus_stop')
+            starting_bus_stop_name = json_request_body.get('starting_bus_stop_name')
+            ending_bus_stop_name = json_request_body.get('ending_bus_stop_name')
+
             result = router.get_waypoints_between_two_bus_stops(
                 starting_bus_stop=starting_bus_stop,
                 ending_bus_stop=ending_bus_stop,
@@ -107,10 +123,17 @@ def application(env, start_response):
             response = json.dumps(result, cls=JSONResponseEncoder)
 
         elif path_info == '/get_waypoints_between_multiple_bus_stops':
-            form = cgi.FieldStorage(fp=env['wsgi.input'], environ=data_env)
+            # form = cgi.FieldStorage(fp=env['wsgi.input'], environ=data_env)
+            # bus_stops = form.getvalue('bus_stops')
+            # bus_stop_names = form.getvalue('bus_stop_names')
 
-            bus_stops = form.getvalue('bus_stops')
-            bus_stop_names = form.getvalue('bus_stop_names')
+            request_body_size = int(env.get('CONTENT_LENGTH', 0))
+            request_body = env['wsgi.input'].read(request_body_size)
+            json_request_body = json.loads(request_body)
+
+            bus_stops = json_request_body.get('bus_stops')
+            bus_stop_names = json_request_body.get('bus_stop_names')
+
             result = router.get_waypoints_between_multiple_bus_stops(
                 bus_stops=bus_stops,
                 bus_stop_names=bus_stop_names
