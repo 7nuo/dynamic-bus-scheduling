@@ -252,7 +252,9 @@ def adjust_departure_datetimes_of_timetable(timetable):
     timetable_entries = timetable.get('timetable_entries')
     total_times = [timetable_entry.get('total_time') for timetable_entry in timetable_entries]
 
-    ideal_departure_datetimes_of_travel_requests = [[timetable_entry.get('departure_datetime')] for timetable_entry in timetable_entries]
+    ideal_departure_datetimes_of_travel_requests = [
+        [timetable_entry.get('departure_datetime')] for timetable_entry in timetable_entries
+    ]
 
     for travel_request in travel_requests:
         ideal_departure_datetimes_of_travel_request = estimate_ideal_departure_datetimes_of_travel_request(
@@ -2035,8 +2037,9 @@ def handle_travel_requests_of_timetables_with_waiting_time_above_threshold(timet
     # calculate_number_of_passengers_of_timetables(timetables=timetables)
 
 
-def print_timetable(timetable):
+def print_timetable(timetable, timetable_entries_control=False, travel_requests_control=False):
     """
+    Print a timetable_document.
 
     timetable_document: {
         '_id', 'line_id',
@@ -2053,6 +2056,8 @@ def print_timetable(timetable):
             'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
     }
     :param timetable: timetable_document
+    :param timetable_entries_control: bool
+    :param travel_requests_control: bool
     :return: None
     """
     timetable_entries = timetable.get('timetable_entries')
@@ -2064,33 +2069,37 @@ def print_timetable(timetable):
     print '\n-- Printing Timetable--'
     print 'starting_datetime:', starting_datetime, \
         '- ending_datetime:', ending_datetime, \
-        '- average_waiting_time:', average_waiting_time, \
-        '- travel_requests:', len(travel_requests)
+        '- number_of_travel_requests:', len(travel_requests), \
+        '- average_waiting_time:', average_waiting_time
 
-    # print '- Timetable Entries:'
-    #
-    # for timetable_entry in timetable_entries:
-    #     print 'starting_bus_stop:', timetable_entry.get('starting_bus_stop').get('name'), \
-    #     '- ending_bus_stop:', timetable_entry.get('ending_bus_stop').get('name'), \
-    #     '- departure_datetime:', timetable_entry.get('departure_datetime'), \
-    #     '- arrival_datetime:', timetable_entry.get('arrival_datetime'), \
-    #     '- total_time:', timetable_entry.get('total_time'), \
-    #     '- number_of_onboarding_passengers:', timetable_entry.get('number_of_onboarding_passengers'), \
-    #     '- number_of_deboarding_passengers:', timetable_entry.get('number_of_deboarding_passengers'), \
-    #     '- number_of_current_passengers:', timetable_entry.get('number_of_current_passengers')
-    #
-    # print '- Travel Requests:', len(travel_requests)
+    if timetable_entries_control:
+        print '- Timetable Entries:'
 
-    # for travel_request in travel_requests:
-    #     print 'starting_bus_stop:', travel_request.get('starting_bus_stop').get('name'), \
-    #     '- ending_bus_stop:', travel_request.get('ending_bus_stop').get('name'), \
-    #     '- departure_datetime:', travel_request.get('departure_datetime'), \
-    #     '- starting_timetable_entry_index:', travel_request.get('starting_timetable_entry_index'), \
-    #     '- ending_timetable_entry_index:', travel_request.get('ending_timetable_entry_index')
+        for timetable_entry in timetable_entries:
+            print 'starting_bus_stop:', timetable_entry.get('starting_bus_stop').get('name'), \
+                '- ending_bus_stop:', timetable_entry.get('ending_bus_stop').get('name'), \
+                '- departure_datetime:', timetable_entry.get('departure_datetime'), \
+                '- arrival_datetime:', timetable_entry.get('arrival_datetime'), \
+                '- total_time:', timetable_entry.get('total_time'), \
+                '- number_of_onboarding_passengers:', timetable_entry.get('number_of_onboarding_passengers'), \
+                '- number_of_deboarding_passengers:', timetable_entry.get('number_of_deboarding_passengers'), \
+                '- number_of_current_passengers:', timetable_entry.get('number_of_current_passengers')
+
+    if travel_requests_control:
+        print '- Travel Requests:'
+
+        for travel_request in travel_requests:
+            print 'starting_bus_stop:', travel_request.get('starting_bus_stop').get('name'), \
+                '- ending_bus_stop:', travel_request.get('ending_bus_stop').get('name'), \
+                '- departure_datetime:', travel_request.get('departure_datetime'), \
+                '- starting_timetable_entry_index:', travel_request.get('starting_timetable_entry_index'), \
+                '- ending_timetable_entry_index:', travel_request.get('ending_timetable_entry_index')
 
 
-def print_timetables(timetables):
+def print_timetables(timetables, timetables_control=False, timetable_entries_control=False,
+                     travel_requests_control=False):
     """
+    Print multiple timetable_documents.
 
     timetable_document: {
         '_id', 'line_id',
@@ -2107,12 +2116,12 @@ def print_timetables(timetables):
             'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
     }
     :param timetables: [timetable_document]
+    :param timetables_control: bool
+    :param timetable_entries_control: bool
+    :param travel_requests_control: bool
     :return: None
     """
     sort_timetables_by_starting_datetime(timetables=timetables)
-
-    # for timetable in timetables:
-    #     print_timetable(timetable=timetable)
 
     number_of_timetables = len(timetables)
     total_number_of_passengers_in_timetables = calculate_total_number_of_travel_requests_in_timetables(
@@ -2127,6 +2136,14 @@ def print_timetables(timetables):
         '- total_number_of_passengers_in_timetables:', total_number_of_passengers_in_timetables, \
         '- average_number_of_passengers_in_timetables:', average_number_of_passengers_in_timetables, \
         '- average_waiting_time:', average_waiting_time
+
+    if timetables_control:
+        for timetable in timetables:
+            print_timetable(
+                timetable=timetable,
+                timetable_entries_control=timetable_entries_control,
+                travel_requests_control=travel_requests_control
+            )
 
 
 def remove_travel_request_from_timetable_with_adjustments(travel_request, timetable):

@@ -94,19 +94,11 @@ if __name__ == '__main__':
     application_tester = ApplicationTester()
     printing_limit = 10  # Positive int or None
 
-    # s = 'Sernanders väg'
-    # s1 = s.encode('utf-8')
-    # # s1 = u' '.join(s)
-    # print s1
-    # # print str(s)
-    #
-    # # print str(testing_bus_stop_names)
-
     while True:
         time.sleep(0.01)
         selection = raw_input(
             '\n0.  exit'
-            '\n1.  (mongodb_database) ---------- clear_all_collections'
+            '\n1.  (mongodb_database) ---------- clear_collections'
             '\n2.  (osm_parser) ---------------- test_parse_osm_file'
             '\n3.  (osm_parser) ---------------- test_populate_all_collections'
             '\n4.  (mongodb_database) ---------- print_collections'
@@ -116,27 +108,99 @@ if __name__ == '__main__':
             '\n8.  (route_generator) ----------- test_get_waypoints_between_multiple_bus_stops'
             '\n9.  (look_ahead_handler) -------- test_generate_bus_line'
             '\n10. (mongodb_database) ---------- print_bus_line_documents'
-            '\n11. (travel_requests_simulator) - test_generate_travel_request_documents'
-            '\n12. (mongodb_database) ---------- print_travel_request_documents'
-            '\n13. (look_ahead_handler) -------- test_generate_timetables_for_bus_line'
-            '\n14. (look_ahead_handler) -------- test_update_timetables_of_bus_line'
-            '\n15. (look_ahead_handler) -------- start_timetables_generator_process'
-            '\n16. (look_ahead_handler) -------- terminate_timetables_generator_process'
-            '\n17. (look_ahead_handler) -------- start_timetables_updater_process'
-            '\n18. (look_ahead_handler) -------- terminate_timetables_updater_process'
-            '\n19. (travel_requests_simulator) - start_travel_requests_generator_process'
-            '\n20. (travel_requests_simulator) - terminate_travel_requests_generator_process'
-            '\n21. (traffic_data_simulator) ---- start_traffic_data_generator_process'
-            '\n22. (traffic_data_simulator) ---- terminate_traffic_data_generator_process'
+            '\n11. (mongodb_database) ---------- print_detailed_bus_stop_waypoints_documents'
+            '\n12. (travel_requests_simulator) - test_generate_travel_request_documents'
+            '\n13. (mongodb_database) ---------- print_travel_request_documents'
+            '\n14. (look_ahead_handler) -------- test_generate_timetables_for_bus_line'
+            '\n15. (look_ahead_handler) -------- test_update_timetables_of_bus_line'
+            '\n16. (look_ahead_handler) -------- start_timetables_generator_process'
+            '\n17. (look_ahead_handler) -------- terminate_timetables_generator_process'
+            '\n18. (look_ahead_handler) -------- start_timetables_updater_process'
+            '\n19. (look_ahead_handler) -------- terminate_timetables_updater_process'
+            '\n20. (travel_requests_simulator) - start_travel_requests_generator_process'
+            '\n21. (travel_requests_simulator) - terminate_travel_requests_generator_process'
+            '\n22. (traffic_data_simulator) ---- start_traffic_data_generator_process'
+            '\n23. (traffic_data_simulator) ---- terminate_traffic_data_generator_process'
             '\nSelection: '
         )
         # 0. exit
         if selection == '0':
             break
 
-        # 1. (mongodb_database) - clear_all_collections
+        # 1. (mongodb_database) - clear_collections
         elif selection == '1':
-            application_tester.mongodb_database_connection_tester.clear_all_collections()
+            while True:
+                inner_selection = raw_input(
+                    '\n0.  back'
+                    '\n1.  clear_all_collections'
+                    '\n2.  clear_address_documents_collection'
+                    '\n3.  clear_bus_line_documents_collection'
+                    '\n4.  clear_bus_stop_documents_collection'
+                    '\n5.  clear_bus_stop_waypoints_documents_collection'
+                    '\n6.  clear_edge_documents_collection'
+                    '\n7.  clear_node_documents_collection'
+                    '\n8.  clear_point_documents_collection'
+                    '\n9.  clear_timetable_documents_collection'
+                    '\n10. clear_traffic_event_documents_collection'
+                    '\n11. clear_travel_request_documents_collection'
+                    '\n12. clear_way_documents_collection'
+                    '\nSelection: '
+                )
+
+                # 0. back
+                if inner_selection == '0':
+                    break
+
+                # 1. clear_all_collections
+                elif inner_selection == '1':
+                    application_tester.mongodb_database_connection_tester.clear_all_collections()
+
+                # 2. clear_address_documents_collection
+                elif inner_selection == '2':
+                    application_tester.mongodb_database_connection_tester.clear_address_documents_collection()
+
+                # 3. clear_bus_line_documents_collection
+                elif inner_selection == '3':
+                    application_tester.mongodb_database_connection_tester.clear_bus_line_documents_collection()
+
+                # 4. clear_bus_stop_documents_collection
+                elif inner_selection == '4':
+                    application_tester.mongodb_database_connection_tester.clear_bus_stop_documents_collection()
+
+                # 5. clear_bus_stop_waypoints_documents_collection
+                elif inner_selection == '5':
+                    application_tester.mongodb_database_connection_tester.clear_bus_stop_waypoints_documents_collection()
+
+                # 6. clear_edge_documents_collection
+                elif inner_selection == '6':
+                    application_tester.mongodb_database_connection_tester.clear_edge_documents_collection()
+
+                # 7. clear_node_documents_collection
+                elif inner_selection == '7':
+                    application_tester.mongodb_database_connection_tester.clear_node_documents_collection()
+
+                # 8. clear_point_documents_collection
+                elif inner_selection == '8':
+                    application_tester.mongodb_database_connection_tester.clear_point_documents_collection()
+
+                # 9. clear_timetable_documents_collection
+                elif inner_selection == '9':
+                    application_tester.mongodb_database_connection_tester.clear_timetable_documents_collection()
+
+                # 10. clear_traffic_event_documents_collection
+                elif inner_selection == '10':
+                    application_tester.mongodb_database_connection_tester.clear_traffic_event_documents_collection()
+
+                # 11. clear_travel_request_documents_collection
+                elif inner_selection == '11':
+                    application_tester.mongodb_database_connection_tester.clear_travel_request_documents_collection()
+
+                # 12. clear_way_documents_collection
+                elif inner_selection == '12':
+                    application_tester.mongodb_database_connection_tester.clear_way_documents_collection()
+
+                else:
+                    pass
 
         # 2. (osm_parser) - test_parse_osm_file
         elif selection == '2':
@@ -148,39 +212,59 @@ if __name__ == '__main__':
 
         # 4. (mongodb_database) - print_collections
         elif selection == '4':
-            inner_selection = raw_input(
-                '\n0.  back'
-                '\n1.  print_address_documents'
-                '\n2.  print_bus_stop_documents'
-                '\n3.  print_edge_documents'
-                '\n4.  print_node_documents'
-                '\n5.  print_point_documents'
-                '\n6.  print_way_documents'
-                '\nSelection: '
-            )
-            if inner_selection == '0':
-                pass
+            while True:
+                inner_selection = raw_input(
+                    '\n0.  back'
+                    '\n1.  print_address_documents'
+                    '\n2.  print_bus_stop_documents'
+                    '\n3.  print_edge_documents'
+                    '\n4.  print_node_documents'
+                    '\n5.  print_point_documents'
+                    '\n6.  print_way_documents'
+                    '\nSelection: '
+                )
+                # 0. back
+                if inner_selection == '0':
+                    break
 
-            elif inner_selection == '1':
-                application_tester.mongodb_database_connection_tester.print_address_documents(counter=printing_limit)
+                # 1. print_address_documents
+                elif inner_selection == '1':
+                    application_tester.mongodb_database_connection_tester.print_address_documents(
+                        counter=printing_limit
+                    )
 
-            elif inner_selection == '2':
-                application_tester.mongodb_database_connection_tester.print_bus_stop_documents(counter=printing_limit)
+                # 2. print_bus_stop_documents
+                elif inner_selection == '2':
+                    application_tester.mongodb_database_connection_tester.print_bus_stop_documents(
+                        counter=printing_limit
+                    )
 
-            elif inner_selection == '3':
-                application_tester.mongodb_database_connection_tester.print_edge_documents(counter=printing_limit)
+                # 3. print_edge_documents
+                elif inner_selection == '3':
+                    application_tester.mongodb_database_connection_tester.print_edge_documents(
+                        counter=printing_limit
+                    )
 
-            elif inner_selection == '4':
-                application_tester.mongodb_database_connection_tester.print_node_documents(counter=printing_limit)
+                # 4. print_node_documents
+                elif inner_selection == '4':
+                    application_tester.mongodb_database_connection_tester.print_node_documents(
+                        counter=printing_limit
+                    )
 
-            elif inner_selection == '5':
-                application_tester.mongodb_database_connection_tester.print_point_documents(counter=printing_limit)
+                # 5. print_point_documents
+                elif inner_selection == '5':
+                    application_tester.mongodb_database_connection_tester.print_point_documents(
+                        counter=printing_limit
+                    )
 
-            elif inner_selection == '6':
-                application_tester.mongodb_database_connection_tester.print_way_documents(counter=printing_limit)
+                # 6. print_way_documents
+                elif inner_selection == '6':
+                    application_tester.mongodb_database_connection_tester.print_way_documents(
+                        counter=printing_limit
+                    )
 
-            else:
-                print 'Invalid input.'
+                else:
+                    pass
 
         # 5. (route_generator) - test_get_route_between_two_bus_stops
         elif selection == '5':
@@ -219,16 +303,22 @@ if __name__ == '__main__':
         elif selection == '10':
             application_tester.mongodb_database_connection_tester.print_bus_line_documents()
 
-        # 11. (travel_requests_simulator) - test_generate_travel_request_documents
+        # 11. (mongodb_database) - print_detailed_bus_stop_waypoints_documents
         elif selection == '11':
+            application_tester.mongodb_database_connection_tester.print_detailed_bus_stop_waypoints_documents(
+                bus_stop_names=testing_bus_stop_names
+            )
+
+        # 12. (travel_requests_simulator) - test_generate_travel_request_documents
+        elif selection == '12':
             application_tester.travel_requests_simulator_tester.test_generate_travel_request_documents(
                 line_id=1,
                 initial_datetime=travel_requests_min_departure_datetime_testing_value,
                 number_of_travel_request_documents=10000
             )
 
-        # 12. (mongodb_database) - print_travel_request_documents
-        elif selection == '12':
+        # 13. (mongodb_database) - print_travel_request_documents
+        elif selection == '13':
             application_tester.mongodb_database_connection_tester.print_travel_request_documents(
                 line_ids=[1],
                 min_departure_datetime=travel_requests_min_departure_datetime_testing_value,
@@ -236,46 +326,49 @@ if __name__ == '__main__':
                 counter=10
             )
 
-        # 13. (look_ahead_handler) - test_generate_timetables_for_bus_line
-        elif selection == '13':
+        # 14. (look_ahead_handler) - test_generate_timetables_for_bus_line
+        elif selection == '14':
             application_tester.look_ahead_handler_tester.test_generate_timetables_for_bus_line(line_id=1)
 
-        # 14. (look_ahead_handler) - test_update_timetables_of_bus_line
-        elif selection == '14':
+        # 15. (look_ahead_handler) - test_update_timetables_of_bus_line
+        elif selection == '15':
             application_tester.look_ahead_handler_tester.test_update_timetables_of_bus_line(line_id=1)
 
-        # 15. (look_ahead_handler) - start_timetables_generator_process
-        elif selection == '15':
+        # 16. (look_ahead_handler) - start_timetables_generator_process
+        elif selection == '16':
             application_tester.look_ahead_handler_tester.start_timetables_generator_process()
 
-        # 16. (look_ahead_handler) - terminate_timetables_generator_process
-        elif selection == '16':
+        # 17. (look_ahead_handler) - terminate_timetables_generator_process
+        elif selection == '17':
             application_tester.look_ahead_handler_tester.terminate_timetables_generator_process()
 
-        # 17. (look_ahead_handler) - start_timetables_updater_process
-        elif selection == '17':
+        # 18. (look_ahead_handler) - start_timetables_updater_process
+        elif selection == '18':
             application_tester.look_ahead_handler_tester.start_timetables_updater_process()
 
-        # 18. (look_ahead_handler) - terminate_timetables_updater_process
-        elif selection == '18':
+        # 19. (look_ahead_handler) - terminate_timetables_updater_process
+        elif selection == '19':
             application_tester.look_ahead_handler_tester.terminate_timetables_updater_process()
 
-        # 19. (travel_requests_simulator) - start_travel_requests_generator_process
-        elif selection == '19':
+        # 20. (travel_requests_simulator) - start_travel_requests_generator_process
+        elif selection == '20':
             application_tester.travel_requests_simulator_tester.start_travel_requests_generator_process(
                 initial_datetime=travel_requests_min_departure_datetime_testing_value,
                 min_number_of_travel_request_documents=travel_requests_generator_min_number_of_documents,
                 max_number_of_travel_request_documents=travel_requests_generator_max_number_of_documents
             )
 
-        # 20. (travel_requests_simulator) - terminate_travel_requests_generator_process
-        elif selection == '20':
+        # 21. (travel_requests_simulator) - terminate_travel_requests_generator_process
+        elif selection == '21':
             application_tester.travel_requests_simulator_tester.terminate_travel_requests_generator_process()
 
-        # 21. (traffic_data_simulator) - start_traffic_data_generator_process
-        elif selection == '21':
+        # 22. (traffic_data_simulator) - start_traffic_data_generator_process
+        elif selection == '22':
             application_tester.traffic_data_simulator_tester.start_traffic_data_generator_process()
 
-        # 22. (traffic_data_simulator) - terminate_traffic_data_generator_process
-        elif selection == '22':
+        # 23. (traffic_data_simulator) - terminate_traffic_data_generator_process
+        elif selection == '23':
             application_tester.traffic_data_simulator_tester.terminate_traffic_data_generator_process()
+
+        else:
+            pass

@@ -50,6 +50,116 @@ class MongodbDatabaseConnectionTester(object):
             log_message='clear_all_collections: finished - elapsed_time = ' +
                         str(self.elapsed_time) + ' sec')
 
+    def clear_address_documents_collection(self):
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_address_documents_collection: starting')
+        self.start_time = time.time()
+        self.mongodb_database_connection.clear_address_documents_collection()
+        self.elapsed_time = time.time() - self.start_time
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_address_documents_collection: finished - elapsed_time = ' +
+                        str(self.elapsed_time) + ' sec')
+
+    def clear_bus_line_documents_collection(self):
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_bus_line_documents_collection: starting')
+        self.start_time = time.time()
+        self.mongodb_database_connection.clear_bus_line_documents_collection()
+        self.elapsed_time = time.time() - self.start_time
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_bus_line_documents_collection: finished - elapsed_time = ' +
+                        str(self.elapsed_time) + ' sec')
+
+    def clear_bus_stop_documents_collection(self):
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_bus_stop_documents_collection: starting')
+        self.start_time = time.time()
+        self.mongodb_database_connection.clear_bus_stop_documents_collection()
+        self.elapsed_time = time.time() - self.start_time
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_bus_stop_documents_collection: finished - elapsed_time = ' +
+                        str(self.elapsed_time) + ' sec')
+
+    def clear_bus_stop_waypoints_documents_collection(self):
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_bus_stop_waypoints_documents_collection: starting')
+        self.start_time = time.time()
+        self.mongodb_database_connection.clear_bus_stop_waypoints_documents_collection()
+        self.elapsed_time = time.time() - self.start_time
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_bus_stop_waypoints_documents_collection: finished - elapsed_time = ' +
+                        str(self.elapsed_time) + ' sec')
+
+    def clear_edge_documents_collection(self):
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_edge_documents_collection: starting')
+        self.start_time = time.time()
+        self.mongodb_database_connection.clear_edge_documents_collection()
+        self.elapsed_time = time.time() - self.start_time
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_edge_documents_collection: finished - elapsed_time = ' +
+                        str(self.elapsed_time) + ' sec')
+
+    def clear_node_documents_collection(self):
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_node_documents_collection: starting')
+        self.start_time = time.time()
+        self.mongodb_database_connection.clear_node_documents_collection()
+        self.elapsed_time = time.time() - self.start_time
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_node_documents_collection: finished - elapsed_time = ' +
+                        str(self.elapsed_time) + ' sec')
+
+    def clear_point_documents_collection(self):
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_point_documents_collection: starting')
+        self.start_time = time.time()
+        self.mongodb_database_connection.clear_point_documents_collection()
+        self.elapsed_time = time.time() - self.start_time
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_point_documents_collection: finished - elapsed_time = ' +
+                        str(self.elapsed_time) + ' sec')
+
+    def clear_timetable_documents_collection(self):
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_timetable_documents_collection: starting')
+        self.start_time = time.time()
+        self.mongodb_database_connection.clear_timetable_documents_collection()
+        self.elapsed_time = time.time() - self.start_time
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_timetable_documents_collection: finished - elapsed_time = ' +
+                        str(self.elapsed_time) + ' sec')
+
+    def clear_traffic_event_documents_collection(self):
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_traffic_event_documents_collection: starting')
+        self.start_time = time.time()
+        self.mongodb_database_connection.clear_traffic_event_documents_collection()
+        self.elapsed_time = time.time() - self.start_time
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_traffic_event_documents_collection: finished - elapsed_time = ' +
+                        str(self.elapsed_time) + ' sec')
+
+    def clear_travel_request_documents_collection(self):
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_travel_request_documents_collection: starting')
+        self.start_time = time.time()
+        self.mongodb_database_connection.clear_travel_request_documents_collection()
+        self.elapsed_time = time.time() - self.start_time
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_travel_request_documents_collection: finished - elapsed_time = ' +
+                        str(self.elapsed_time) + ' sec')
+
+    def clear_way_documents_collection(self):
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_way_documents_collection: starting')
+        self.start_time = time.time()
+        self.mongodb_database_connection.clear_way_documents_collection()
+        self.elapsed_time = time.time() - self.start_time
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_way_documents_collection: finished - elapsed_time = ' +
+                        str(self.elapsed_time) + ' sec')
+
     def print_address_documents(self, object_ids=None, names=None, node_ids=None, counter=None):
         """
         Print multiple address_documents.
@@ -110,6 +220,65 @@ class MongodbDatabaseConnectionTester(object):
             osm_ids=osm_ids,
             names=names,
             counter=counter
+        )
+
+    def print_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None, bus_stop_names=None, line_id=None):
+        """
+        Print multiple bus_stop_waypoints_documents.
+
+        bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_object_id]]
+        }
+        :param object_ids: [ObjectId]
+        :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        :param bus_stop_names: [string]
+        :param line_id: int
+        :return: None
+        """
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='print_bus_stop_waypoints_documents')
+        self.mongodb_database_connection.print_bus_stop_waypoints_documents(
+            object_ids=object_ids,
+            bus_stops=bus_stops,
+            bus_stop_names=bus_stop_names,
+            line_id=line_id
+        )
+
+    def print_detailed_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None,
+                                                    bus_stop_names=None, line_id=None):
+        """
+        Print multiple detailed_bus_stop_waypoints_documents.
+
+        edge_document: {
+            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+            'max_speed', 'road_type', 'way_id', 'traffic_density'
+        }
+        bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_object_id]]
+        }
+        detailed_bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_document]]
+        }
+        :param object_ids: [ObjectId]
+        :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        :param bus_stop_names: [string]
+        :param line_id: int
+        :return: None
+        """
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='print_detailed_bus_stop_waypoints_documents')
+        self.mongodb_database_connection.print_detailed_bus_stop_waypoints_documents(
+            object_ids=object_ids,
+            bus_stops=bus_stops,
+            bus_stop_names=bus_stop_names,
+            line_id=line_id
         )
 
     def print_edge_documents(self, object_ids=None, starting_node_osm_id=None, ending_node_osm_id=None, counter=None):
@@ -174,6 +343,64 @@ class MongodbDatabaseConnectionTester(object):
             counter=counter
         )
 
+    def print_timetable_documents(self, object_ids=None, line_ids=None, counter=None, timetables_control=True,
+                                  timetable_entries_control=False, travel_requests_control=False):
+        """
+        Print multiple timetable_documents.
+
+        timetable_document: {
+            '_id', 'line_id',
+            'timetable_entries': [{
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
+                'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'travel_requests': [{
+                '_id', 'client_id', 'line_id',
+                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+                'departure_datetime', 'arrival_datetime',
+                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
+        }
+        :param object_ids: [ObjectId]
+        :param line_ids: [int]
+        :param counter: int
+        :param timetables_control: bool
+        :param timetable_entries_control: bool
+        :param travel_requests_control: bool
+        :return: timetable_documents: [timetable_document]
+        """
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='print_timetable_documents')
+        self.mongodb_database_connection.print_timetable_documents(
+            object_ids=object_ids,
+            line_ids=line_ids,
+            counter=counter,
+            timetables_control=timetables_control,
+            timetable_entries_control=timetable_entries_control,
+            travel_requests_control=travel_requests_control
+        )
+
+    def print_traffic_density_documents(self, bus_stops=None, bus_stop_names=None):
+        """
+        Print multiple traffic_density_documents.
+
+        traffic_density_document: {
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'traffic_density_values': [[{'edge_object_id', 'traffic_density'}]]
+        }
+        :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        :param bus_stop_names: [string]
+        :return: None
+        """
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='print_traffic_density_documents')
+        self.mongodb_database_connection.print_traffic_density_documents(
+            bus_stops=bus_stops,
+            bus_stop_names=bus_stop_names
+        )
+
     def print_travel_request_documents(self, object_ids=None, client_ids=None, line_ids=None,
                                        min_departure_datetime=None, max_departure_datetime=None,
                                        counter=None):
@@ -225,96 +452,152 @@ class MongodbDatabaseConnectionTester(object):
             counter=counter
         )
 
-    def print_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None, bus_stop_names=None, line_id=None):
-        """
-        Print multiple bus_stop_waypoints_documents.
-
-        bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_object_id]]
-        }
-        :param object_ids: [ObjectId]
-        :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
-        :param bus_stop_names: [string]
-        :param line_id: int
-        :return: None
-        """
-        log(module_name='mongodb_database_connection_test', log_type='INFO',
-            log_message='print_bus_stop_waypoints_documents')
-        self.mongodb_database_connection.print_bus_stop_waypoints_documents(
-            object_ids=object_ids,
-            bus_stops=bus_stops,
-            bus_stop_names=bus_stop_names,
-            line_id=line_id
-        )
-
-    def print_detailed_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None,
-                                                    bus_stop_names=None, line_id=None):
-        """
-        Print multiple detailed_bus_stop_waypoints_documents.
-
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
-        bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_object_id]]
-        }
-        detailed_bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_document]]
-        }
-        :param object_ids: [ObjectId]
-        :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
-        :param bus_stop_names: [string]
-        :param line_id: int
-        :return: None
-        """
-        log(module_name='mongodb_database_connection_test', log_type='INFO',
-            log_message='print_detailed_bus_stop_waypoints_documents')
-        self.mongodb_database_connection.print_detailed_bus_stop_waypoints_documents(
-            object_ids=object_ids,
-            bus_stops=bus_stops,
-            bus_stop_names=bus_stop_names,
-            line_id=line_id
-        )
-
-    def print_traffic_density_documents(self, bus_stops=None, bus_stop_names=None):
-        """
-        Print multiple traffic_density_documents.
-
-        traffic_density_document: {
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'traffic_density_values': [[{'edge_object_id', 'traffic_density'}]]
-        }
-        :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
-        :param bus_stop_names: [string]
-        :return: None
-        """
-        log(module_name='mongodb_database_connection_test', log_type='INFO',
-            log_message='print_traffic_density_documents')
-        self.mongodb_database_connection.print_traffic_density_documents(
-            bus_stops=bus_stops,
-            bus_stop_names=bus_stop_names
-        )
-
 if __name__ == '__main__':
-    tester = MongodbDatabaseConnectionTester()
-    # travel_requests_simulator_tester.clear_all_collections()
-    # travel_requests_simulator_tester.print_address_documents()
-    # travel_requests_simulator_tester.print_bus_line_documents()
-    # travel_requests_simulator_tester.print_bus_stop_documents()
-    # travel_requests_simulator_tester.print_edge_documents()
-    # travel_requests_simulator_tester.print_node_documents()
-    # travel_requests_simulator_tester.print_point_documents()
-    # travel_requests_simulator_tester.print_travel_request_documents()
-    # travel_requests_simulator_tester.print_way_documents()
-    # travel_requests_simulator_tester.print_bus_stop_waypoints_documents()
-    # travel_requests_simulator_tester.print_detailed_bus_stop_waypoints_documents()
-    # travel_requests_simulator_tester.print_traffic_density_documents()
+    mongodb_database_connection_tester = MongodbDatabaseConnectionTester()
+    printing_limit = 10  # Positive int or None
+
+    while True:
+        time.sleep(0.01)
+        selection = raw_input(
+            '\n0.  exit'
+            '\n1.  clear_collections'
+            '\n2.  print_address_documents'
+            '\n3.  print_bus_line_documents'
+            '\n4.  print_bus_stop_documents'
+            '\n5.  print_bus_stop_waypoints_documents'
+            '\n6.  print_detailed_bus_stop_waypoints_documents'
+            '\n7.  print_edge_documents'
+            '\n8.  print_node_documents'
+            '\n9.  print_point_documents'
+            '\n10. print_timetable_documents'
+            '\n11. print_traffic_density_documents'
+            '\n12. print_travel_request_documents'
+            '\n13. print_way_documents'
+            '\nSelection: '
+        )
+        # 0. exit
+        if selection == '0':
+            break
+
+        # 1. clear_collections
+        elif selection == '1':
+            while True:
+                inner_selection = raw_input(
+                    '\n0.  back'
+                    '\n1.  clear_all_collections'
+                    '\n2.  clear_address_documents_collection'
+                    '\n3.  clear_bus_line_documents_collection'
+                    '\n4.  clear_bus_stop_documents_collection'
+                    '\n5.  clear_bus_stop_waypoints_documents_collection'
+                    '\n6.  clear_edge_documents_collection'
+                    '\n7.  clear_node_documents_collection'
+                    '\n8.  clear_point_documents_collection'
+                    '\n9.  clear_timetable_documents_collection'
+                    '\n10. clear_traffic_event_documents_collection'
+                    '\n11. clear_travel_request_documents_collection'
+                    '\n12. clear_way_documents_collection'
+                    '\nSelection: '
+                )
+
+                # 0. back
+                if inner_selection == '0':
+                    break
+
+                # 1. clear_all_collections
+                elif inner_selection == '1':
+                    mongodb_database_connection_tester.clear_all_collections()
+
+                # 2. clear_address_documents_collection
+                elif inner_selection == '2':
+                    mongodb_database_connection_tester.clear_address_documents_collection()
+
+                # 3. clear_bus_line_documents_collection
+                elif inner_selection == '3':
+                    mongodb_database_connection_tester.clear_bus_line_documents_collection()
+
+                # 4. clear_bus_stop_documents_collection
+                elif inner_selection == '4':
+                    mongodb_database_connection_tester.clear_bus_stop_documents_collection()
+
+                # 5. clear_bus_stop_waypoints_documents_collection
+                elif inner_selection == '5':
+                    mongodb_database_connection_tester.clear_bus_stop_waypoints_documents_collection()
+
+                # 6. clear_edge_documents_collection
+                elif inner_selection == '6':
+                    mongodb_database_connection_tester.clear_edge_documents_collection()
+
+                # 7. clear_node_documents_collection
+                elif inner_selection == '7':
+                    mongodb_database_connection_tester.clear_node_documents_collection()
+
+                # 8. clear_point_documents_collection
+                elif inner_selection == '8':
+                    mongodb_database_connection_tester.clear_point_documents_collection()
+
+                # 9. clear_timetable_documents_collection
+                elif inner_selection == '9':
+                    mongodb_database_connection_tester.clear_timetable_documents_collection()
+
+                # 10. clear_traffic_event_documents_collection
+                elif inner_selection == '10':
+                    mongodb_database_connection_tester.clear_traffic_event_documents_collection()
+
+                # 11. clear_travel_request_documents_collection
+                elif inner_selection == '11':
+                    mongodb_database_connection_tester.clear_travel_request_documents_collection()
+
+                # 12. clear_way_documents_collection
+                elif inner_selection == '12':
+                    mongodb_database_connection_tester.clear_way_documents_collection()
+
+                else:
+                    pass
+
+        # 2. print_address_documents
+        elif selection == '2':
+            mongodb_database_connection_tester.print_address_documents()
+
+        # 3. print_bus_line_documents
+        elif selection == '3':
+            mongodb_database_connection_tester.print_bus_line_documents()
+
+        # 4. print_bus_stop_documents
+        elif selection == '4':
+            mongodb_database_connection_tester.print_bus_stop_documents()
+
+        # 5. print_bus_stop_waypoints_documents
+        elif selection == '5':
+            mongodb_database_connection_tester.print_bus_stop_waypoints_documents()
+
+        # 6. print_detailed_bus_stop_waypoints_documents
+        elif selection == '6':
+            mongodb_database_connection_tester.print_detailed_bus_stop_waypoints_documents()
+
+        # 7. print_edge_documents
+        elif selection == '7':
+            mongodb_database_connection_tester.print_edge_documents()
+
+        # 8. print_node_documents
+        elif selection == '8':
+            mongodb_database_connection_tester.print_node_documents()
+
+        # 9. print_point_documents
+        elif selection == '9':
+            mongodb_database_connection_tester.print_point_documents()
+
+        # 10. print_timetable_documents
+        elif selection == '10':
+            mongodb_database_connection_tester.print_timetable_documents()
+
+        # 11. print_traffic_density_documents
+        elif selection == '11':
+            mongodb_database_connection_tester.print_traffic_density_documents()
+
+        # 12. print_travel_request_documents
+        elif selection == '12':
+            mongodb_database_connection_tester.print_travel_request_documents()
+
+        # 13. print_way_documents
+        elif selection == '13':
+            mongodb_database_connection_tester.print_way_documents()

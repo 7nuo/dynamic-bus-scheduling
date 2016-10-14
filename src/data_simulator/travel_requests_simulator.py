@@ -42,9 +42,9 @@ class TravelRequestsSimulator(object):
 
         :return: None
         """
-        self.mongodb_database_connection.clear_travel_requests_collection()
+        self.mongodb_database_connection.clear_travel_request_documents_collection()
         log(module_name='travel_requests_simulator', log_type='DEBUG',
-            log_message='clear_travel_requests_collection: ok')
+            log_message='clear_travel_request_documents_collection: ok')
 
     def delete_travel_request_documents(self, object_ids=None, client_ids=None, line_ids=None,
                                         min_departure_datetime=None, max_departure_datetime=None):
