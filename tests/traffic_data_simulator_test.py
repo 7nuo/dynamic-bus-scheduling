@@ -67,6 +67,55 @@ class TrafficDataSimulatorTester(object):
             log_message='test_clear_traffic_density: finished - elapsed_time = '
                         + str(self.elapsed_time) + ' sec')
 
+    def test_generate_traffic_data_between_two_bus_stops(self, starting_bus_stop=None, ending_bus_stop=None,
+                                                         starting_bus_stop_name=None, ending_bus_stop_name=None):
+        """
+        Generate random traffic density values for the edges which connect two bus_stops.
+
+        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+
+        :param starting_bus_stop: bus_stop_document
+        :param ending_bus_stop: bus_stop_document
+        :param starting_bus_stop_name: string
+        :param ending_bus_stop_name: string
+        :return: None
+        """
+        log(module_name='traffic_data_simulator_test', log_type='INFO',
+            log_message='test_generate_traffic_data_between_two_bus_stops: starting')
+        self.start_time = time.time()
+        self.traffic_data_simulator.generate_traffic_data_between_two_bus_stops(
+            starting_bus_stop=starting_bus_stop,
+            ending_bus_stop=ending_bus_stop,
+            starting_bus_stop_name=starting_bus_stop_name,
+            ending_bus_stop_name=ending_bus_stop_name
+        )
+        self.elapsed_time = time.time() - self.start_time
+        log(module_name='traffic_data_simulator_test', log_type='INFO',
+            log_message='test_generate_traffic_data_between_two_bus_stops: finished - elapsed_time = '
+                        + str(self.elapsed_time) + ' sec')
+
+    def test_generate_traffic_data_between_multiple_bus_stops(self, bus_stops=None, bus_stop_names=None):
+        """
+        Generate random traffic density values for the edges which connect multiple bus_stops.
+
+        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+
+        :param bus_stops: [bus_stop_document]
+        :param bus_stop_names: [string]
+        :return: None
+        """
+        log(module_name='traffic_data_simulator_test', log_type='INFO',
+            log_message='test_generate_traffic_data_between_multiple_bus_stops: starting')
+        self.start_time = time.time()
+        self.traffic_data_simulator.generate_traffic_data_between_multiple_bus_stops(
+            bus_stops=bus_stops,
+            bus_stop_names=bus_stop_names
+        )
+        self.elapsed_time = time.time() - self.start_time
+        log(module_name='traffic_data_simulator_test', log_type='INFO',
+            log_message='test_generate_traffic_data_between_multiple_bus_stops: finished - elapsed_time = '
+                        + str(self.elapsed_time) + ' sec')
+
     def test_generate_traffic_data_for_bus_line(self, bus_line=None, line_id=None):
         """
         Generate random traffic density values for the edge_documents which are included in a bus_line_document.
@@ -109,36 +158,6 @@ class TrafficDataSimulatorTester(object):
             log_message='test_generate_traffic_data_for_bus_lines: finished - elapsed_time = '
                         + str(self.elapsed_time) + ' sec')
 
-    def test_generate_traffic_data_between_bus_stops(self, starting_bus_stop=None, ending_bus_stop=None,
-                                                     starting_bus_stop_name=None, ending_bus_stop_name=None):
-        """
-        Generate random traffic density values for the edges which connect two bus_stops.
-
-        bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_object_id]]
-        }
-        :param starting_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
-        :param ending_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
-        :param starting_bus_stop_name: string
-        :param ending_bus_stop_name: string
-        :return: None
-        """
-        log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='test_generate_traffic_data_between_bus_stops: starting')
-        self.start_time = time.time()
-        self.traffic_data_simulator.generate_traffic_data_between_bus_stops(
-            starting_bus_stop=starting_bus_stop,
-            ending_bus_stop=ending_bus_stop,
-            starting_bus_stop_name=starting_bus_stop_name,
-            ending_bus_stop_name=ending_bus_stop_name
-        )
-        self.elapsed_time = time.time() - self.start_time
-        log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='test_generate_traffic_data_between_bus_stops: finished - elapsed_time = '
-                        + str(self.elapsed_time) + ' sec')
-
     def test_traffic_data_generator_process(self):
         time_difference = 0
         initial_time = time.time()
@@ -150,19 +169,6 @@ class TrafficDataSimulatorTester(object):
 
         log(module_name='traffic_data_simulator_test', log_type='INFO',
             log_message='traffic_data_generator_process: finished')
-
-    # def print_traffic_density_between_two_bus_stops(self, starting_bus_stop_name, ending_bus_stop_name):
-    #     log(module_name='traffic_data_simulator_test', log_type='INFO',
-    #         log_message='print_traffic_density_documents: starting')
-    #     self.start_time = time.time()
-    #     self.traffic_data_simulator.print_traffic_density_between_two_bus_stops(
-    #         starting_bus_stop_name=starting_bus_stop_name,
-    #         ending_bus_stop_name=ending_bus_stop_name,
-    #     )
-    #     self.elapsed_time = time.time() - self.start_time
-    #     log(module_name='traffic_data_simulator_test', log_type='INFO',
-    #         log_message='print_traffic_density_documents: finished - elapsed_time = ' +
-    #                     str(self.elapsed_time) + ' sec')
 
 
 if __name__ == '__main__':

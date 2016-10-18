@@ -38,6 +38,73 @@ class TrafficDataSimulator(object):
     def clear_traffic_density(self):
         self.mongodb_database_connection.clear_traffic_density()
 
+    def generate_traffic_data_between_two_bus_stops(self, starting_bus_stop=None, ending_bus_stop=None,
+                                                    starting_bus_stop_name=None, ending_bus_stop_name=None):
+        """
+        Generate random traffic density values for the edges which connect two bus_stops.
+
+        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+
+        bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_object_id]]
+        }
+        :param starting_bus_stop: bus_stop_document
+        :param ending_bus_stop: bus_stop_document
+        :param starting_bus_stop_name: string
+        :param ending_bus_stop_name: string
+        :return: None
+        """
+        bus_stop_waypoints_document = self.mongodb_database_connection.find_bus_stop_waypoints_document(
+            starting_bus_stop=starting_bus_stop,
+            ending_bus_stop=ending_bus_stop,
+            starting_bus_stop_name=starting_bus_stop_name,
+            ending_bus_stop_name=ending_bus_stop_name
+        )
+        edge_object_ids_included_in_bus_stop_waypoints_document = \
+            self.mongodb_database_connection.get_edge_object_ids_included_in_bus_stop_waypoints(
+                bus_stop_waypoints=bus_stop_waypoints_document
+            )
+        self.generate_traffic_data_for_edge_object_ids(
+            edge_object_ids=edge_object_ids_included_in_bus_stop_waypoints_document
+        )
+
+    def generate_traffic_data_between_multiple_bus_stops(self, bus_stops=None, bus_stop_names=None):
+        """
+        Generate random traffic density values for the edges which connect multiple bus_stops.
+
+        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+
+        :param bus_stops: [bus_stop_documents]
+        :param bus_stop_names: [string]
+        :return: None
+        """
+        if bus_stops is not None:
+            number_of_bus_stops = len(bus_stops)
+
+            for i in range(0, number_of_bus_stops - 1):
+                starting_bus_stop = bus_stops[i]
+                ending_bus_stop = bus_stops[i + 1]
+                self.generate_traffic_data_between_two_bus_stops(
+                    starting_bus_stop=starting_bus_stop,
+                    ending_bus_stop=ending_bus_stop
+                )
+
+        elif bus_stop_names is not None:
+            number_of_bus_stop_names = len(bus_stop_names)
+
+            for i in range(0, number_of_bus_stop_names - 1):
+                starting_bus_stop_name = bus_stop_names[i]
+                ending_bus_stop_name = bus_stop_names[i + 1]
+                self.generate_traffic_data_between_two_bus_stops(
+                    starting_bus_stop_name=starting_bus_stop_name,
+                    ending_bus_stop_name=ending_bus_stop_name
+                )
+
+        else:
+            pass
+
     def generate_traffic_data_for_bus_line(self, bus_line=None, line_id=None):
         """
         Generate random traffic density values for the edge_documents which are included in a bus_line_document.
@@ -74,36 +141,6 @@ class TrafficDataSimulator(object):
 
         for bus_line in bus_lines:
             self.generate_traffic_data_for_bus_line(bus_line=bus_line)
-
-    def generate_traffic_data_between_bus_stops(self, starting_bus_stop=None, ending_bus_stop=None,
-                                                starting_bus_stop_name=None, ending_bus_stop_name=None):
-        """
-        Generate random traffic density values for the edges which connect two bus_stops.
-
-        bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_object_id]]
-        }
-        :param starting_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
-        :param ending_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
-        :param starting_bus_stop_name: string
-        :param ending_bus_stop_name: string
-        :return: None
-        """
-        bus_stop_waypoints_document = self.mongodb_database_connection.find_bus_stop_waypoints_document(
-            starting_bus_stop=starting_bus_stop,
-            ending_bus_stop=ending_bus_stop,
-            starting_bus_stop_name=starting_bus_stop_name,
-            ending_bus_stop_name=ending_bus_stop_name
-        )
-        edge_object_ids_included_in_bus_stop_waypoints_document = \
-            self.mongodb_database_connection.get_edge_object_ids_included_in_bus_stop_waypoints(
-                bus_stop_waypoints=bus_stop_waypoints_document
-            )
-        self.generate_traffic_data_for_edge_object_ids(
-            edge_object_ids=edge_object_ids_included_in_bus_stop_waypoints_document
-        )
 
     def generate_traffic_data_for_edge_object_ids(self, edge_object_ids):
         """

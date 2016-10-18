@@ -80,8 +80,8 @@ class TimetableGenerator(object):
 def add_ideal_departure_datetimes_of_travel_request(ideal_departure_datetimes_of_travel_request,
                                                     ideal_departure_datetimes_of_travel_requests):
     """
-    Add each one of the items in the ideal_departure_datetimes_of_travel_request list, to the corresponding list
-    of the ideal_departure_datetimes_of_travel_requests double list.
+    Add each one of the items in the ideal_departure_datetimes_of_travel_request list, to the
+    corresponding list of the ideal_departure_datetimes_of_travel_requests double list.
 
     :param ideal_departure_datetimes_of_travel_request: [departure_datetime]
     :param ideal_departure_datetimes_of_travel_requests: [[departure_datetime]]
@@ -257,6 +257,8 @@ def adjust_departure_datetimes_of_timetable(timetable):
     ]
 
     for travel_request in travel_requests:
+        if travel_request == 'ending_bus_stop':
+            print travel_requests
         ideal_departure_datetimes_of_travel_request = estimate_ideal_departure_datetimes_of_travel_request(
             travel_request=travel_request,
             total_times=total_times
@@ -997,6 +999,12 @@ def divide_timetable(timetable):
     adjust_departure_datetimes_of_timetables(timetables=timetables)
     calculate_number_of_passengers_of_timetables(timetables=timetables)
 
+    # timetable['travel_requests'] = []
+    # additional_timetable['travel_requests'] = []
+    # correspond_travel_requests_to_timetables(travel_requests=travel_requests, timetables=timetables)
+    # adjust_departure_datetimes_of_timetables(timetables=timetables)
+    # calculate_number_of_passengers_of_timetables(timetables=timetables)
+
     return additional_timetable
 
 
@@ -1635,7 +1643,6 @@ def handle_timetables_with_average_waiting_time_above_threshold(timetables):
         timetables_with_average_waiting_time_above_threshold = get_timetables_with_average_waiting_time_above_threshold(
             timetables=timetables
         )
-
         for timetable in timetables_with_average_waiting_time_above_threshold:
             additional_timetable = divide_timetable_based_on_average_waiting_time(timetable=timetable)
 
@@ -1786,12 +1793,54 @@ def partition_travel_requests_list(travel_requests):
     :return: travel_requests_lists: {'first_list': [travel_request_document], 'second_list': [travel_request_document]}
     """
     number_of_travel_requests = len(travel_requests)
-    half_number_of_travel_requests = number_of_travel_requests / 2
+    # half_number_of_travel_requests = number_of_travel_requests / 2
+    #
+    # first_list_of_travel_requests = travel_requests[0:half_number_of_travel_requests]
+    # second_list_of_travel_requests = travel_requests[half_number_of_travel_requests:number_of_travel_requests]
 
-    first_list = travel_requests[0:half_number_of_travel_requests]
-    second_list = travel_requests[half_number_of_travel_requests:number_of_travel_requests]
+    first_list_of_travel_requests = []
+    second_list_of_travel_requests = []
 
-    travel_requests_lists = {'first_list': first_list, 'second_list': second_list}
+    if number_of_travel_requests == 0:
+        pass
+    elif number_of_travel_requests == 1:
+        first_list_of_travel_requests.append(travel_requests[0])
+    else:
+        first_list_of_travel_requests.append(travel_requests[0])
+        second_list_of_travel_requests.append(travel_requests[number_of_travel_requests - 1])
+
+        departure_datetimes = [travel_request.get('departure_datetime') for travel_request in travel_requests]
+        first_list_of_departure_datetimes = [departure_datetimes[0]]
+        second_list_of_departure_datetimes = [departure_datetimes[number_of_travel_requests - 1]]
+
+        for i in range(1, number_of_travel_requests - 1):
+            travel_request = travel_requests[i]
+            departure_datetime = departure_datetimes[i]
+
+            mean_of_first_list_of_departure_datetimes = calculate_mean_departure_datetime(
+                departure_datetimes=first_list_of_departure_datetimes
+            )
+            mean_of_second_list_of_departure_datetimes = calculate_mean_departure_datetime(
+                departure_datetimes=second_list_of_departure_datetimes
+            )
+            difference_with_first_list_of_departure_datetimes = abs(
+                departure_datetime - mean_of_first_list_of_departure_datetimes
+            )
+            difference_with_second_list_departure_datetimes = abs(
+                departure_datetime - mean_of_second_list_of_departure_datetimes
+            )
+
+            if difference_with_first_list_of_departure_datetimes < difference_with_second_list_departure_datetimes:
+                first_list_of_travel_requests.append(travel_request)
+                first_list_of_departure_datetimes.append(departure_datetime)
+            else:
+                second_list_of_travel_requests.append(travel_request)
+                second_list_of_departure_datetimes.append(departure_datetime)
+
+    travel_requests_lists = {
+        'first_list': first_list_of_travel_requests,
+        'second_list': second_list_of_travel_requests
+    }
     return travel_requests_lists
 
 

@@ -62,31 +62,39 @@ def test_get_route_between_two_bus_stops(starting_bus_stop=None, ending_bus_stop
     starting_bus_stop = response.get('starting_bus_stop')
     ending_bus_stop = response.get('ending_bus_stop')
     route = response.get('route')
-    total_distance = route.get('total_distance')
-    total_time = route.get('total_time')
-    node_osm_ids = route.get('node_osm_ids')
-    points = route.get('points')
-    edges = route.get('edges')
-    distances_from_starting_node = route.get('distances_from_starting_node')
-    times_from_starting_node = route.get('times_from_starting_node')
-    distances_from_previous_node = route.get('distances_from_previous_node')
-    times_from_previous_node = route.get('times_from_previous_node')
 
-    output = '\nstarting_bus_stop: ' + str(starting_bus_stop) + \
-             '\nending_bus_stop: ' + str(ending_bus_stop) + \
-             '\ntotal_distance: ' + str(total_distance) +\
-             '\ntotal_time: ' + str(total_time) +\
-             '\nnode_osm_ids: ' + str(node_osm_ids) +\
-             '\npoints: ' + str(points) +\
-             '\nedges: ' + str(edges) +\
-             '\ndistances_from_starting_node: ' + str(distances_from_starting_node) +\
-             '\ntimes_from_starting_node: ' + str(times_from_starting_node) +\
-             '\ndistances_from_previous_node: ' + str(distances_from_previous_node) +\
-             '\ntimes_from_previous_node: ' + str(times_from_previous_node)
+    if route is not None:
+        total_distance = route.get('total_distance')
+        total_time = route.get('total_time')
+        node_osm_ids = route.get('node_osm_ids')
+        points = route.get('points')
+        edges = route.get('edges')
+        distances_from_starting_node = route.get('distances_from_starting_node')
+        times_from_starting_node = route.get('times_from_starting_node')
+        distances_from_previous_node = route.get('distances_from_previous_node')
+        times_from_previous_node = route.get('times_from_previous_node')
+
+        output = '\nstarting_bus_stop: ' + str(starting_bus_stop) + \
+                 '\nending_bus_stop: ' + str(ending_bus_stop) + \
+                 '\ntotal_distance: ' + str(total_distance) + \
+                 '\ntotal_time: ' + str(total_time) + \
+                 '\nnode_osm_ids: ' + str(node_osm_ids) + \
+                 '\npoints: ' + str(points) + \
+                 '\nedges: ' + str(edges) + \
+                 '\ndistances_from_starting_node: ' + str(distances_from_starting_node) + \
+                 '\ntimes_from_starting_node: ' + str(times_from_starting_node) + \
+                 '\ndistances_from_previous_node: ' + str(distances_from_previous_node) + \
+                 '\ntimes_from_previous_node: ' + str(times_from_previous_node)
+
+    else:
+        output = '\nstarting_bus_stop: ' + str(starting_bus_stop) + \
+                 '\nending_bus_stop: ' + str(ending_bus_stop) + \
+                 '\nroute: None'
 
     print output
 
     elapsed_time = time.time() - start_time
+    time.sleep(0.1)
     log(module_name='route_generator_test', log_type='INFO',
         log_message='test_get_route_between_two_bus_stops: finished - elapsed_time = ' +
                     str(elapsed_time) + ' sec')
@@ -120,31 +128,38 @@ def test_get_route_between_multiple_bus_stops(bus_stops=None, bus_stop_names=Non
         starting_bus_stop = intermediate_response.get('starting_bus_stop')
         ending_bus_stop = intermediate_response.get('ending_bus_stop')
         intermediate_route = intermediate_response.get('route')
-        total_distance = intermediate_route.get('total_distance')
-        total_time = intermediate_route.get('total_time')
-        node_osm_ids = intermediate_route.get('node_osm_ids')
-        points = intermediate_route.get('points')
-        edges = intermediate_route.get('edges')
-        distances_from_starting_node = intermediate_route.get('distances_from_starting_node')
-        times_from_starting_node = intermediate_route.get('times_from_starting_node')
-        distances_from_previous_node = intermediate_route.get('distances_from_previous_node')
-        times_from_previous_node = intermediate_route.get('times_from_previous_node')
 
-        output = '\nstarting_bus_stop: ' + str(starting_bus_stop) + \
-                 '\nending_bus_stop: ' + str(ending_bus_stop) + \
-                 '\ntotal_distance: ' + str(total_distance) +\
-                 '\ntotal_time: ' + str(total_time) +\
-                 '\nnode_osm_ids: ' + str(node_osm_ids) +\
-                 '\npoints: ' + str(points) +\
-                 '\nedges: ' + str(edges) +\
-                 '\ndistances_from_starting_node: ' + str(distances_from_starting_node) +\
-                 '\ntimes_from_starting_node: ' + str(times_from_starting_node) +\
-                 '\ndistances_from_previous_node: ' + str(distances_from_previous_node) +\
-                 '\ntimes_from_previous_node: ' + str(times_from_previous_node)
+        if intermediate_route is not None:
+            total_distance = intermediate_route.get('total_distance')
+            total_time = intermediate_route.get('total_time')
+            node_osm_ids = intermediate_route.get('node_osm_ids')
+            points = intermediate_route.get('points')
+            edges = intermediate_route.get('edges')
+            distances_from_starting_node = intermediate_route.get('distances_from_starting_node')
+            times_from_starting_node = intermediate_route.get('times_from_starting_node')
+            distances_from_previous_node = intermediate_route.get('distances_from_previous_node')
+            times_from_previous_node = intermediate_route.get('times_from_previous_node')
+
+            output = '\nstarting_bus_stop: ' + str(starting_bus_stop) + \
+                     '\nending_bus_stop: ' + str(ending_bus_stop) + \
+                     '\ntotal_distance: ' + str(total_distance) + \
+                     '\ntotal_time: ' + str(total_time) + \
+                     '\nnode_osm_ids: ' + str(node_osm_ids) + \
+                     '\npoints: ' + str(points) + \
+                     '\nedges: ' + str(edges) + \
+                     '\ndistances_from_starting_node: ' + str(distances_from_starting_node) + \
+                     '\ntimes_from_starting_node: ' + str(times_from_starting_node) + \
+                     '\ndistances_from_previous_node: ' + str(distances_from_previous_node) + \
+                     '\ntimes_from_previous_node: ' + str(times_from_previous_node)
+        else:
+            output = '\nstarting_bus_stop: ' + str(starting_bus_stop) + \
+                     '\nending_bus_stop: ' + str(ending_bus_stop) + \
+                     '\nroute: None'
 
         print output
 
     elapsed_time = time.time() - start_time
+    time.sleep(0.1)
     log(module_name='route_generator_test', log_type='INFO',
         log_message='test_get_route_between_multiple_bus_stops: finished - elapsed_time = ' +
                     str(elapsed_time) + ' sec')
@@ -191,6 +206,7 @@ def test_get_waypoints_between_two_bus_stops(starting_bus_stop=None, ending_bus_
         print 'waypoints: ' + str(separate_waypoints)
 
     elapsed_time = time.time() - start_time
+    time.sleep(0.1)
     log(module_name='route_generator_test', log_type='INFO',
         log_message='test_get_waypoints_between_two_bus_stops: finished - elapsed_time = ' +
                     str(elapsed_time) + ' sec')
@@ -233,6 +249,7 @@ def test_get_waypoints_between_multiple_bus_stops(bus_stops=None, bus_stop_names
             print 'waypoints: ' + str(separate_waypoints)
 
     elapsed_time = time.time() - start_time
+    time.sleep(0.1)
     log(module_name='route_generator_test', log_type='INFO',
         log_message='test_get_waypoints_between_multiple_bus_stops: finished - elapsed_time = ' +
                     str(elapsed_time) + ' sec')

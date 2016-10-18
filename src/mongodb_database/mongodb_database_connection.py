@@ -1372,7 +1372,7 @@ class MongodbDatabaseConnection(object):
         elif osm_ids is not None:
             way_documents_cursor = self.way_documents_collection.find({'osm_id': {'$in': osm_ids}})
         else:
-            return None
+            way_documents_cursor = self.way_documents_collection.find({})
 
         way_documents = list(way_documents_cursor)
         return way_documents
@@ -1476,7 +1476,7 @@ class MongodbDatabaseConnection(object):
         edge_documents_cursor = self.edge_documents_collection.find({})
         return edge_documents_cursor
 
-    def get_edges(self):
+    def get_edges_dictionary(self):
         """
         Retrieve a dictionary containing all the edge_documents.
 

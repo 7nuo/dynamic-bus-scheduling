@@ -112,15 +112,18 @@ if __name__ == '__main__':
             '\n12. (travel_requests_simulator) - test_generate_travel_request_documents'
             '\n13. (mongodb_database) ---------- print_travel_request_documents'
             '\n14. (look_ahead_handler) -------- test_generate_timetables_for_bus_line'
-            '\n15. (look_ahead_handler) -------- test_update_timetables_of_bus_line'
-            '\n16. (look_ahead_handler) -------- start_timetables_generator_process'
-            '\n17. (look_ahead_handler) -------- terminate_timetables_generator_process'
-            '\n18. (look_ahead_handler) -------- start_timetables_updater_process'
-            '\n19. (look_ahead_handler) -------- terminate_timetables_updater_process'
-            '\n20. (travel_requests_simulator) - start_travel_requests_generator_process'
-            '\n21. (travel_requests_simulator) - terminate_travel_requests_generator_process'
-            '\n22. (traffic_data_simulator) ---- start_traffic_data_generator_process'
-            '\n23. (traffic_data_simulator) ---- terminate_traffic_data_generator_process'
+            '\n15. (mongodb_database) ---------- print_timetable_documents'
+            '\n16. (traffic_data_simulator) ---- test_generate_traffic_data_between_multiple_stops'
+            '\n17. (mongodb_database) ---------- print_traffic_density_documents'
+            '\n18. (look_ahead_handler) -------- test_update_timetables_of_bus_line'
+            '\n19. (look_ahead_handler) -------- start_timetables_generator_process'
+            '\n20. (look_ahead_handler) -------- terminate_timetables_generator_process'
+            '\n21. (look_ahead_handler) -------- start_timetables_updater_process'
+            '\n22. (look_ahead_handler) -------- terminate_timetables_updater_process'
+            '\n23. (travel_requests_simulator) - start_travel_requests_generator_process'
+            '\n24. (travel_requests_simulator) - terminate_travel_requests_generator_process'
+            '\n25. (traffic_data_simulator) ---- start_traffic_data_generator_process'
+            '\n26. (traffic_data_simulator) ---- terminate_traffic_data_generator_process'
             '\nSelection: '
         )
         # 0. exit
@@ -169,7 +172,8 @@ if __name__ == '__main__':
 
                 # 5. clear_bus_stop_waypoints_documents_collection
                 elif inner_selection == '5':
-                    application_tester.mongodb_database_connection_tester.clear_bus_stop_waypoints_documents_collection()
+                    application_tester.mongodb_database_connection_tester.\
+                        clear_bus_stop_waypoints_documents_collection()
 
                 # 6. clear_edge_documents_collection
                 elif inner_selection == '6':
@@ -330,44 +334,66 @@ if __name__ == '__main__':
         elif selection == '14':
             application_tester.look_ahead_handler_tester.test_generate_timetables_for_bus_line(line_id=1)
 
-        # 15. (look_ahead_handler) - test_update_timetables_of_bus_line
+        # 15. (mongodb_database) - print_timetable_documents
         elif selection == '15':
+            application_tester.mongodb_database_connection_tester.print_timetable_documents(
+                line_ids=[1],
+                counter=1,
+                timetables_control=True,
+                timetable_entries_control=True,
+                travel_requests_control=True
+            )
+
+        # 16. (traffic_data_simulator) - test_generate_traffic_data_between_multiple_bus_stops
+        elif selection == '16':
+            application_tester.traffic_data_simulator_tester.test_generate_traffic_data_between_multiple_bus_stops(
+                bus_stop_names=testing_bus_stop_names
+            )
+
+        # 17. (mongodb_database) - print_traffic_density_documents
+        elif selection == '17':
+            application_tester.mongodb_database_connection_tester.print_traffic_density_documents(
+                bus_stop_names=testing_bus_stop_names
+            )
+
+        # 18. (look_ahead_handler) - test_update_timetables_of_bus_line
+        elif selection == '18':
             application_tester.look_ahead_handler_tester.test_update_timetables_of_bus_line(line_id=1)
 
-        # 16. (look_ahead_handler) - start_timetables_generator_process
-        elif selection == '16':
+        # 19. (look_ahead_handler) - start_timetables_generator_process
+        elif selection == '19':
             application_tester.look_ahead_handler_tester.start_timetables_generator_process()
 
-        # 17. (look_ahead_handler) - terminate_timetables_generator_process
-        elif selection == '17':
+        # 20. (look_ahead_handler) - terminate_timetables_generator_process
+        elif selection == '20':
             application_tester.look_ahead_handler_tester.terminate_timetables_generator_process()
 
-        # 18. (look_ahead_handler) - start_timetables_updater_process
-        elif selection == '18':
+        # 21. (look_ahead_handler) - start_timetables_updater_process
+        elif selection == '21':
             application_tester.look_ahead_handler_tester.start_timetables_updater_process()
 
-        # 19. (look_ahead_handler) - terminate_timetables_updater_process
-        elif selection == '19':
+        # 22. (look_ahead_handler) - terminate_timetables_updater_process
+        elif selection == '22':
             application_tester.look_ahead_handler_tester.terminate_timetables_updater_process()
 
-        # 20. (travel_requests_simulator) - start_travel_requests_generator_process
-        elif selection == '20':
+        # 23. (travel_requests_simulator) - start_travel_requests_generator_process
+        elif selection == '23':
             application_tester.travel_requests_simulator_tester.start_travel_requests_generator_process(
                 initial_datetime=travel_requests_min_departure_datetime_testing_value,
                 min_number_of_travel_request_documents=travel_requests_generator_min_number_of_documents,
                 max_number_of_travel_request_documents=travel_requests_generator_max_number_of_documents
             )
 
-        # 21. (travel_requests_simulator) - terminate_travel_requests_generator_process
-        elif selection == '21':
+        # 24. (travel_requests_simulator) - terminate_travel_requests_generator_process
+        elif selection == '24':
             application_tester.travel_requests_simulator_tester.terminate_travel_requests_generator_process()
 
-        # 22. (traffic_data_simulator) - start_traffic_data_generator_process
-        elif selection == '22':
+        # 25. (traffic_data_simulator) - start_traffic_data_generator_process
+        elif selection == '25':
             application_tester.traffic_data_simulator_tester.start_traffic_data_generator_process()
 
-        # 23. (traffic_data_simulator) - terminate_traffic_data_generator_process
-        elif selection == '23':
+        # 26. (traffic_data_simulator) - terminate_traffic_data_generator_process
+        elif selection == '26':
             application_tester.traffic_data_simulator_tester.terminate_traffic_data_generator_process()
 
         else:

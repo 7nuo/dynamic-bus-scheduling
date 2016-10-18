@@ -32,13 +32,13 @@ mongodb_port = 27017
 route_generator_host = '127.0.0.1'
 route_generator_port = '2000'
 route_generator_request_timeout = 30
-route_generator_edges_updater_timeout = 60
+route_generator_edges_updater_timeout = 10
 route_generator_edges_updater_max_operation_timeout = 600
 
-traffic_data_parser_timeout = 100
-traffic_data_parser_max_operation_timeout = 600
 traffic_data_generator_timeout = 100
 traffic_data_generator_max_operation_timeout = 600
+traffic_data_parser_timeout = 100
+traffic_data_parser_max_operation_timeout = 600
 
 look_ahead_timetables_generator_timeout = 100
 look_ahead_timetables_generator_max_operation_timeout = 600
@@ -53,14 +53,16 @@ travel_requests_generator_max_number_of_documents = 100
 
 # Maximum amount of speed for roads without a predefined value
 standard_speed = 50
-# Road types that can be accessed by a bus
-bus_road_types = ('motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary',
-                  'secondary_link', 'tertiary', 'tertiary_link', 'unclassified', 'residential', 'bus_road')
+# Road types that can be accessed by bus
+bus_road_types = (
+    'motorway', 'motorway_link', 'trunk', 'trunk_link', 'primary', 'primary_link', 'secondary',
+    'secondary_link', 'tertiary', 'tertiary_link', 'unclassified', 'residential', 'bus_road'
+)
 
 maximum_bus_capacity = 100
 average_waiting_time_threshold = 50
 individual_waiting_time_threshold = 200
-minimum_number_of_passengers_in_timetable = 30
+minimum_number_of_passengers_in_timetable = 10
 
 timetables_starting_datetime_testing_value = datetime(2016, 9, 15, 0, 0, 0, 00000)
 timetables_ending_datetime_testing_value = datetime(2016, 9, 16, 0, 0, 0, 00000)
@@ -73,8 +75,8 @@ testing_osm_filename = '../resources/osm_files/uppsala.osm'
 # testing_osm_filename = '../resources/osm_files/stockholm.osm'
 
 testing_bus_stop_names = [
-    'Centralstationen', 'Stadshuset', 'Skolgatan', 'Ekonomikum', 'Studentstaden', 'Rickomberga',
+    'Centralstationen', 'Stadshuset', 'Skolgatan', 'Ekonomikum', 'Rickomberga',
     'Oslogatan', 'Reykjaviksgatan', 'Ekebyhus', 'Sernanders väg', 'Flogsta centrum', 'Sernanders väg',
-    'Ekebyhus', 'Reykjaviksgatan', 'Oslogatan', 'Rickomberga', 'Studentstaden', 'Ekonomikum',
+    'Ekebyhus', 'Reykjaviksgatan', 'Oslogatan', 'Rickomberga', 'Ekonomikum',
     'Skolgatan', 'Stadshuset', 'Centralstationen'
 ]
