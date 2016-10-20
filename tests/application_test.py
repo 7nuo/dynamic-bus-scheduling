@@ -37,6 +37,7 @@ from tests.traffic_data_simulator_test import TrafficDataSimulatorTester
 from tests.travel_requests_simulator_test import TravelRequestsSimulatorTester
 from tests.route_generator_test import test_get_route_between_two_bus_stops, test_get_route_between_multiple_bus_stops,\
     test_get_waypoints_between_two_bus_stops, test_get_waypoints_between_multiple_bus_stops
+from multiprocessing import Process
 
 
 class ApplicationTester(object):
@@ -93,6 +94,10 @@ class ApplicationTester(object):
 if __name__ == '__main__':
     application_tester = ApplicationTester()
     printing_limit = 10  # Positive int or None
+    timetables_generator_process = None
+    timetables_updater_process = None
+    travel_requests_generator_process = None
+    traffic_data_generator_process = None
 
     while True:
         time.sleep(0.01)
@@ -362,39 +367,95 @@ if __name__ == '__main__':
 
         # 19. (look_ahead_handler) - start_timetables_generator_process
         elif selection == '19':
-            application_tester.look_ahead_handler_tester.start_timetables_generator_process()
+            # application_tester.look_ahead_handler_tester.start_timetables_generator_process()
+            timetables_generator_process = Process(
+                target=application_tester.look_ahead_handler_tester.test_timetables_generator_process,
+                args=()
+            )
+            timetables_generator_process.start()
+            print '\nlook_ahead_handler: timetables_generator_process: terminated'
 
         # 20. (look_ahead_handler) - terminate_timetables_generator_process
         elif selection == '20':
-            application_tester.look_ahead_handler_tester.terminate_timetables_generator_process()
+            # application_tester.look_ahead_handler_tester.terminate_timetables_generator_process()
+            if timetables_generator_process is not None:
+                timetables_generator_process.terminate()
+                timetables_generator_process.join()
+                timetables_generator_process = None
+                print '\nlook_ahead_handler: timetables_generator_process: terminated'
+            else:
+                print '\nlook_ahead_handler: timetables_generator_process: None'
 
         # 21. (look_ahead_handler) - start_timetables_updater_process
         elif selection == '21':
-            application_tester.look_ahead_handler_tester.start_timetables_updater_process()
+            # application_tester.look_ahead_handler_tester.start_timetables_updater_process()
+            timetables_updater_process = Process(
+                target=application_tester.look_ahead_handler_tester.test_timetables_updater_process,
+                args=()
+            )
+            timetables_updater_process.start()
+            print '\nlook_ahead_handler: timetables_updater_process: starting'
 
         # 22. (look_ahead_handler) - terminate_timetables_updater_process
         elif selection == '22':
-            application_tester.look_ahead_handler_tester.terminate_timetables_updater_process()
+            # application_tester.look_ahead_handler_tester.terminate_timetables_updater_process()
+            if timetables_updater_process is not None:
+                timetables_updater_process.terminate()
+                timetables_updater_process.join()
+                timetables_generator_process = None
+                print '\nlook_ahead_handler: timetables_updater_process: terminated'
+            else:
+                print '\nlook_ahead_handler: timetables_updater_process: None'
 
         # 23. (travel_requests_simulator) - start_travel_requests_generator_process
         elif selection == '23':
-            application_tester.travel_requests_simulator_tester.start_travel_requests_generator_process(
-                initial_datetime=travel_requests_min_departure_datetime_testing_value,
-                min_number_of_travel_request_documents=travel_requests_generator_min_number_of_documents,
-                max_number_of_travel_request_documents=travel_requests_generator_max_number_of_documents
+            # application_tester.travel_requests_simulator_tester.start_travel_requests_generator_process(
+            #     initial_datetime=travel_requests_min_departure_datetime_testing_value,
+            #     min_number_of_travel_request_documents=travel_requests_generator_min_number_of_documents,
+            #     max_number_of_travel_request_documents=travel_requests_generator_max_number_of_documents
+            # )
+            initial_datetime = travel_requests_min_departure_datetime_testing_value
+            min_number_of_travel_request_documents = travel_requests_generator_min_number_of_documents
+            max_number_of_travel_request_documents = travel_requests_generator_max_number_of_documents
+
+            travel_requests_generator_process = Process(
+                target=application_tester.travel_requests_simulator_tester.test_travel_requests_generator_process,
+                args=(initial_datetime, min_number_of_travel_request_documents, max_number_of_travel_request_documents)
             )
+            travel_requests_generator_process.start()
+            print '\ntravel_requests_simulator: travel_requests_generator_process: starting'
 
         # 24. (travel_requests_simulator) - terminate_travel_requests_generator_process
         elif selection == '24':
-            application_tester.travel_requests_simulator_tester.terminate_travel_requests_generator_process()
+            # application_tester.travel_requests_simulator_tester.terminate_travel_requests_generator_process()
+            if travel_requests_generator_process is not None:
+                travel_requests_generator_process.terminate()
+                travel_requests_generator_process.join()
+                traffic_requests_generator_process = None
+                print '\ntravel_requests_simulator: travel_requests_generator_process: terminated'
+            else:
+                print '\ntravel_requests_simulator: travel_requests_generator_process: None'
 
         # 25. (traffic_data_simulator) - start_traffic_data_generator_process
         elif selection == '25':
-            application_tester.traffic_data_simulator_tester.start_traffic_data_generator_process()
+            # application_tester.traffic_data_simulator_tester.start_traffic_data_generator_process()
+            traffic_data_generator_process = Process(
+                target=application_tester.traffic_data_simulator_tester.test_traffic_data_generator_process,
+                args=()
+            )
+            traffic_data_generator_process.start()
+            print '\ntraffic_data_simulator: traffic_data_generator_process: starting'
 
         # 26. (traffic_data_simulator) - terminate_traffic_data_generator_process
         elif selection == '26':
-            application_tester.traffic_data_simulator_tester.terminate_traffic_data_generator_process()
+            # application_tester.traffic_data_simulator_tester.terminate_traffic_data_generator_process()
+            if traffic_data_generator_process is not None:
+                traffic_data_generator_process.terminate()
+                traffic_data_generator_process.join()
+                traffic_data_generator_process = None
+                print '\ntraffic_data_simulator: traffic_data_generator_process: terminated'
+            else:
+                print '\ntraffic_data_simulator: traffic_data_generator_process: None'
 
         else:
             pass

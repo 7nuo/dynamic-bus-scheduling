@@ -21,6 +21,7 @@
 // SOFTWARE.
 
 var amqp = require('amqplib/callback_api');
+var amqpEndpoint = 'amqp://guest:guest@131.227.92.55:8007/';
 // var amqpEndpoint = 'amqp://localhost:8007/';
 var ampqConnection = null;
 
@@ -32,13 +33,39 @@ var routingKey = '#';
 // var routingKey = 'Aarhus.Road.Traffic.195070';
 var N3 = require('n3');
 
+var MongoClient = require('mongodb').MongoClient;
+var mongodbHost = '127.0.0.1';
+var mongodbPort = '27017';
+var mongodbDatabaseName = 'monad';
+var url = 'mongodb://' + mongodbHost + ':' + mongodbPort + '/' + mongodbDatabaseName;
+var mongodbDatabase = null;
+var trafficEventsCollection = null;
+
 var debug = true;
 
-function establishConnection() {
+function establishConnections() {
+    establishMongodbDatabaseConnection();
+    establishCityPulseDataBusConnection();
+}
+
+function establishMongodbDatabaseConnection() {
+    MongoClient.connect(url, function(err, db) {
+        if (err) {
+            console.error('mongodb_database_connection: establishConnection:', err.message);
+        }
+        else {
+            console.log('mongodb_database_connection: establishConnection: ok');
+            mongodbDatabase = db;
+            whenConnectedToMongodbDatabase();
+        }
+    });
+}
+
+function establishCityPulseDataBusConnection() {
     amqp.connect(amqpEndpoint, function(err, conn) {
         if (err) {
             console.error("[AMQP]", err.message);
-            return setTimeout(establishConnection, 1000);
+            return setTimeout(establishCityPulseDataBusConnection, 1000);
         }
         conn.on("error", function(err) {
             if (err.message !== "Connection closing") {
@@ -47,11 +74,11 @@ function establishConnection() {
         });
         conn.on("close", function() {
             console.error("[AMQP] reconnecting");
-            return setTimeout(establishConnection, 1000);
+            return setTimeout(establishCityPulseDataBusConnection, 1000);
         });
         console.log("[AMQP] connected");
         ampqConnection = conn;
-        whenConnected();
+        whenConnectedToCityPulseDataBus();
     });
 }
 
@@ -208,8 +235,61 @@ function consumer() {
     }
 }
 
-function whenConnected() {
+function deleteTrafficEventDocument(eventId) {
+    var key = {
+        "event_id": eventId.toString()
+    };
+    trafficEventsCollection.deleteOne(key, function (err, result) {
+        if (err) {
+            console.error('mongodb_database_connection: deleteTrafficEventDocument:', err.message);
+        }
+        else {
+            console.log('mongodb_database_connection: deleteTrafficEventDocument:', result.deletedCount);
+        }
+    });
+}
+
+function findTrafficEventDocument(eventId) {
+    var trafficEventDocument = null;
+    var key = {
+        "event_id": eventId.toString()
+    };
+    trafficEventsCollection.findOne(key, function (err, result) {
+        if (err) {
+            console.error('mongodb_database_connection: findTrafficEventDocument:', err.message);
+        }
+        else {
+            trafficEventDocument = result;
+        }
+    });
+    return trafficEventDocument;
+}
+
+function insertTrafficEventDocument(eventId, eventType, severityLevel, latitude, longitude, date) {
+    var key = {
+        "event_id": eventId.toString()
+    };
+    var data = {$set: {
+        "event_type": eventType,
+        "severity_level": severityLevel,
+        "latitude": latitude,
+        "longitude": longitude,
+        "date": date
+    }};
+    trafficEventsCollection.updateOne(key, data, {upsert:true},  function (err, result) {
+        if (err) {
+            console.error('mongodb_database_connection: insertTrafficEventDocument:', err.message);
+        }
+    });
+}
+
+function whenConnectedToMongodbDatabase() {
+    trafficEventsCollection = mongodbDatabase.collection('TrafficEvents');
+    // mongodbDatabase.close();
+}
+
+function whenConnectedToCityPulseDataBus() {
     consumer();
 }
 
-establishConnection();
+establishConnections();

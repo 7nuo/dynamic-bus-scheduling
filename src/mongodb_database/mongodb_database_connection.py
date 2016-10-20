@@ -2964,7 +2964,12 @@ class MongodbDatabaseConnection(object):
         number_of_timetable_documents = len(timetable_documents)
 
         if counter is not None and counter < number_of_timetable_documents:
-            timetable_documents = timetable_documents[0:(counter-1)]
+            if counter == 0:
+                timetable_documents = []
+            elif counter == 1:
+                timetable_documents = [timetable_documents[0]]
+            else:
+                timetable_documents = timetable_documents[0:(counter-1)]
 
         print_timetables(
             timetables=timetable_documents,

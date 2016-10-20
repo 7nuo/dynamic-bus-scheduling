@@ -1044,6 +1044,11 @@ def divide_timetable_based_on_average_waiting_time(timetable):
         timetable=additional_timetable
     )
 
+    # if (new_average_waiting_time + additional_timetable_average_waiting_time) / 2 > initial_average_waiting_time:
+    #     timetable['timetable_entries'] = initial_timetable_entries
+    #     timetable['travel_requests'] = initial_travel_requests
+    #     return None
+
     if (new_average_waiting_time > initial_average_waiting_time or
                 additional_timetable_average_waiting_time > initial_average_waiting_time):
         timetable['timetable_entries'] = initial_timetable_entries
