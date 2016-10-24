@@ -31,7 +31,7 @@ mongodb_port = 27017
 
 route_generator_host = '127.0.0.1'
 route_generator_port = '2000'
-route_generator_request_timeout = 30
+route_generator_request_timeout = 60
 route_generator_edges_updater_timeout = 10
 route_generator_edges_updater_max_operation_timeout = 600
 
@@ -64,15 +64,13 @@ average_waiting_time_threshold = 60
 individual_waiting_time_threshold = 200
 minimum_number_of_passengers_in_timetable = 30
 
-timetables_starting_datetime_testing_value = datetime(2016, 9, 15, 0, 0, 0, 00000)
-timetables_ending_datetime_testing_value = datetime(2016, 9, 16, 0, 0, 0, 00000)
+timetables_starting_datetime_testing_value = datetime(2016, 10, 20, 0, 0, 0, 00000)
+timetables_ending_datetime_testing_value = datetime(2016, 10, 21, 0, 0, 0, 00000)
 
-travel_requests_min_departure_datetime_testing_value = datetime(2016, 9, 15, 0, 0, 0, 00000)
-travel_requests_max_departure_datetime_testing_value = datetime(2016, 9, 16, 0, 0, 0, 00000)
+travel_requests_min_departure_datetime_testing_value = datetime(2016, 10, 20, 0, 0, 0, 00000)
+travel_requests_max_departure_datetime_testing_value = datetime(2016, 10, 21, 0, 0, 0, 00000)
 
 testing_osm_filename = '../resources/osm_files/uppsala.osm'
-# testing_osm_filename = '../resources/osm_files/aarhus.osm'
-# testing_osm_filename = '../resources/osm_files/stockholm.osm'
 
 testing_bus_stop_names = [
     'Centralstationen', 'Stadshuset', 'Skolgatan', 'Ekonomikum', 'Rickomberga',

@@ -29,20 +29,96 @@ from src.look_ahead.timetable_generator import print_timetables
 
 
 class MongodbDatabaseConnection(object):
+    """
+    Database: dynamic_bus_scheduling
+
+    Collections:
+        - AddressDocuments
+        - BusLineDocuments
+        - BusStopDocuments
+        - BusStopWaypointsDocuments
+        - EdgeDocuments
+        - NodeDocuments
+        - PointDocuments
+        - TimetableDocuments
+        - TrafficEventDocuments
+        - TravelRequestDocuments
+        - WayDocuments
+
+    Description of collection documents:
+
+    address_document: {
+        '_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}
+    }
+    bus_line_document: {
+        '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+    }
+    bus_stop_document: {
+        '_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}
+    }
+    bus_stop_waypoints_document: {
+        '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        'waypoints': [[edge_object_id]]
+    }
+    detailed_bus_stop_waypoints_document: {
+        '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        'waypoints': [[edge_document]]
+    }
+    edge_document: {
+        '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'max_speed', 'road_type', 'way_id', 'traffic_density'
+    }
+    node_document: {
+        '_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}
+    }
+    point_document: {
+        '_id', 'osm_id', 'point': {'longitude', 'latitude'}
+    }
+    timetable_document: {
+        '_id', 'line_id',
+        'timetable_entries': [{
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+        'travel_requests': [{
+            '_id', 'client_id', 'line_id',
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'departure_datetime', 'arrival_datetime',
+            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
+    }
+    traffic_event_document: {
+        '_id', 'event_id', 'event_type', 'severity_level', 'longitude', 'latitude', 'date'
+    }
+    travel_request_document: {
+        '_id', 'client_id', 'line_id',
+        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        'departure_datetime', 'arrival_datetime',
+        'starting_timetable_entry_index', 'ending_timetable_entry_index'
+    }
+    way_document: {
+        '_id', 'osm_id', 'tags', 'references'
+    }
+    """
     def __init__(self, host, port):
         self.mongo_client = MongoClient(host, port)
-        self.db = self.mongo_client.monad
-        self.address_documents_collection = self.db.AddressBook
-        self.bus_line_documents_collection = self.db.BusLines
-        self.bus_stop_waypoints_documents_collection = self.db.BusStopWaypoints
-        self.bus_stop_documents_collection = self.db.BusStops
-        self.edge_documents_collection = self.db.Edges
-        self.node_documents_collection = self.db.Nodes
-        self.point_documents_collection = self.db.Points
-        self.timetable_documents_collection = self.db.Timetables
-        self.traffic_event_documents_collection = self.db.TrafficEvents
-        self.travel_request_documents_collection = self.db.TravelRequests
-        self.way_documents_collection = self.db.Ways
+        self.db = self.mongo_client.dynamic_bus_scheduling
+        self.address_documents_collection = self.db.AddressDocuments
+        self.bus_line_documents_collection = self.db.BusLineDocuments
+        self.bus_stop_documents_collection = self.db.BusStopDocuments
+        self.bus_stop_waypoints_documents_collection = self.db.BusStopWaypointsDocuments
+        self.edge_documents_collection = self.db.EdgeDocuments
+        self.node_documents_collection = self.db.NodeDocuments
+        self.point_documents_collection = self.db.PointDocuments
+        self.timetable_documents_collection = self.db.TimetableDocuments
+        self.traffic_event_documents_collection = self.db.TrafficEventDocuments
+        self.travel_request_documents_collection = self.db.TravelRequestDocuments
+        self.way_documents_collection = self.db.WayDocuments
 
     def clear_all_collections(self):
         self.clear_address_documents_collection()
@@ -859,7 +935,9 @@ class MongodbDatabaseConnection(object):
         :return: bus_stop_waypoints_document
         """
         if object_id is not None:
-            bus_stop_waypoints_document = self.bus_stop_waypoints_documents_collection.find_one({'_id': ObjectId(object_id)})
+            bus_stop_waypoints_document = self.bus_stop_waypoints_documents_collection.find_one({
+                '_id': ObjectId(object_id)
+            })
         elif starting_bus_stop is not None and ending_bus_stop is not None:
             bus_stop_waypoints_document = self.bus_stop_waypoints_documents_collection.find_one({
                 'starting_bus_stop._id': starting_bus_stop.get('_id'),
@@ -1220,7 +1298,9 @@ class MongodbDatabaseConnection(object):
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            timetable_documents_cursor = self.timetable_documents_collection.find({'_id': {'$in': processed_object_ids}})
+            timetable_documents_cursor = self.timetable_documents_collection.find({
+                '_id': {'$in': processed_object_ids}
+            })
         elif line_ids is not None:
             timetable_documents_cursor = self.timetable_documents_collection.find({'line_id': {'$in': line_ids}})
         else:
@@ -1262,9 +1342,13 @@ class MongodbDatabaseConnection(object):
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            traffic_event_documents_cursor = self.traffic_event_documents_collection.find({'_id': {'$in': processed_object_ids}})
+            traffic_event_documents_cursor = self.traffic_event_documents_collection.find({
+                '_id': {'$in': processed_object_ids}
+            })
         elif event_ids is not None:
-            traffic_event_documents_cursor = self.traffic_event_documents_collection.find({'event_id': {'$in': event_ids}})
+            traffic_event_documents_cursor = self.traffic_event_documents_collection.find({
+                'event_id': {'$in': event_ids}
+            })
         else:
             traffic_event_documents_cursor = self.traffic_event_documents_collection.find({})
 
@@ -1309,7 +1393,9 @@ class MongodbDatabaseConnection(object):
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            travel_requests_cursor = self.travel_request_documents_collection.find({'_id': {'$in': processed_object_ids}})
+            travel_requests_cursor = self.travel_request_documents_collection.find({
+                '_id': {'$in': processed_object_ids}
+            })
         elif client_ids is not None and min_departure_datetime is not None and max_departure_datetime is not None:
             travel_requests_cursor = self.travel_request_documents_collection.find({
                 'client_id': {'$in': client_ids},
