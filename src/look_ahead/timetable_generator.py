@@ -866,6 +866,53 @@ def clear_travel_requests_of_timetables(timetables):
         clear_travel_requests_of_timetable(timetable=timetable)
 
 
+def correspond_bus_vehicle_to_timetable(bus_vehicles, timetable):
+    """
+    Correspond a timetable to one of the existed bus_vehicles, if possible, otherwise add a new one.
+
+    bus_vehicle_document: {
+        'starting_datetime', 'ending_datetime'
+    }
+    timetable_document: {
+        '_id', 'line_id',
+        'timetable_entries': [{
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+        'travel_requests': [{
+            '_id', 'client_id', 'line_id',
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'departure_datetime', 'arrival_datetime',
+            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
+    }
+    :param bus_vehicles: [bus_vehicle_document]
+    :param timetable: timetable_document
+    :return: None (updates bus_vehicles)
+    """
+    corresponded = False
+    starting_datetime_of_timetable = get_starting_datetime_of_timetable(timetable=timetable)
+    ending_datetime_of_timetable = get_ending_datetime_of_timetable(timetable=timetable)
+
+    for bus_vehicle in bus_vehicles:
+        # starting_datetime_of_bus_vehicle = bus_vehicle.get('starting_datetime')
+        ending_datetime_of_bus_vehicle = bus_vehicle.get('ending_datetime')
+
+        if ending_datetime_of_bus_vehicle < starting_datetime_of_timetable:
+            bus_vehicle['starting_datetime'] = starting_datetime_of_timetable
+            bus_vehicle['ending_datetime'] = ending_datetime_of_timetable
+            corresponded = True
+            break
+
+    if not corresponded:
+        bus_vehicle = {
+            'starting_datetime': starting_datetime_of_timetable,
+            'ending_datetime': ending_datetime_of_timetable
+        }
+        bus_vehicles.append(bus_vehicle)
+
+
 def correspond_travel_requests_to_bus_stops(travel_requests, bus_stops):
     """
     The list of bus stops of a bus line might contain the same bus_stop_osm_ids more than once.
@@ -1131,6 +1178,36 @@ def estimate_ideal_departure_datetimes_of_travel_request(travel_request, total_t
             print ideal_departure_datetimes
 
     return ideal_departure_datetimes
+
+
+def estimate_number_of_bus_vehicles_for_timetables(timetables):
+    """
+    Estimate the required number of bus_vehicles, in order to serve a list of timetables.
+
+    timetable_document: {
+        '_id', 'line_id',
+        'timetable_entries': [{
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+        'travel_requests': [{
+            '_id', 'client_id', 'line_id',
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'departure_datetime', 'arrival_datetime',
+            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
+    }
+    :param timetables: [timetable_document]
+    :return: number_of_bus_vehicles: int
+    """
+    bus_vehicles = []
+
+    for timetable in timetables:
+        correspond_bus_vehicle_to_timetable(bus_vehicles=bus_vehicles, timetable=timetable)
+
+    number_of_bus_vehicles = len(bus_vehicles)
+    return number_of_bus_vehicles
 
 
 def generate_additional_timetable(timetable):
@@ -2178,15 +2255,21 @@ def print_timetables(timetables, timetables_control=False, timetable_entries_con
     sort_timetables_by_starting_datetime(timetables=timetables)
 
     number_of_timetables = len(timetables)
+    number_of_bus_vehicles = estimate_number_of_bus_vehicles_for_timetables(
+        timetables=timetables
+    )
     total_number_of_passengers_in_timetables = calculate_total_number_of_travel_requests_in_timetables(
         timetables=timetables
     )
     average_number_of_passengers_in_timetables = calculate_average_number_of_travel_requests_in_timetables(
         timetables=timetables
     )
-    average_waiting_time = calculate_average_waiting_time_of_timetables_in_seconds(timetables=timetables)
+    average_waiting_time = calculate_average_waiting_time_of_timetables_in_seconds(
+        timetables=timetables
+    )
 
     print 'number_of_timetables:', number_of_timetables, \
+        '- number_of_bus_vehicles:', number_of_bus_vehicles, \
         '- total_number_of_passengers_in_timetables:', total_number_of_passengers_in_timetables, \
         '- average_number_of_passengers_in_timetables:', average_number_of_passengers_in_timetables, \
         '- average_waiting_time:', average_waiting_time
