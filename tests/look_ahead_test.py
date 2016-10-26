@@ -25,6 +25,10 @@ SOFTWARE.
 """
 import time
 from multiprocessing import Process
+import os
+import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from src.common.logger import log
 from src.common.variables import timetables_starting_datetime_testing_value, timetables_ending_datetime_testing_value, \
     travel_requests_min_departure_datetime_testing_value, travel_requests_max_departure_datetime_testing_value, \

@@ -23,6 +23,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+import os
+import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from src.data_simulator.travel_requests_simulator import TravelRequestsSimulator
 from src.common.logger import log
 from src.common.variables import travel_requests_generator_timeout, travel_requests_generator_max_operation_timeout, \

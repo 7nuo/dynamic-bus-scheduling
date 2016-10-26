@@ -24,6 +24,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import time
+import os
+import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from src.common.logger import log
 from src.common.variables import testing_bus_stop_names
 from src.route_generator.route_generator_client import get_route_between_two_bus_stops, \

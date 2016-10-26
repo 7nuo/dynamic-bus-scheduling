@@ -23,9 +23,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from common.variables import mongodb_host, mongodb_port
-from mongodb_database.mongodb_database_connection import MongodbDatabaseConnection
-from route_generator.route_generator_client import get_waypoints_between_multiple_bus_stops
+from src.common.variables import mongodb_host, mongodb_port
+from src.mongodb_database.mongodb_database_connection import MongodbDatabaseConnection
+from src.route_generator.route_generator_client import get_waypoints_between_multiple_bus_stops
 from src.common.logger import log
 from src.look_ahead.timetable_generator import *
 from src.look_ahead.timetable_updater import *

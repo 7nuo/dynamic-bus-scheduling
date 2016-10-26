@@ -25,8 +25,10 @@ SOFTWARE.
 """
 import time
 import os
+import sys
 
-from common.variables import testing_osm_filename, testing_bus_stop_names, \
+sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
+from src.common.variables import testing_osm_filename, testing_bus_stop_names, \
     travel_requests_min_departure_datetime_testing_value, travel_requests_max_departure_datetime_testing_value, \
     travel_requests_generator_min_number_of_documents, travel_requests_generator_max_number_of_documents
 from src.common.logger import log

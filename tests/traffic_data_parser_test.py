@@ -24,6 +24,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import time
+import os
+import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from src.common.logger import log
 from src.common.variables import traffic_data_parser_timeout, traffic_data_parser_max_operation_timeout
 from src.traffic_data_parser.traffic_data_parser import TrafficDataParser
