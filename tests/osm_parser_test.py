@@ -26,11 +26,17 @@ SOFTWARE.
 import time
 import os
 import sys
-
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from src.osm_parser.osm_parser import OsmParser
 from src.common.logger import log
 from src.common.variables import testing_osm_filename
+
+__author__ = 'Eleftherios Anagnostopoulos'
+__email__ = 'eanagnostopoulos@hotmail.com'
+__credits__ = [
+    'Azadeh Bararsani (Senior Researcher at Ericsson AB) - email: azadeh.bararsani@ericsson.com'
+    'Aneta Vulgarakis Feljan (Senior Researcher at Ericsson AB) - email: aneta.vulgarakis@ericsson.com'
+]
 
 
 class OsmParserTester(object):

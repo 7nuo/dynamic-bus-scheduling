@@ -23,7 +23,14 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from point import center
+from src.geospatial_data.point import center
+
+__author__ = 'Eleftherios Anagnostopoulos'
+__email__ = 'eanagnostopoulos@hotmail.com'
+__credits__ = [
+    'Azadeh Bararsani (Senior Researcher at Ericsson AB) - email: azadeh.bararsani@ericsson.com'
+    'Aneta Vulgarakis Feljan (Senior Researcher at Ericsson AB) - email: aneta.vulgarakis@ericsson.com'
+]
 
 
 class Address(object):

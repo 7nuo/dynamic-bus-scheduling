@@ -23,11 +23,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+# import multiprocessing
 import os
 import sys
-import multiprocessing
 sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 from src.common.variables import route_generator_host, route_generator_port
+
+__author__ = 'Eleftherios Anagnostopoulos'
+__email__ = 'eanagnostopoulos@hotmail.com'
+__credits__ = [
+    'Azadeh Bararsani (Senior Researcher at Ericsson AB) - email: azadeh.bararsani@ericsson.com'
+    'Aneta Vulgarakis Feljan (Senior Researcher at Ericsson AB) - email: aneta.vulgarakis@ericsson.com'
+]
 
 
 bind = route_generator_host + ':' + route_generator_port

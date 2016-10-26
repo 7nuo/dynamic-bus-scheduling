@@ -23,10 +23,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-import cgi
+# import cgi
 import json
 from bson import ObjectId
-from router import Router
+from src.route_generator.router import Router
+
+__author__ = 'Eleftherios Anagnostopoulos'
+__email__ = 'eanagnostopoulos@hotmail.com'
+__credits__ = [
+    'Azadeh Bararsani (Senior Researcher at Ericsson AB) - email: azadeh.bararsani@ericsson.com'
+    'Aneta Vulgarakis Feljan (Senior Researcher at Ericsson AB) - email: aneta.vulgarakis@ericsson.com'
+]
 
 
 router = Router()

@@ -26,6 +26,13 @@ SOFTWARE.
 import math
 import numpy as np
 
+__author__ = 'Eleftherios Anagnostopoulos'
+__email__ = 'eanagnostopoulos@hotmail.com'
+__credits__ = [
+    'Azadeh Bararsani (Senior Researcher at Ericsson AB) - email: azadeh.bararsani@ericsson.com'
+    'Aneta Vulgarakis Feljan (Senior Researcher at Ericsson AB) - email: aneta.vulgarakis@ericsson.com'
+]
+
 
 class Point(object):
     """

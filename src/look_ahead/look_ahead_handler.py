@@ -30,6 +30,13 @@ from src.common.logger import log
 from src.look_ahead.timetable_generator import *
 from src.look_ahead.timetable_updater import *
 
+__author__ = 'Eleftherios Anagnostopoulos'
+__email__ = 'eanagnostopoulos@hotmail.com'
+__credits__ = [
+    'Azadeh Bararsani (Senior Researcher at Ericsson AB) - email: azadeh.bararsani@ericsson.com'
+    'Aneta Vulgarakis Feljan (Senior Researcher at Ericsson AB) - email: aneta.vulgarakis@ericsson.com'
+]
+
 
 class LookAheadHandler(object):
     def __init__(self):

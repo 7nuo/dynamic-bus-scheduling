@@ -27,6 +27,13 @@ from bson import ObjectId
 from pymongo import MongoClient
 from src.look_ahead.timetable_generator import print_timetables
 
+__author__ = 'Eleftherios Anagnostopoulos'
+__email__ = 'eanagnostopoulos@hotmail.com'
+__credits__ = [
+    'Azadeh Bararsani (Senior Researcher at Ericsson AB) - email: azadeh.bararsani@ericsson.com'
+    'Aneta Vulgarakis Feljan (Senior Researcher at Ericsson AB) - email: aneta.vulgarakis@ericsson.com'
+]
+
 
 class MongodbDatabaseConnection(object):
     """

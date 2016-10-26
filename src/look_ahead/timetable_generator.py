@@ -23,10 +23,17 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+from datetime import datetime, timedelta, time
 from src.common.variables import maximum_bus_capacity, average_waiting_time_threshold, \
     individual_waiting_time_threshold, minimum_number_of_passengers_in_timetable
 from src.route_generator.route_generator_client import get_route_between_multiple_bus_stops
-from datetime import datetime, timedelta, time
+
+__author__ = 'Eleftherios Anagnostopoulos'
+__email__ = 'eanagnostopoulos@hotmail.com'
+__credits__ = [
+    'Azadeh Bararsani (Senior Researcher at Ericsson AB) - email: azadeh.bararsani@ericsson.com'
+    'Aneta Vulgarakis Feljan (Senior Researcher at Ericsson AB) - email: aneta.vulgarakis@ericsson.com'
+]
 
 
 class TimetableGenerator(object):

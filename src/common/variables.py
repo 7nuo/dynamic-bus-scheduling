@@ -25,6 +25,12 @@ SOFTWARE.
 """
 from datetime import datetime
 
+__author__ = 'Eleftherios Anagnostopoulos'
+__email__ = 'eanagnostopoulos@hotmail.com'
+__credits__ = [
+    'Azadeh Bararsani (Senior Researcher at Ericsson AB) - email: azadeh.bararsani@ericsson.com'
+    'Aneta Vulgarakis Feljan (Senior Researcher at Ericsson AB) - email: aneta.vulgarakis@ericsson.com'
+]
 
 mongodb_host = '127.0.0.1'
 mongodb_port = 27017
@@ -74,7 +80,7 @@ testing_osm_filename = '../resources/osm_files/uppsala.osm'
 
 testing_bus_stop_names = [
     'Centralstationen', 'Stadshuset', 'Skolgatan', 'Ekonomikum', 'Rickomberga',
-    'Oslogatan', 'Reykjaviksgatan', 'Ekebyhus', 'Sernanders väg', 'Flogsta centrum', 'Sernanders väg',
-    'Ekebyhus', 'Reykjaviksgatan', 'Oslogatan', 'Rickomberga', 'Ekonomikum',
-    'Skolgatan', 'Stadshuset', 'Centralstationen'
+    'Oslogatan', 'Reykjaviksgatan', 'Ekebyhus', 'Sernanders väg', 'Flogsta centrum',
+    'Sernanders väg', 'Ekebyhus', 'Reykjaviksgatan', 'Oslogatan', 'Rickomberga',
+    'Ekonomikum', 'Skolgatan', 'Stadshuset', 'Centralstationen'
 ]

@@ -24,14 +24,20 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import time
+from multiprocessing import Process
 import os
 import sys
-
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from src.common.logger import log
 from src.common.variables import traffic_data_generator_timeout, traffic_data_generator_max_operation_timeout
 from src.data_simulator.traffic_data_simulator import TrafficDataSimulator
-from multiprocessing import Process
+
+__author__ = 'Eleftherios Anagnostopoulos'
+__email__ = 'eanagnostopoulos@hotmail.com'
+__credits__ = [
+    'Azadeh Bararsani (Senior Researcher at Ericsson AB) - email: azadeh.bararsani@ericsson.com'
+    'Aneta Vulgarakis Feljan (Senior Researcher at Ericsson AB) - email: aneta.vulgarakis@ericsson.com'
+]
 
 
 class TrafficDataSimulatorTester(object):

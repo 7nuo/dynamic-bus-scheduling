@@ -27,7 +27,6 @@ import time
 from multiprocessing import Process
 import os
 import sys
-
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from src.common.logger import log
 from src.common.variables import timetables_starting_datetime_testing_value, timetables_ending_datetime_testing_value, \
@@ -35,6 +34,13 @@ from src.common.variables import timetables_starting_datetime_testing_value, tim
     look_ahead_timetables_generator_timeout, look_ahead_timetables_generator_max_operation_timeout, \
     look_ahead_timetables_updater_timeout, look_ahead_timetables_updater_max_operation_timeout
 from src.look_ahead.look_ahead_handler import LookAheadHandler
+
+__author__ = 'Eleftherios Anagnostopoulos'
+__email__ = 'eanagnostopoulos@hotmail.com'
+__credits__ = [
+    'Azadeh Bararsani (Senior Researcher at Ericsson AB) - email: azadeh.bararsani@ericsson.com'
+    'Aneta Vulgarakis Feljan (Senior Researcher at Ericsson AB) - email: aneta.vulgarakis@ericsson.com'
+]
 
 
 class LookAheadHandlerTester(object):

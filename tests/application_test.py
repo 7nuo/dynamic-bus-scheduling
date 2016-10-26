@@ -24,9 +24,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 import time
+from multiprocessing import Process
 import os
 import sys
-
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from src.common.variables import testing_osm_filename, testing_bus_stop_names, \
     travel_requests_min_departure_datetime_testing_value, travel_requests_max_departure_datetime_testing_value, \
@@ -39,7 +39,14 @@ from tests.traffic_data_simulator_test import TrafficDataSimulatorTester
 from tests.travel_requests_simulator_test import TravelRequestsSimulatorTester
 from tests.route_generator_test import test_get_route_between_two_bus_stops, test_get_route_between_multiple_bus_stops,\
     test_get_waypoints_between_two_bus_stops, test_get_waypoints_between_multiple_bus_stops
-from multiprocessing import Process
+
+
+__author__ = 'Eleftherios Anagnostopoulos'
+__email__ = 'eanagnostopoulos@hotmail.com'
+__credits__ = [
+    'Azadeh Bararsani (Senior Researcher at Ericsson AB) - email: azadeh.bararsani@ericsson.com'
+    'Aneta Vulgarakis Feljan (Senior Researcher at Ericsson AB) - email: aneta.vulgarakis@ericsson.com'
+]
 
 
 class ApplicationTester(object):

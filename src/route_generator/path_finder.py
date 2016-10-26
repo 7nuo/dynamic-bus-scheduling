@@ -26,6 +26,13 @@ SOFTWARE.
 from src.common.variables import bus_road_types, standard_speed
 from src.geospatial_data.point import distance, Point
 
+__author__ = 'Eleftherios Anagnostopoulos'
+__email__ = 'eanagnostopoulos@hotmail.com'
+__credits__ = [
+    'Azadeh Bararsani (Senior Researcher at Ericsson AB) - email: azadeh.bararsani@ericsson.com'
+    'Aneta Vulgarakis Feljan (Senior Researcher at Ericsson AB) - email: aneta.vulgarakis@ericsson.com'
+]
+
 
 class Node(object):
     def __init__(self, osm_id, point_document):

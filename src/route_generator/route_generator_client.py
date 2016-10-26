@@ -25,10 +25,15 @@ SOFTWARE.
 """
 import requests
 import json
-
 from bson import ObjectId
-
 from src.common.variables import route_generator_host, route_generator_port, route_generator_request_timeout
+
+__author__ = 'Eleftherios Anagnostopoulos'
+__email__ = 'eanagnostopoulos@hotmail.com'
+__credits__ = [
+    'Azadeh Bararsani (Senior Researcher at Ericsson AB) - email: azadeh.bararsani@ericsson.com'
+    'Aneta Vulgarakis Feljan (Senior Researcher at Ericsson AB) - email: aneta.vulgarakis@ericsson.com'
+]
 
 
 class JSONResponseEncoder(json.JSONEncoder):

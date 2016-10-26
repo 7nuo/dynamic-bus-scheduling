@@ -23,17 +23,23 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
+import time
+from multiprocessing import Process
 import os
 import sys
-
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from src.data_simulator.travel_requests_simulator import TravelRequestsSimulator
 from src.common.logger import log
 from src.common.variables import travel_requests_generator_timeout, travel_requests_generator_max_operation_timeout, \
     travel_requests_min_departure_datetime_testing_value, travel_requests_generator_min_number_of_documents, \
     travel_requests_generator_max_number_of_documents
-from multiprocessing import Process
-import time
+
+__author__ = 'Eleftherios Anagnostopoulos'
+__email__ = 'eanagnostopoulos@hotmail.com'
+__credits__ = [
+    'Azadeh Bararsani (Senior Researcher at Ericsson AB) - email: azadeh.bararsani@ericsson.com'
+    'Aneta Vulgarakis Feljan (Senior Researcher at Ericsson AB) - email: aneta.vulgarakis@ericsson.com'
+]
 
 
 class TravelRequestsSimulatorTester(object):
