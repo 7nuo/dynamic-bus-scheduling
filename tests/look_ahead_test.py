@@ -32,7 +32,7 @@ from src.common.logger import log
 from src.common.variables import timetables_starting_datetime_testing_value, timetables_ending_datetime_testing_value, \
     travel_requests_min_departure_datetime_testing_value, travel_requests_max_departure_datetime_testing_value, \
     look_ahead_timetables_generator_timeout, look_ahead_timetables_generator_max_operation_timeout, \
-    look_ahead_timetables_updater_timeout, look_ahead_timetables_updater_max_operation_timeout
+    look_ahead_timetables_updater_timeout, look_ahead_timetables_updater_max_operation_timeout, testing_bus_line_id
 from src.look_ahead.look_ahead_handler import LookAheadHandler
 
 __author__ = 'Eleftherios Anagnostopoulos'

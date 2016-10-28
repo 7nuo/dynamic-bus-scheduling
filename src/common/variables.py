@@ -84,3 +84,5 @@ testing_bus_stop_names = [
     'Sernanders väg', 'Ekebyhus', 'Reykjaviksgatan', 'Oslogatan', 'Rickomberga',
     'Ekonomikum', 'Skolgatan', 'Stadshuset', 'Centralstationen'
 ]
+
+testing_bus_line_id = 1

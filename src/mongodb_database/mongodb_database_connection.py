@@ -2025,21 +2025,43 @@ class MongodbDatabaseConnection(object):
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         :return: new_object_id: ObjectId
         """
-        if bus_line_document is not None:
-            key = {'_id': ObjectId(bus_line_document.get('_id'))}
+        if bus_line_document is None and (line_id is None or bus_stops is None):
+            return None
+
+        elif bus_line_document is not None:
+            object_id = bus_line_document.get('_id')
+
+            if object_id is not None:
+                key = {
+                    '_id': ObjectId(object_id)
+                }
+                data = {
+                    '$set': {
+                        'line_id': bus_line_document.get('line_id'),
+                        'bus_stops': bus_line_document.get('bus_stops')
+                    }
+                }
+            else:
+                key = {
+                    'line_id': bus_line_document.get('line_id')
+                }
+                data = {
+                    '$set': {
+                        'bus_stops': bus_line_document.get('bus_stops')
+                    }
+                }
+        else:
+            key = {
+                'line_id': line_id
+            }
             data = {
                 '$set': {
-                    'line_id': bus_line_document.get('line_id'),
-                    'bus_stops': bus_line_document.get('bus_stops')
+                    'bus_stops': bus_stops
                 }
             }
-            result = self.bus_line_documents_collection.update_one(key, data, upsert=True)
-            new_object_id = result.upserted_id
-        else:
-            bus_line_document = {'line_id': line_id, 'bus_stops': bus_stops}
-            result = self.bus_line_documents_collection.insert_one(bus_line_document)
-            new_object_id = result.inserted_id
 
+        result = self.bus_line_documents_collection.update_one(key, data, upsert=True)
+        new_object_id = result.upserted_id
         return new_object_id
 
     def insert_bus_line_documents(self, bus_line_documents):

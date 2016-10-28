@@ -28,7 +28,7 @@ from multiprocessing import Process
 import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
-from src.common.variables import testing_osm_filename, testing_bus_stop_names, \
+from src.common.variables import testing_osm_filename, testing_bus_stop_names, testing_bus_line_id, \
     travel_requests_min_departure_datetime_testing_value, travel_requests_max_departure_datetime_testing_value, \
     travel_requests_generator_min_number_of_documents, travel_requests_generator_max_number_of_documents
 from src.common.logger import log
@@ -313,7 +313,7 @@ if __name__ == '__main__':
         # 9. (look_ahead_handler) - test_generate_bus_line
         elif selection == '9':
             application_tester.look_ahead_handler_tester.test_generate_bus_line(
-                line_id=1,
+                line_id=testing_bus_line_id,
                 bus_stop_names=testing_bus_stop_names
             )
 
@@ -330,7 +330,7 @@ if __name__ == '__main__':
         # 12. (travel_requests_simulator) - test_generate_travel_request_documents
         elif selection == '12':
             application_tester.travel_requests_simulator_tester.test_generate_travel_request_documents(
-                line_id=1,
+                line_id=testing_bus_line_id,
                 initial_datetime=travel_requests_min_departure_datetime_testing_value,
                 number_of_travel_request_documents=10000
             )
@@ -338,7 +338,7 @@ if __name__ == '__main__':
         # 13. (mongodb_database) - print_travel_request_documents
         elif selection == '13':
             application_tester.mongodb_database_connection_tester.print_travel_request_documents(
-                line_ids=[1],
+                line_ids=[testing_bus_line_id],
                 min_departure_datetime=travel_requests_min_departure_datetime_testing_value,
                 max_departure_datetime=travel_requests_max_departure_datetime_testing_value,
                 counter=10
@@ -346,12 +346,14 @@ if __name__ == '__main__':
 
         # 14. (look_ahead_handler) - test_generate_timetables_for_bus_line
         elif selection == '14':
-            application_tester.look_ahead_handler_tester.test_generate_timetables_for_bus_line(line_id=1)
+            application_tester.look_ahead_handler_tester.test_generate_timetables_for_bus_line(
+                line_id=testing_bus_line_id
+            )
 
         # 15. (mongodb_database) - print_timetable_documents
         elif selection == '15':
             application_tester.mongodb_database_connection_tester.print_timetable_documents(
-                line_ids=[1],
+                line_ids=[testing_bus_line_id],
                 counter=1,
                 timetables_control=True,
                 timetable_entries_control=True,
@@ -372,7 +374,9 @@ if __name__ == '__main__':
 
         # 18. (look_ahead_handler) - test_update_timetables_of_bus_line
         elif selection == '18':
-            application_tester.look_ahead_handler_tester.test_update_timetables_of_bus_line(line_id=1)
+            application_tester.look_ahead_handler_tester.test_update_timetables_of_bus_line(
+                line_id=testing_bus_line_id
+            )
 
         # 19. (look_ahead_handler) - start_timetables_generator_process
         elif selection == '19':
