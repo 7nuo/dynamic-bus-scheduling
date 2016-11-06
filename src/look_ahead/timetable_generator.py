@@ -56,8 +56,11 @@ class TimetableGenerator(object):
             'timetable_entries': [{
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                 'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-                'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+                'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+                'number_of_deboarding_passengers', 'number_of_current_passengers',
+                'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                          'distances_from_starting_node', 'times_from_starting_node',
+                          'distances_from_previous_node', 'times_from_previous_node'}}],
             'travel_requests': [{
                 '_id', 'client_id', 'line_id',
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -108,8 +111,11 @@ def add_timetable_to_timetables_sorted_by_starting_datetime(timetable, timetable
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -182,8 +188,11 @@ def add_travel_request_to_timetable_with_adjustments(travel_request, timetable):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -216,8 +225,11 @@ def add_travel_request_to_timetable_without_adjustments(travel_request, timetabl
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -243,8 +255,11 @@ def adjust_departure_datetimes_of_timetable(timetable):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -257,7 +272,7 @@ def adjust_departure_datetimes_of_timetable(timetable):
     """
     travel_requests = timetable.get('travel_requests')
     timetable_entries = timetable.get('timetable_entries')
-    total_times = [timetable_entry.get('total_time') for timetable_entry in timetable_entries]
+    total_times = [timetable_entry.get('route').get('total_time') for timetable_entry in timetable_entries]
 
     ideal_departure_datetimes_of_travel_requests = [
         [timetable_entry.get('departure_datetime')] for timetable_entry in timetable_entries
@@ -292,8 +307,11 @@ def adjust_departure_datetimes_of_timetables(timetables):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -318,8 +336,11 @@ def adjust_timetable_entries(timetable, ideal_departure_datetimes):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -336,7 +357,7 @@ def adjust_timetable_entries(timetable, ideal_departure_datetimes):
 
     for i in range(0, number_of_timetable_entries):
         timetable_entry = timetable_entries[i]
-        total_time = timetable_entry.get('total_time')
+        total_time = timetable_entry.get('route').get('total_time')
         ideal_starting_datetime = ideal_departure_datetimes[i]
 
         if i == 0:
@@ -361,8 +382,11 @@ def calculate_average_number_of_travel_requests_in_timetables(timetables):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -394,8 +418,11 @@ def calculate_average_waiting_time_of_timetable_in_seconds(timetable):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -431,8 +458,11 @@ def calculate_average_waiting_time_of_timetables_in_seconds(timetables):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -473,8 +503,11 @@ def calculate_departure_datetime_differences_between_travel_request_and_timetabl
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -544,8 +577,11 @@ def calculate_number_of_passengers_of_timetable(timetable):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -592,8 +628,11 @@ def calculate_number_of_passengers_of_timetables(timetables):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -617,8 +656,11 @@ def calculate_total_number_of_travel_requests_in_timetables(timetables):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -692,8 +734,11 @@ def calculate_waiting_time_of_travel_requests_of_timetable(timetable):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -741,8 +786,11 @@ def check_average_waiting_time_of_timetable(timetable):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -771,8 +819,11 @@ def check_number_of_passengers_of_timetable(timetable):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -803,8 +854,11 @@ def clear_number_of_passengers_of_timetable(timetable):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -832,8 +886,11 @@ def clear_travel_requests_of_timetable(timetable):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -857,8 +914,11 @@ def clear_travel_requests_of_timetables(timetables):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -885,8 +945,11 @@ def correspond_bus_vehicle_to_timetable(bus_vehicles, timetable):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -979,8 +1042,11 @@ def correspond_travel_requests_to_timetables(travel_requests, timetables):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1032,8 +1098,11 @@ def divide_timetable(timetable):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1072,8 +1141,11 @@ def divide_timetable_based_on_average_waiting_time(timetable):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1196,8 +1268,11 @@ def estimate_number_of_bus_vehicles_for_timetables(timetables):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1226,8 +1301,11 @@ def generate_additional_timetable(timetable):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1248,7 +1326,7 @@ def generate_additional_timetable(timetable):
             'ending_bus_stop': timetable_entry.get('ending_bus_stop'),
             'departure_datetime': timetable_entry.get('departure_datetime'),
             'arrival_datetime': timetable_entry.get('arrival_datetime'),
-            'total_time': timetable_entry.get('total_time'),
+            'route': timetable_entry.get('route'),
             'number_of_onboarding_passengers': 0,
             'number_of_deboarding_passengers': 0,
             'number_of_current_passengers': 0
@@ -1266,8 +1344,11 @@ def generate_additional_timetables(timetables):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1296,8 +1377,11 @@ def generate_initial_timetables(line_id, timetables_starting_datetime, timetable
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1342,8 +1426,11 @@ def generate_new_timetable(line_id, timetable_starting_datetime, route_generator
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1369,15 +1456,15 @@ def generate_new_timetable(line_id, timetable_starting_datetime, route_generator
     for intermediate_response in route_generator_response:
         starting_bus_stop = intermediate_response.get('starting_bus_stop')
         ending_bus_stop = intermediate_response.get('ending_bus_stop')
-        intermediate_route = intermediate_response.get('route')
-        total_time = intermediate_route.get('total_time')
+        route = intermediate_response.get('route')
+        total_time = route.get('total_time')
 
         timetable_entry = {
             'starting_bus_stop': starting_bus_stop,
             'ending_bus_stop': ending_bus_stop,
             'departure_datetime': current_datetime,
             'arrival_datetime': current_datetime + timedelta(minutes=total_time / 60),
-            'total_time': total_time,
+            'route': route,
             'number_of_onboarding_passengers': 0,
             'number_of_deboarding_passengers': 0,
             'number_of_current_passengers': 0
@@ -1398,8 +1485,11 @@ def generate_new_timetable_for_travel_requests(timetable, travel_requests):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1453,8 +1543,11 @@ def get_ending_datetime_of_timetable(timetable):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1480,8 +1573,11 @@ def get_overcrowded_timetables(timetables):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1511,8 +1607,11 @@ def get_starting_datetime_of_timetable(timetable):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1538,8 +1637,11 @@ def get_starting_datetimes_of_timetables(timetables):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1601,8 +1703,11 @@ def get_timetable_with_minimum_departure_datetime_difference(departure_datetime_
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1639,8 +1744,11 @@ def get_timetables_with_average_waiting_time_above_threshold(timetables):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1678,8 +1786,11 @@ def get_travel_requests_of_timetable_with_waiting_time_above_threshold(timetable
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1713,8 +1824,11 @@ def handle_timetables_with_average_waiting_time_above_threshold(timetables):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1757,8 +1871,11 @@ def handle_overcrowded_timetables(timetables):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1842,8 +1959,11 @@ def partition_travel_requests_in_timetables(travel_requests, timetables):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1948,8 +2068,11 @@ def handle_travel_requests_of_timetable_with_waiting_time_above_threshold(timeta
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -2040,8 +2163,11 @@ def handle_undercrowded_timetable(timetable, timetables):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -2088,8 +2214,11 @@ def handle_undercrowded_timetables(timetables):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -2122,8 +2251,11 @@ def get_undercrowded_timetables(timetables):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -2153,8 +2285,11 @@ def handle_travel_requests_of_timetables_with_waiting_time_above_threshold(timet
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -2184,8 +2319,11 @@ def print_timetable(timetable, timetable_entries_control=False, travel_requests_
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -2218,10 +2356,11 @@ def print_timetable(timetable, timetable_entries_control=False, travel_requests_
                 '- ending_bus_stop:', timetable_entry.get('ending_bus_stop').get('name'), \
                 '- departure_datetime:', timetable_entry.get('departure_datetime'), \
                 '- arrival_datetime:', timetable_entry.get('arrival_datetime'), \
-                '- total_time:', timetable_entry.get('total_time'), \
+                '- total_time:', timetable_entry.get('route').get('total_time'), \
                 '- number_of_onboarding_passengers:', timetable_entry.get('number_of_onboarding_passengers'), \
                 '- number_of_deboarding_passengers:', timetable_entry.get('number_of_deboarding_passengers'), \
-                '- number_of_current_passengers:', timetable_entry.get('number_of_current_passengers')
+                '- number_of_current_passengers:', timetable_entry.get('number_of_current_passengers'), \
+                '- route:', timetable_entry.get('route')
 
     if travel_requests_control:
         print '- Travel Requests:'
@@ -2244,8 +2383,11 @@ def print_timetables(timetables, timetables_control=False, timetable_entries_con
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -2306,8 +2448,11 @@ def remove_travel_request_from_timetable_with_adjustments(travel_request, timeta
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -2340,8 +2485,11 @@ def remove_travel_request_from_timetable_without_adjustments(travel_request, tim
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -2376,8 +2524,11 @@ def remove_travel_requests_from_timetable_without_adjustments(travel_requests, t
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -2405,8 +2556,11 @@ def sort_timetables_by_starting_datetime(timetables):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},

@@ -25,7 +25,7 @@ SOFTWARE.
 """
 from src.common.variables import mongodb_host, mongodb_port
 from src.mongodb_database.mongodb_database_connection import MongodbDatabaseConnection
-from src.route_generator.route_generator_client import get_waypoints_between_multiple_bus_stops
+from src.route_generator.route_generator_client import get_waypoints_between_two_bus_stops
 from src.common.logger import log
 from src.look_ahead.timetable_generator import *
 from src.look_ahead.timetable_updater import *
@@ -53,80 +53,97 @@ class LookAheadHandler(object):
         bus_line_document: {
             '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         }
+        bus_stop_document: {
+            '_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}
+        }
+        bus_stop_waypoints_document: {
+            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'waypoints': [[edge_object_id]]
+        }
         :param line_id: int
         :param bus_stop_names: [string]
         :return: None
         """
         # 1: The inputs: line_id and bus_stop_names are provided to the function, so as as a bus_line
         #    with the corresponding line_id and bus_stops to be generated.
-
-        log(module_name='look_ahead_handler_tester', log_type='DEBUG',
-            log_message='get_waypoints_between_multiple_bus_stops (route_generator): starting')
-
-        # 2: The Look Ahead sends a request to the Route Generator so as to select the corresponding bus_stops
-        #    for the provided bus_stop_names, as well as to identify all the possible combinations
-        #    of intermediate waypoints which connect these bus stops.
         #
-        # route_generator_response: [{
-        #     'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        #     'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        #     'waypoints': [[{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-        #                     'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-        #                     'max_speed', 'road_type', 'way_id', 'traffic_density'}]]}]
-        #
-        route_generator_response = get_waypoints_between_multiple_bus_stops(bus_stop_names=bus_stop_names)
-
-        log(module_name='look_ahead_handler_tester', log_type='DEBUG',
-            log_message='get_waypoints_between_multiple_bus_stops (route_generator): finished')
-
-        # 3: The Look Ahead processes the response of the Route Generator, extracting the bus_stops
-        #    and all the possible combinations of their intermediate waypoints which connect them.
-        #    These waypoints correspond to the edges which connect the geographic nodes of the
-        #    operation area. So, a bus_route is represented as a list of edges. Multiple possible
-        #    routes between bus_stops are represented as multiple lists of edges.
+        # 2: The Look Ahead connects to the System Database and retrieves the bus_stops which correspond to
+        #    the provided bus_stop_names. The function returns None and the bus_line is not generated,
+        #    in case there is a bus_stop_name which does not correspond to a stored bus_stop.
         #
         bus_stops = []
-        starting_bus_stop_controller = True
 
-        for intermediate_response in route_generator_response:
-            starting_bus_stop = intermediate_response.get('starting_bus_stop')
-            ending_bus_stop = intermediate_response.get('ending_bus_stop')
-            waypoints = intermediate_response.get('waypoints')
-            lists_of_edge_object_ids = []
+        for bus_stop_name in bus_stop_names:
+            bus_stop_document = self.mongodb_database_connection.find_bus_stop_document(name=bus_stop_name)
 
-            for list_of_edges in waypoints:
-                list_of_edge_object_ids = []
+            if bus_stop_document is None:
+                log_message = 'find_bus_stop_document (mongodb_database) - name:', bus_stop_name, '- result: None'
+                log(module_name='look_ahead_handler', log_type='DEBUG', log_message=log_message)
+                return None
+            else:
+                bus_stops.append(bus_stop_document)
 
-                for edge in list_of_edges:
-                    edge_object_id = edge.get('_id')
-                    list_of_edge_object_ids.append(edge_object_id)
+        # 3: The intermediate waypoints of the bus_routes, which are generated while combining starting and
+        #    ending bus_stops of the bus_line, should be stored as bus_stop_waypoints_documents at the System Database.
+        #    The Look Ahead checks the existing bus_stop_waypoints_documents and communicates with the Route Generator
+        #    in order to identify the waypoints of the bus_routes which are not already stored. The newly generated
+        #    bus_stop_waypoints_documents are getting stored to the corresponding collection of the System Database.
+        #    The function returns None and the bus_line is not generated, in case the Route Generator can not identify
+        #    a possible route in order to connect the bus_stops of the bus_line.
+        #
+        number_of_bus_stops = len(bus_stops)
 
-                lists_of_edge_object_ids.append(list_of_edge_object_ids)
+        for i in range(0, number_of_bus_stops - 1):
+            starting_bus_stop = bus_stops[i]
+            ending_bus_stop = bus_stops[i + 1]
 
-            # waypoints: [[edge_object_id]]
-            #
-            waypoints = lists_of_edge_object_ids
-
-            # 4: The Look Ahead populates the BusStopWaypoints collection, by storing all the possible waypoints
-            #    for each combination of starting_bus_stop and ending_bus_stop oh the bus_line.
-            #
-            self.mongodb_database_connection.insert_bus_stop_waypoints_document(
+            bus_stop_waypoints_document = self.mongodb_database_connection.find_bus_stop_waypoints_document(
                 starting_bus_stop=starting_bus_stop,
-                ending_bus_stop=ending_bus_stop,
-                waypoints=waypoints
+                ending_bus_stop=ending_bus_stop
             )
+            if bus_stop_waypoints_document is None:
+                route_generator_response = get_waypoints_between_two_bus_stops(
+                    starting_bus_stop=starting_bus_stop,
+                    ending_bus_stop=ending_bus_stop
+                )
+                if route_generator_response is None:
+                    log(module_name='look_ahead_handler', log_type='DEBUG',
+                        log_message='get_waypoints_between_two_bus_stops (route_generator): None')
+                    return None
+                else:
+                    waypoints = route_generator_response.get('waypoints')
 
-            if starting_bus_stop_controller:
-                bus_stops.append(starting_bus_stop)
-                starting_bus_stop_controller = False
+                    if len(waypoints) == 0:
+                        log(module_name='look_ahead_handler', log_type='DEBUG',
+                            log_message='get_waypoints_between_two_bus_stops (route_generator): None')
+                        return None
 
-            bus_stops.append(ending_bus_stop)
+                    lists_of_edge_object_ids = []
 
-        log(module_name='look_ahead_handler', log_type='DEBUG',
-            log_message='insert_bus_stop_waypoints_document (mongodb_database): ok')
+                    for list_of_edges in waypoints:
+                        list_of_edge_object_ids = []
 
-        # 5: The Look Ahead stores the generated bus_line, which is consisted of the line_id and
-        #    the list of its bus_stops, to the corresponding collection of the System Database.
+                        for edge in list_of_edges:
+                            edge_object_id = edge.get('_id')
+                            list_of_edge_object_ids.append(edge_object_id)
+
+                        lists_of_edge_object_ids.append(list_of_edge_object_ids)
+
+                    # waypoints: [[edge_object_id]]
+                    #
+                    waypoints = lists_of_edge_object_ids
+
+                    self.mongodb_database_connection.insert_bus_stop_waypoints_document(
+                        starting_bus_stop=starting_bus_stop,
+                        ending_bus_stop=ending_bus_stop,
+                        waypoints=waypoints
+                    )
+
+        # 4: The Look Ahead stores the newly generated bus_line_document, which is consisted of the line_id
+        #    and the list of bus_stops, to the corresponding collection of the System Database.
+        #    In case there is an already existing bus_line_document, with the same line_id,
+        #    then the list of bus_stops gets updated.
         #
         bus_line_document = {'line_id': line_id, 'bus_stops': bus_stops}
         self.mongodb_database_connection.insert_bus_line_document(bus_line_document=bus_line_document)
@@ -227,7 +244,7 @@ class LookAheadHandler(object):
         current_average_waiting_time_of_timetables = float('Inf')
 
         while True:
-            new_timetables = self.generate_new_timetables_based_on_travel_requests(
+            new_timetables = generate_new_timetables_based_on_travel_requests(
                 current_timetables=timetable_generator.timetables,
                 travel_requests=timetable_generator.travel_requests
             )
@@ -277,8 +294,8 @@ class LookAheadHandler(object):
         Update the timetables of a bus_line, taking into consideration the current levels of traffic_density.
 
         bus_line_document: {
-                   '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
-
+            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        }
         :param bus_line: bus_line_document
         :param line_id: int
         :return: None
@@ -292,13 +309,38 @@ class LookAheadHandler(object):
 
         bus_stops = bus_line.get('bus_stops')
         timetables = self.mongodb_database_connection.find_timetable_documents(line_ids=[line_id])
+        travel_requests = get_travel_requests_of_timetables(timetables=timetables)
 
-        timetable_updater = TimetableUpdater(bus_stops=bus_stops, timetables=timetables)
-
-        update_timetables(
+        timetable_updater = TimetableUpdater(
+            bus_stops=bus_stops,
+            timetables=timetables,
+            travel_requests=travel_requests
+        )
+        update_entries_of_timetables(
             timetables=timetable_updater.timetables,
             route_generator_response=timetable_updater.route_generator_response
         )
+        current_average_waiting_time_of_timetables = calculate_average_waiting_time_of_timetables_in_seconds(
+            timetables=timetable_updater.timetables
+        )
+
+        while True:
+            new_timetables = generate_new_timetables_based_on_travel_requests(
+                current_timetables=timetable_updater.timetables,
+                travel_requests=timetable_updater.travel_requests
+            )
+            new_average_waiting_time_of_timetables = calculate_average_waiting_time_of_timetables_in_seconds(
+                timetables=new_timetables
+            )
+            if new_average_waiting_time_of_timetables < current_average_waiting_time_of_timetables:
+                timetable_updater.timetables = new_timetables
+                current_average_waiting_time_of_timetables = new_average_waiting_time_of_timetables
+                print_timetables(timetables=timetable_updater.timetables)
+            else:
+                break
+
+        print_timetables(timetables=timetable_updater.timetables)
+
         self.mongodb_database_connection.insert_timetable_documents(
             timetable_documents=timetable_updater.timetables
         )
@@ -316,111 +358,155 @@ class LookAheadHandler(object):
         for bus_line in bus_lines:
             self.update_timetables_of_bus_line(bus_line=bus_line)
 
-    @staticmethod
-    def generate_new_timetables_based_on_travel_requests(current_timetables, travel_requests):
-        """
-        Generate new timetables based on the travel_requests.
 
-        timetable_document: {
-            '_id', 'line_id',
-            'timetable_entries': [{
-                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-                'number_of_deboarding_passengers', 'number_of_current_passengers'}],
-            'travel_requests': [{
-                '_id', 'client_id', 'line_id',
-                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime',
-                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-        }
-        travel_request_document: {
+def generate_new_timetables_based_on_travel_requests(current_timetables, travel_requests):
+    """
+    Generate new timetables based on the travel_requests.
+
+    timetable_document: {
+        '_id', 'line_id',
+        'timetable_entries': [{
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
+        'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'
-        }
-        :param current_timetables: [timetable_document]
-        :param travel_requests: [travel_request_document]
-        :return: new_timetables: [timetable_document]
-        """
-        new_timetables = generate_additional_timetables(timetables=current_timetables)
+            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
+    }
+    travel_request_document: {
+        '_id', 'client_id', 'line_id',
+        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        'departure_datetime', 'arrival_datetime',
+        'starting_timetable_entry_index', 'ending_timetable_entry_index'
+    }
+    :param current_timetables: [timetable_document]
+    :param travel_requests: [travel_request_document]
+    :return: new_timetables: [timetable_document]
+    """
+    new_timetables = generate_additional_timetables(timetables=current_timetables)
 
-        # 6: (Initial Clustering) Each one of the retrieved travel_requests is corresponded to the timetable
-        #    which produces the minimum_individual_waiting_time for the passenger. The waiting time is calculated
-        #    as the difference between the departure_datetime of the travel_request and the departure_datetime of
-        #    the timetable_entry from where the passenger departs from (identified by the
-        #    'starting_timetable_entry_index' value).
-        #
-        correspond_travel_requests_to_timetables(
-            travel_requests=travel_requests,
-            timetables=new_timetables
-        )
+    # 6: (Initial Clustering) Each one of the retrieved travel_requests is corresponded to the timetable
+    #    which produces the minimum_individual_waiting_time for the passenger. The waiting time is calculated
+    #    as the difference between the departure_datetime of the travel_request and the departure_datetime of
+    #    the timetable_entry from where the passenger departs from (identified by the
+    #    'starting_timetable_entry_index' value).
+    #
+    correspond_travel_requests_to_timetables(
+        travel_requests=travel_requests,
+        timetables=new_timetables
+    )
 
-        # 7: (Handling of Undercrowded Timetables) After the initial clustering step, there might be timetables
-        #    where the number of travel_requests is lower than the input: minimum_number_of_passengers_in_timetable.
-        #    This is usual during night hours, where transportation demand is not so high. These timetables are
-        #    removed from the list of generated timetables and each one of their travel_requests is corresponded
-        #    to one of the remaining timetables, based on the individual_waiting_time of the passenger.
-        #
-        travel_requests_of_undercrowded_timetables = handle_undercrowded_timetables(timetables=new_timetables)
-        correspond_travel_requests_to_timetables(
-            travel_requests=travel_requests_of_undercrowded_timetables,
-            timetables=new_timetables
-        )
+    # 7: (Handling of Undercrowded Timetables) After the initial clustering step, there might be timetables
+    #    where the number of travel_requests is lower than the input: minimum_number_of_passengers_in_timetable.
+    #    This is usual during night hours, where transportation demand is not so high. These timetables are
+    #    removed from the list of generated timetables and each one of their travel_requests is corresponded
+    #    to one of the remaining timetables, based on the individual_waiting_time of the passenger.
+    #
+    travel_requests_of_undercrowded_timetables = handle_undercrowded_timetables(timetables=new_timetables)
+    correspond_travel_requests_to_timetables(
+        travel_requests=travel_requests_of_undercrowded_timetables,
+        timetables=new_timetables
+    )
 
-        # 8: (Handling of Overcrowded Timetables) In addition, there might be timetables where the
-        #    number_of_current_passengers is higher than the input: maximum_bus_capacity, which indicates that
-        #    each one of these timetables cannot be served by one bus vehicle. For this reason, each one of these
-        #    timetables should be divided into two timetables, and the corresponding travel_requests are partitioned.
-        #    The whole procedure is repeated until there is no timetable where the number_of_current_passengers
-        #    exceeds the maximum_bus_capacity.
-        #
-        #    The first step is to calculate the number_of_current_passengers in each one of the timetable_entries.
-        #
-        calculate_number_of_passengers_of_timetables(timetables=new_timetables)
-        # handle_overcrowded_timetables(timetables=new_timetables)
+    # 8: (Handling of Overcrowded Timetables) In addition, there might be timetables where the
+    #    number_of_current_passengers is higher than the input: maximum_bus_capacity, which indicates that
+    #    each one of these timetables cannot be served by one bus vehicle. For this reason, each one of these
+    #    timetables should be divided into two timetables, and the corresponding travel_requests are partitioned.
+    #    The whole procedure is repeated until there is no timetable where the number_of_current_passengers
+    #    exceeds the maximum_bus_capacity.
+    #
+    #    The first step is to calculate the number_of_current_passengers in each one of the timetable_entries.
+    #
+    calculate_number_of_passengers_of_timetables(timetables=new_timetables)
+    # handle_overcrowded_timetables(timetables=new_timetables)
 
-        # 9: (Adjust Departure Datetimes) At this point of processing, the number of travel_requests in each timetable
-        #    is higher than the minimum_number_of_passengers_in_timetable and lower than the maximum_bus_capacity.
-        #    So, the departure_datetime and arrival_datetime values of each timetable_entry are re-estimated,
-        #    taking into consideration the departure_datetime values of the corresponding travel_requests.
-        #    In each timetable and for each travel_request, the ideal departure_datetimes from all bus_stops
-        #    (not only the bus stop from where the passenger desires to depart) are estimated. Then, the ideal
-        #    departure_datetimes of the timetable, for each bus stop, correspond to the mean values of the ideal
-        #    departure_datetimes of the corresponding travel_requests. Finally, starting from the initial bus_stop
-        #    and combining the ideal departure_datetimes of each bus_stop and the required traveling time between
-        #    bus_stops, included in the response of the Route Generator, the departure_datetimes of the
-        #    timetable_entries are finalized.
-        adjust_departure_datetimes_of_timetables(timetables=new_timetables)
+    # 9: (Adjust Departure Datetimes) At this point of processing, the number of travel_requests in each timetable
+    #    is higher than the minimum_number_of_passengers_in_timetable and lower than the maximum_bus_capacity.
+    #    So, the departure_datetime and arrival_datetime values of each timetable_entry are re-estimated,
+    #    taking into consideration the departure_datetime values of the corresponding travel_requests.
+    #    In each timetable and for each travel_request, the ideal departure_datetimes from all bus_stops
+    #    (not only the bus stop from where the passenger desires to depart) are estimated. Then, the ideal
+    #    departure_datetimes of the timetable, for each bus stop, correspond to the mean values of the ideal
+    #    departure_datetimes of the corresponding travel_requests. Finally, starting from the initial bus_stop
+    #    and combining the ideal departure_datetimes of each bus_stop and the required traveling time between
+    #    bus_stops, included in the response of the Route Generator, the departure_datetimes of the
+    #    timetable_entries are finalized.
+    adjust_departure_datetimes_of_timetables(timetables=new_timetables)
 
-        # 10: (Individual Waiting Time) For each timetable, the individual_waiting_time of each passenger is calculated.
-        #     For each one of the travel_requests where individual_waiting_time is higher than the
-        #     input: individual_waiting_time_threshold, alternative existing timetables are investigated, based on the
-        #     new individual_waiting_time, the average_waiting_time and the number_of_current_passengers of each
-        #     timetable. For the travel_requests which cannot be served by the other existing timetables, if their
-        #     number is greater or equal than the mini_number_of_passengers_in_timetable, then a new timetable is
-        #     generated with departure_datetimes based on the ideal departure_datetimes of the
-        #     aforementioned passengers.
-        #
-        # handle_travel_requests_of_timetables_with_waiting_time_above_threshold(
-        #     timetables=new_timetables
-        # )
-        # calculate_number_of_passengers_of_timetables(timetables=new_timetables)
-        # adjust_departure_datetimes_of_timetables(timetables=new_timetables)
+    # 10: (Individual Waiting Time) For each timetable, the individual_waiting_time of each passenger is calculated.
+    #     For each one of the travel_requests where individual_waiting_time is higher than the
+    #     input: individual_waiting_time_threshold, alternative existing timetables are investigated, based on the
+    #     new individual_waiting_time, the average_waiting_time and the number_of_current_passengers of each
+    #     timetable. For the travel_requests which cannot be served by the other existing timetables, if their
+    #     number is greater or equal than the mini_number_of_passengers_in_timetable, then a new timetable is
+    #     generated with departure_datetimes based on the ideal departure_datetimes of the
+    #     aforementioned passengers.
+    #
+    # handle_travel_requests_of_timetables_with_waiting_time_above_threshold(
+    #     timetables=new_timetables
+    # )
+    # calculate_number_of_passengers_of_timetables(timetables=new_timetables)
+    # adjust_departure_datetimes_of_timetables(timetables=new_timetables)
 
-        # 11: (Average Waiting Time) For each timetable, the average_waiting_time of passengers is calculated.
-        #     If the average waiting time is higher than the input: average-waiting-time-threshold, then the
-        #     possibility of dividing the timetable is investigated. If the two new timetables have lower
-        #     average_waiting_time than the initial one and both have more travel_requests than the
-        #     minimum_number_of_passengers_in_timetable, then the initial timetable is divided, its travel_requests
-        #     are partitioned, and the departure_datetime and arrival_datetime values of the timetable_entries of
-        #     the new timetables, are estimated based on the departure_datetime values of the partitioned requests.
-        #
-        handle_timetables_with_average_waiting_time_above_threshold(new_timetables)
-        calculate_number_of_passengers_of_timetables(timetables=new_timetables)
-        adjust_departure_datetimes_of_timetables(timetables=new_timetables)
+    # 11: (Average Waiting Time) For each timetable, the average_waiting_time of passengers is calculated.
+    #     If the average waiting time is higher than the input: average-waiting-time-threshold, then the
+    #     possibility of dividing the timetable is investigated. If the two new timetables have lower
+    #     average_waiting_time than the initial one and both have more travel_requests than the
+    #     minimum_number_of_passengers_in_timetable, then the initial timetable is divided, its travel_requests
+    #     are partitioned, and the departure_datetime and arrival_datetime values of the timetable_entries of
+    #     the new timetables, are estimated based on the departure_datetime values of the partitioned requests.
+    #
+    handle_timetables_with_average_waiting_time_above_threshold(timetables=new_timetables)
+    calculate_number_of_passengers_of_timetables(timetables=new_timetables)
+    adjust_departure_datetimes_of_timetables(timetables=new_timetables)
 
-        return new_timetables
+    return new_timetables
+
+
+def get_travel_requests_of_timetables(timetables):
+    """
+    Retrieve a list containing all the travel_request_documents,
+    which are included in a list of timetable_documents.
+
+    timetable_document: {
+        '_id', 'line_id',
+        'timetable_entries': [{
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
+        'travel_requests': [{
+            '_id', 'client_id', 'line_id',
+            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+            'departure_datetime', 'arrival_datetime',
+            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
+    }
+    travel_request_document: {
+        '_id', 'client_id', 'line_id',
+        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        'departure_datetime', 'arrival_datetime',
+        'starting_timetable_entry_index', 'ending_timetable_entry_index'
+    }
+    :param timetables: [timetable_documents]
+    :return: travel_requests: [travel_request_documents]
+    """
+    travel_requests = []
+
+    for timetable in timetables:
+        travel_requests_of_timetable = timetable.get('travel_requests')
+        travel_requests.extend(travel_requests_of_timetable)
+
+    return travel_requests

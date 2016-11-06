@@ -89,8 +89,11 @@ class MongodbDatabaseConnection(object):
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+            'number_of_deboarding_passengers', 'number_of_current_passengers',
+            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                      'distances_from_starting_node', 'times_from_starting_node',
+                      'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
             '_id', 'client_id', 'line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -586,8 +589,11 @@ class MongodbDatabaseConnection(object):
             'timetable_entries': [{
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                 'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-                'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+                'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+                'number_of_deboarding_passengers', 'number_of_current_passengers',
+                'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                          'distances_from_starting_node', 'times_from_starting_node',
+                          'distances_from_previous_node', 'times_from_previous_node'}}],
             'travel_requests': [{
                 '_id', 'client_id', 'line_id',
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -610,8 +616,11 @@ class MongodbDatabaseConnection(object):
             'timetable_entries': [{
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                 'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-                'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+                'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+                'number_of_deboarding_passengers', 'number_of_current_passengers',
+                'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                          'distances_from_starting_node', 'times_from_starting_node',
+                          'distances_from_previous_node', 'times_from_previous_node'}}],
             'travel_requests': [{
                 '_id', 'client_id', 'line_id',
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1266,8 +1275,11 @@ class MongodbDatabaseConnection(object):
             'timetable_entries': [{
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                 'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-                'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+                'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+                'number_of_deboarding_passengers', 'number_of_current_passengers',
+                'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                          'distances_from_starting_node', 'times_from_starting_node',
+                          'distances_from_previous_node', 'times_from_previous_node'}}],
             'travel_requests': [{
                 '_id', 'client_id', 'line_id',
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1290,8 +1302,11 @@ class MongodbDatabaseConnection(object):
             'timetable_entries': [{
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                 'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-                'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+                'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+                'number_of_deboarding_passengers', 'number_of_current_passengers',
+                'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                          'distances_from_starting_node', 'times_from_starting_node',
+                          'distances_from_previous_node', 'times_from_previous_node'}}],
             'travel_requests': [{
                 '_id', 'client_id', 'line_id',
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1831,8 +1846,11 @@ class MongodbDatabaseConnection(object):
             'timetable_entries': [{
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                 'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-                'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+                'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+                'number_of_deboarding_passengers', 'number_of_current_passengers',
+                'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                          'distances_from_starting_node', 'times_from_starting_node',
+                          'distances_from_previous_node', 'times_from_previous_node'}}],
             'travel_requests': [{
                 '_id', 'client_id', 'line_id',
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -1854,8 +1872,11 @@ class MongodbDatabaseConnection(object):
             'timetable_entries': [{
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                 'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-                'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+                'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+                'number_of_deboarding_passengers', 'number_of_current_passengers',
+                'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                          'distances_from_starting_node', 'times_from_starting_node',
+                          'distances_from_previous_node', 'times_from_previous_node'}}],
             'travel_requests': [{
                 '_id', 'client_id', 'line_id',
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -2296,8 +2317,11 @@ class MongodbDatabaseConnection(object):
             'timetable_entries': [{
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                 'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-                'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+                'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+                'number_of_deboarding_passengers', 'number_of_current_passengers',
+                'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                          'distances_from_starting_node', 'times_from_starting_node',
+                          'distances_from_previous_node', 'times_from_previous_node'}}],
             'travel_requests': [{
                 '_id', 'client_id', 'line_id',
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -2327,8 +2351,11 @@ class MongodbDatabaseConnection(object):
             'timetable_entries': [{
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                 'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-                'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+                'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+                'number_of_deboarding_passengers', 'number_of_current_passengers',
+                'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                          'distances_from_starting_node', 'times_from_starting_node',
+                          'distances_from_previous_node', 'times_from_previous_node'}}],
             'travel_requests': [{
                 '_id', 'client_id', 'line_id',
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -3055,8 +3082,11 @@ class MongodbDatabaseConnection(object):
             'timetable_entries': [{
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
                 'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime', 'total_time', 'number_of_onboarding_passengers',
-                'number_of_deboarding_passengers', 'number_of_current_passengers'}],
+                'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+                'number_of_deboarding_passengers', 'number_of_current_passengers',
+                'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                          'distances_from_starting_node', 'times_from_starting_node',
+                          'distances_from_previous_node', 'times_from_previous_node'}}],
             'travel_requests': [{
                 '_id', 'client_id', 'line_id',
                 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
