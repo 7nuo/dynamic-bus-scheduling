@@ -29,7 +29,8 @@ import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from src.common.logger import log
-from src.common.variables import traffic_data_generator_timeout, traffic_data_generator_max_operation_timeout
+from src.common.variables import traffic_data_generator_timeout, traffic_data_generator_max_operation_timeout, \
+    testing_bus_stop_names
 from src.data_simulator.traffic_data_simulator import TrafficDataSimulator
 
 __author__ = 'Eleftherios Anagnostopoulos'
@@ -42,40 +43,55 @@ __credits__ = [
 
 class TrafficDataSimulatorTester(object):
     def __init__(self):
-        log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='initialize_traffic_data_simulator: starting')
+        self.module_name = 'traffic_data_simulator_tester'
+        self.log_type = 'INFO'
+        self.log_message = 'initialize_traffic_data_simulator: starting'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
+
         self.start_time = time.time()
         self.traffic_data_simulator = TrafficDataSimulator()
         self.traffic_data_generator_process = None
         self.elapsed_time = time.time() - self.start_time
-        log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='initialize_traffic_data_simulator: finished - elapsed_time = ' +
-                        str(self.elapsed_time) + ' sec')
+
+        self.log_message = 'initialize_traffic_data_simulator: finished - elapsed_time = ' \
+                           + str(self.elapsed_time) + ' sec'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
     def start_traffic_data_generator_process(self):
-        log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='traffic_data_generator_process: starting')
-        self.traffic_data_generator_process = Process(
-            target=self.test_generate_traffic_data_for_bus_lines,
-            args=()
-        )
-        self.traffic_data_generator_process.start()
+        if self.traffic_data_generator_process is None:
+            self.traffic_data_generator_process = Process(
+                target=self.test_generate_traffic_data_for_bus_lines,
+                args=()
+            )
+            self.traffic_data_generator_process.start()
+            self.log_message = 'traffic_data_generator_process: starting'
+        else:
+            self.log_message = 'traffic_data_generator_process: already started'
+
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
     def terminate_traffic_data_generator_process(self):
-        self.traffic_data_generator_process.terminate()
-        self.traffic_data_generator_process.join()
-        log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='traffic_data_generator_process: finished')
+        if self.traffic_data_generator_process is not None:
+            self.traffic_data_generator_process.terminate()
+            self.traffic_data_generator_process.join()
+            self.traffic_data_generator_process = None
+            self.log_message = 'traffic_data_generator_process: terminated'
+        else:
+            'traffic_data_generator_process: None'
+
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
     def test_clear_traffic_density(self):
-        log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='test_clear_traffic_density: starting')
+        self.log_message = 'test_clear_traffic_density: starting'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
+
         self.start_time = time.time()
         self.traffic_data_simulator.clear_traffic_density()
         self.elapsed_time = time.time() - self.start_time
-        log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='test_clear_traffic_density: finished - elapsed_time = '
-                        + str(self.elapsed_time) + ' sec')
+
+        self.log_message = 'test_clear_traffic_density: finished - elapsed_time = ' \
+                           + str(self.elapsed_time) + ' sec'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
     def test_generate_traffic_data_between_two_bus_stops(self, starting_bus_stop=None, ending_bus_stop=None,
                                                          starting_bus_stop_name=None, ending_bus_stop_name=None):
@@ -90,8 +106,9 @@ class TrafficDataSimulatorTester(object):
         :param ending_bus_stop_name: string
         :return: None
         """
-        log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='test_generate_traffic_data_between_two_bus_stops: starting')
+        self.log_message = 'test_generate_traffic_data_between_two_bus_stops: starting'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
+
         self.start_time = time.time()
         self.traffic_data_simulator.generate_traffic_data_between_two_bus_stops(
             starting_bus_stop=starting_bus_stop,
@@ -100,9 +117,10 @@ class TrafficDataSimulatorTester(object):
             ending_bus_stop_name=ending_bus_stop_name
         )
         self.elapsed_time = time.time() - self.start_time
-        log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='test_generate_traffic_data_between_two_bus_stops: finished - elapsed_time = '
-                        + str(self.elapsed_time) + ' sec')
+
+        self.log_message = 'test_generate_traffic_data_between_two_bus_stops: finished - elapsed_time = ' \
+                           + str(self.elapsed_time) + ' sec'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
     def test_generate_traffic_data_between_multiple_bus_stops(self, bus_stops=None, bus_stop_names=None):
         """
@@ -114,17 +132,19 @@ class TrafficDataSimulatorTester(object):
         :param bus_stop_names: [string]
         :return: None
         """
-        log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='test_generate_traffic_data_between_multiple_bus_stops: starting')
+        self.log_message = 'test_generate_traffic_data_between_multiple_bus_stops: starting'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
+
         self.start_time = time.time()
         self.traffic_data_simulator.generate_traffic_data_between_multiple_bus_stops(
             bus_stops=bus_stops,
             bus_stop_names=bus_stop_names
         )
         self.elapsed_time = time.time() - self.start_time
-        log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='test_generate_traffic_data_between_multiple_bus_stops: finished - elapsed_time = '
-                        + str(self.elapsed_time) + ' sec')
+
+        self.log_message = 'test_generate_traffic_data_between_multiple_bus_stops: finished - elapsed_time = ' \
+                           + str(self.elapsed_time) + ' sec'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
     def test_generate_traffic_data_for_bus_line(self, bus_line=None, line_id=None):
         """
@@ -137,17 +157,19 @@ class TrafficDataSimulatorTester(object):
         :param line_id: int
         :return: None
         """
-        log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='test_generate_traffic_data_for_bus_line: starting')
+        self.log_message = 'test_generate_traffic_data_for_bus_line: starting'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
+
         self.start_time = time.time()
         self.traffic_data_simulator.generate_traffic_data_for_bus_line(
             bus_line=bus_line,
             line_id=line_id
         )
         self.elapsed_time = time.time() - self.start_time
-        log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='test_generate_traffic_data_for_bus_line: finished - elapsed_time = '
-                        + str(self.elapsed_time) + ' sec')
+
+        self.log_message = 'test_generate_traffic_data_for_bus_line: finished - elapsed_time = ' \
+                           + str(self.elapsed_time) + ' sec'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
     def test_generate_traffic_data_for_bus_lines(self, bus_lines=None):
         """
@@ -159,14 +181,16 @@ class TrafficDataSimulatorTester(object):
         :param bus_lines: [bus_line_document]
         :return: None
         """
-        log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='test_generate_traffic_data_for_bus_lines: starting')
+        self.log_message = 'test_generate_traffic_data_for_bus_lines: starting'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
+
         self.start_time = time.time()
         self.traffic_data_simulator.generate_traffic_data_for_bus_lines(bus_lines=bus_lines)
         self.elapsed_time = time.time() - self.start_time
-        log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='test_generate_traffic_data_for_bus_lines: finished - elapsed_time = '
-                        + str(self.elapsed_time) + ' sec')
+
+        self.log_message = 'test_generate_traffic_data_for_bus_lines: finished - elapsed_time = ' \
+                           + str(self.elapsed_time) + ' sec'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
     def test_traffic_data_generator_process(self):
         time_difference = 0
@@ -177,9 +201,38 @@ class TrafficDataSimulatorTester(object):
             time.sleep(traffic_data_generator_timeout)
             time_difference = time.time() - initial_time
 
-        log(module_name='traffic_data_simulator_test', log_type='INFO',
-            log_message='traffic_data_generator_process: finished')
-
 
 if __name__ == '__main__':
     traffic_data_simulator_tester = TrafficDataSimulatorTester()
+
+    while True:
+        time.sleep(0.01)
+        selection = raw_input(
+            '\n0.  exit'
+            '\n1.  test_generate_traffic_data_between_multiple_bus_stops'
+            '\n2.  start_traffic_data_generator_process'
+            '\n3.  terminate_traffic_data_generator_process'
+            '\nSelection: '
+        )
+
+        # 0. exit
+        if selection == '0':
+            break
+
+        # 1. test_generate_traffic_data_between_multiple_bus_stops
+        elif selection == '1':
+            traffic_data_simulator_tester.test_generate_traffic_data_between_multiple_bus_stops(
+                bus_stop_names=testing_bus_stop_names
+            )
+
+        # 2. start_traffic_data_generator_process
+        elif selection == '2':
+            traffic_data_simulator_tester.start_traffic_data_generator_process()
+
+        # 3. terminate_traffic_data_generator_process
+        elif selection == '3':
+            traffic_data_simulator_tester.terminate_traffic_data_generator_process()
+
+        else:
+            pass
+

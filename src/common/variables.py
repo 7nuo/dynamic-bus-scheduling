@@ -66,8 +66,8 @@ bus_road_types = (
 )
 
 maximum_bus_capacity = 100
-average_waiting_time_threshold = 60
-individual_waiting_time_threshold = 200
+average_waiting_time_threshold = 180
+individual_waiting_time_threshold = 180
 minimum_number_of_passengers_in_timetable = 30
 
 timetables_starting_datetime_testing_value = datetime(2016, 10, 20, 0, 0, 0, 00000)

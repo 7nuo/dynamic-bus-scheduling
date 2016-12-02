@@ -102,7 +102,7 @@ class MongodbDatabaseConnection(object):
             'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
     }
     traffic_event_document: {
-        '_id', 'event_id', 'event_type', 'severity_level', 'longitude', 'latitude', 'date'
+        '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
     }
     travel_request_document: {
         '_id', 'client_id', 'line_id',
@@ -647,7 +647,7 @@ class MongodbDatabaseConnection(object):
         Delete a traffic_event_document.
 
         traffic_event_document: {
-            '_id', 'event_id', 'event_type', 'severity_level', 'longitude', 'latitude', 'date'
+            '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
         }
         :param object_id: ObjectId
         :param event_id: string
@@ -667,7 +667,7 @@ class MongodbDatabaseConnection(object):
         Delete multiple traffic_event_documents.
 
         traffic_event_document: {
-            '_id', 'event_id', 'event_type', 'severity_level', 'longitude', 'latitude', 'date'
+            '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
         }
         :param object_ids: [ObjectId]
         :param event_ids: [string]
@@ -1336,7 +1336,7 @@ class MongodbDatabaseConnection(object):
         Retrieve a traffic_event_document.
 
         traffic_event_document: {
-            '_id', 'event_id', 'event_type', 'severity_level', 'longitude', 'latitude', 'date'
+            '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
         }
         :param object_id: ObjectId
         :param event_id: string
@@ -1356,7 +1356,7 @@ class MongodbDatabaseConnection(object):
         Retrieve a traffic_event_document.
 
         traffic_event_document: {
-            '_id', 'event_id', 'event_type', 'severity_level', 'longitude', 'latitude', 'date'
+            '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
         }
         :param object_ids: [ObjectId]
         :param event_ids: [string]
@@ -2379,19 +2379,20 @@ class MongodbDatabaseConnection(object):
         Insert a new traffic_event_document or update, if it already exists in the database.
 
         traffic_event_document: {
-            '_id', 'event_id', 'event_type', 'severity_level', 'longitude', 'latitude', 'date'
+            '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
         }
         :param traffic_event_document
         :return: new_object_id: ObjectId
         """
         key = {'event_id': traffic_event_document.get('event_id')}
-        data = {'$set': {
-            'event_type': traffic_event_document.get('event_type'),
-            'severity_level': traffic_event_document.get('severity_level'),
-            'longitude': traffic_event_document.get('longitude'),
-            'latitude': traffic_event_document.get('latitude'),
-            'date': traffic_event_document.get('date')
-        }}
+        data = {
+            '$set': {
+                'event_type': traffic_event_document.get('event_type'),
+                'event_level': traffic_event_document.get('event_level'),
+                'point': traffic_event_document.get('point'),
+                'datetime': traffic_event_document.get('datetime')
+            }
+        }
         result = self.traffic_event_documents_collection.update_one(key, data, upsert=True)
         new_object_id = result.upserted_id
         return new_object_id
@@ -2401,7 +2402,7 @@ class MongodbDatabaseConnection(object):
         Insert multiple new traffic_event_documents or update, if they already exist in the database.
 
         traffic_event_document: {
-            '_id', 'event_id', 'event_type', 'severity_level', 'longitude', 'latitude', 'date'
+            '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
         }
         :param traffic_event_documents: [traffic_event_document]
         :return: new_object_ids: [ObjectId]
@@ -3137,8 +3138,8 @@ class MongodbDatabaseConnection(object):
         :return: None
         """
         if traffic_density_document is not None:
-            print '\nstarting_bus_stop:', traffic_density_document.get('starting_bus_stop')
-            print 'ending_bus_stop:', traffic_density_document.get('ending_bus_stop')
+            print '\nstarting_bus_stop:', traffic_density_document.get('starting_bus_stop'), \
+                'ending_bus_stop:', traffic_density_document.get('ending_bus_stop')
 
             for traffic_density_values_of_path in traffic_density_document.get('traffic_density_values'):
                 print 'traffic_density_values_of_path:', traffic_density_values_of_path
@@ -3162,6 +3163,62 @@ class MongodbDatabaseConnection(object):
         )
         for traffic_density_document in traffic_density_documents:
             self.print_traffic_density_document(traffic_density_document=traffic_density_document)
+
+    def print_traffic_event_document(self, traffic_event_document=None, object_id=None, event_id=None):
+        """
+        Print a traffic_event_document.
+
+        traffic_event_document: {
+            '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
+        }
+        :param traffic_event_document: traffic_event_document
+        :param object_id: ObjectId
+        :param event_id: string
+        :return: traffic_event_document
+        """
+        if traffic_event_document is None:
+            traffic_event_document = self.find_traffic_event_document(
+                object_id=object_id,
+                event_id=event_id
+            )
+
+        print traffic_event_document
+
+    def print_traffic_event_documents(self, traffic_event_documents=None, object_ids=None, event_ids=None,
+                                      counter=None):
+        """
+        Print multiple traffic_event_documents.
+
+        traffic_event_document: {
+            '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
+        }
+        :param traffic_event_documents: [traffic_event_documents]
+        :param object_ids: [ObjectId]
+        :param event_ids: [string]
+        :param counter: int
+        :return: traffic_event_documents: [traffic_event_document]
+        """
+        if traffic_event_documents is None:
+            traffic_event_documents = self.find_traffic_event_documents(
+                object_ids=object_ids,
+                event_ids=event_ids
+            )
+
+        number_of_traffic_event_documents = len(traffic_event_documents)
+
+        if counter is not None:
+            if number_of_traffic_event_documents < counter:
+                counter = number_of_traffic_event_documents
+
+            for i in range(0, counter):
+                traffic_event_document = traffic_event_documents[i]
+                print traffic_event_document
+
+        else:
+            for traffic_event_document in traffic_event_documents:
+                print traffic_event_document
+
+        print 'number_of_traffic_event_documents:', number_of_traffic_event_documents
 
     def update_traffic_density(self, edge_object_id, new_traffic_density_value):
         """

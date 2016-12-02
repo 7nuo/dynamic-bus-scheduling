@@ -32,7 +32,7 @@ from src.data_simulator.travel_requests_simulator import TravelRequestsSimulator
 from src.common.logger import log
 from src.common.variables import travel_requests_generator_timeout, travel_requests_generator_max_operation_timeout, \
     travel_requests_min_departure_datetime_testing_value, travel_requests_generator_min_number_of_documents, \
-    travel_requests_generator_max_number_of_documents
+    travel_requests_generator_max_number_of_documents, testing_bus_line_id
 
 __author__ = 'Eleftherios Anagnostopoulos'
 __email__ = 'eanagnostopoulos@hotmail.com'
@@ -44,15 +44,19 @@ __credits__ = [
 
 class TravelRequestsSimulatorTester(object):
     def __init__(self):
-        log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='initialize_travel_requests_simulator: starting')
+        self.module_name = 'travel_requests_simulator_tester'
+        self.log_type = 'INFO'
+        self.log_message = 'initialize_travel_requests_simulator: starting'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
+
         self.start_time = time.time()
         self.travel_requests_simulator = TravelRequestsSimulator()
         self.travel_requests_generator_process = None
         self.elapsed_time = time.time() - self.start_time
-        log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='initialize_travel_requests_simulator: finished - elapsed_time = ' +
-                        str(self.elapsed_time) + ' sec')
+
+        self.log_message = 'initialize_travel_requests_simulator: finished - elapsed_time = ' \
+                           + str(self.elapsed_time) + ' sec'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
     def start_travel_requests_generator_process(self, initial_datetime, min_number_of_travel_request_documents,
                                                 max_number_of_travel_request_documents):
@@ -62,29 +66,40 @@ class TravelRequestsSimulatorTester(object):
         :param max_number_of_travel_request_documents: int
         :return: None
         """
-        log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='travel_requests_generator_process: starting')
-        self.travel_requests_generator_process = Process(
-            target=self.test_travel_requests_generator_process,
-            args=(initial_datetime, min_number_of_travel_request_documents, max_number_of_travel_request_documents)
-        )
-        self.travel_requests_generator_process.start()
+        if self.travel_requests_generator_process is None:
+            self.travel_requests_generator_process = Process(
+                target=self.test_travel_requests_generator_process,
+                args=(initial_datetime, min_number_of_travel_request_documents, max_number_of_travel_request_documents)
+            )
+            self.travel_requests_generator_process.start()
+            self.log_message = 'travel_requests_generator_process: starting'
+        else:
+            self.log_message = 'travel_requests_generator_process: already started'
+
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
     def terminate_travel_requests_generator_process(self):
-        self.travel_requests_generator_process.terminate()
-        self.travel_requests_generator_process.join()
-        log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='travel_requests_generator_process: finished')
+        if self.travel_requests_generator_process is not None:
+            self.travel_requests_generator_process.terminate()
+            self.travel_requests_generator_process.join()
+            self.travel_requests_generator_process = None
+            self.log_message = 'travel_requests_generator_process: terminated'
+        else:
+            self.log_message = 'travel_requests_generator_process: None'
+
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
     def test_clear_travel_requests_collection(self):
-        log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='test_clear_travel_requests_collection: starting')
+        self.log_message = 'test_clear_travel_requests_collection: starting'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
+
         self.start_time = time.time()
         self.travel_requests_simulator.clear_travel_requests_collection()
         self.elapsed_time = time.time() - self.start_time
-        log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='test_clear_travel_requests_collection: finished - elapsed_time = ' +
-                        str(self.elapsed_time) + ' sec')
+
+        self.log_message = 'test_clear_travel_requests_collection: finished - elapsed_time = ' \
+                           + str(self.elapsed_time) + ' sec'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
     def test_delete_travel_request_documents(self, object_ids=None, client_ids=None, line_ids=None,
                                              min_departure_datetime=None, max_departure_datetime=None):
@@ -105,8 +120,9 @@ class TravelRequestsSimulatorTester(object):
         :param max_departure_datetime
         :return: None
         """
-        log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='test_delete_travel_request_documents: starting')
+        self.log_message = 'test_delete_travel_request_documents: starting'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
+
         self.start_time = time.time()
         self.travel_requests_simulator.delete_travel_request_documents(
             object_ids=object_ids,
@@ -116,9 +132,10 @@ class TravelRequestsSimulatorTester(object):
             max_departure_datetime=max_departure_datetime
         )
         self.elapsed_time = time.time() - self.start_time
-        log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='test_delete_travel_request_documents: finished - elapsed_time = ' +
-                        str(self.elapsed_time) + ' sec')
+
+        self.log_message = 'test_delete_travel_request_documents: finished - elapsed_time = ' \
+                           + str(self.elapsed_time) + ' sec'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
     def test_generate_random_travel_request_documents(self, initial_datetime, min_number_of_travel_request_documents,
                                                       max_number_of_travel_request_documents):
@@ -132,8 +149,9 @@ class TravelRequestsSimulatorTester(object):
         :param max_number_of_travel_request_documents: int
         :return: None
         """
-        log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='test_generate_random_travel_request_documents: starting')
+        self.log_message = 'test_generate_random_travel_request_documents: starting'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
+
         self.start_time = time.time()
         self.travel_requests_simulator.generate_random_travel_request_documents(
             initial_datetime=initial_datetime,
@@ -141,9 +159,10 @@ class TravelRequestsSimulatorTester(object):
             max_number_of_travel_request_documents=max_number_of_travel_request_documents
         )
         self.elapsed_time = time.time() - self.start_time
-        log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='test_generate_random_travel_request_documents: finished - elapsed_time = '
-                        + str(self.elapsed_time) + ' sec')
+
+        self.log_message = 'test_generate_random_travel_request_documents: finished - elapsed_time = ' \
+                           + str(self.elapsed_time) + ' sec'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
     def test_generate_travel_request_documents(self, initial_datetime, number_of_travel_request_documents,
                                                bus_line=None, line_id=None):
@@ -161,8 +180,9 @@ class TravelRequestsSimulatorTester(object):
         :param line_id: int
         :return: None
         """
-        log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='test_generate_travel_request_documents: starting')
+        self.log_message = 'test_generate_travel_request_documents: starting'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
+
         self.start_time = time.time()
         self.travel_requests_simulator.generate_travel_request_documents(
             initial_datetime=initial_datetime,
@@ -171,9 +191,10 @@ class TravelRequestsSimulatorTester(object):
             line_id=line_id
         )
         self.elapsed_time = time.time() - self.start_time
-        log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='test_generate_travel_request_documents: finished - elapsed_time = '
-                        + str(self.elapsed_time) + ' sec')
+
+        self.log_message = 'test_generate_travel_request_documents: finished - elapsed_time = ' \
+                           + str(self.elapsed_time) + ' sec'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
     def test_travel_requests_generator_process(self, initial_datetime, min_number_of_travel_request_documents,
                                                max_number_of_travel_request_documents):
@@ -195,19 +216,44 @@ class TravelRequestsSimulatorTester(object):
             time.sleep(travel_requests_generator_timeout)
             time_difference = time.time() - initial_time
 
-        log(module_name='travel_requests_simulator_test', log_type='INFO',
-            log_message='travel_requests_generator_process: finished')
-
 
 if __name__ == '__main__':
     travel_requests_simulator_tester = TravelRequestsSimulatorTester()
-    # travel_requests_simulator_tester.test_clear_travel_requests_collection()
-    #
-    # travel_requests_simulator_tester.start_travel_requests_generator_process(
-    #     initial_datetime=travel_requests_min_departure_datetime_testing_value,
-    #     min_number_of_travel_request_documents=travel_requests_generator_min_number_of_documents,
-    #     max_number_of_travel_request_documents=travel_requests_generator_max_number_of_documents
-    # )
-    #
-    # travel_requests_simulator_tester.terminate_travel_requests_generator_process()
+    number_of_travel_requests_documents = 1000
 
+    while True:
+        time.sleep(0.01)
+        selection = raw_input(
+            '\n0.  exit'
+            '\n1.  test_generate_travel_request_documents'
+            '\n2.  start_travel_requests_generator_process'
+            '\n3.  terminate_travel_requests_generator_process'
+            '\nSelection: '
+        )
+
+        # 0. exit
+        if selection == '0':
+            break
+
+        # 1. test_generate_travel_request_documents
+        elif selection == '1':
+            travel_requests_simulator_tester.test_generate_travel_request_documents(
+                line_id=testing_bus_line_id,
+                initial_datetime=travel_requests_min_departure_datetime_testing_value,
+                number_of_travel_request_documents=number_of_travel_requests_documents
+            )
+
+        # 2. start_travel_requests_generator_process
+        elif selection == '2':
+            travel_requests_simulator_tester.start_travel_requests_generator_process(
+                initial_datetime=travel_requests_min_departure_datetime_testing_value,
+                min_number_of_travel_request_documents=travel_requests_generator_min_number_of_documents,
+                max_number_of_travel_request_documents=travel_requests_generator_max_number_of_documents
+            )
+
+        # 3. terminate_travel_requests_generator_process
+        elif selection == '3':
+            travel_requests_simulator_tester.terminate_travel_requests_generator_process()
+
+        else:
+            pass

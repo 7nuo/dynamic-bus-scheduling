@@ -41,37 +41,67 @@ __credits__ = [
 
 class OsmParserTester(object):
     def __init__(self, osm_filename):
-        log(module_name='osm_parser_test', log_type='INFO',
-            log_message='initialize_osm_parser: starting')
+        self.module_name = 'osm_parser_tester'
+        self.log_type = 'INFO'
+        self.log_message = 'initialize_osm_parser: starting'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
+
         self.start_time = time.time()
         self.osm_parser = OsmParser(osm_filename=osm_filename)
         self.elapsed_time = time.time() - self.start_time
-        log(module_name='osm_parser_test', log_type='INFO',
-            log_message='initialize_osm_parser: finished - elapsed time = '
-                        + str(self.elapsed_time) + ' sec')
+
+        self.log_message = 'initialize_osm_parser: finished - elapsed time = ' \
+                           + str(self.elapsed_time) + ' sec'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
     def test_parse_osm_file(self):
-        log(module_name='osm_parser_test', log_type='INFO',
-            log_message='test_parse_osm_file: starting')
+        self.log_message = 'test_parse_osm_file: starting'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
+
         self.start_time = time.time()
         self.osm_parser.parse_osm_file()
         self.elapsed_time = time.time() - self.start_time
-        log(module_name='osm_parser_test', log_type='INFO',
-            log_message='test_parse_osm_file: finished - elapsed time = '
-                        + str(self.elapsed_time) + ' sec')
+
+        self.log_message = 'test_parse_osm_file: finished - elapsed time = ' \
+                           + str(self.elapsed_time) + ' sec'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
     def test_populate_all_collections(self):
-        log(module_name='osm_parser_test', log_type='INFO',
-            log_message='test_populate_all_collections: starting')
+        self.log_message = 'test_populate_all_collections: starting'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
+
         self.start_time = time.time()
         self.osm_parser.populate_all_collections()
         self.elapsed_time = time.time() - self.start_time
-        log(module_name='osm_parser_test', log_type='INFO',
-            log_message='test_populate_all_collections: finished - elapsed time = ' +
-                        str(self.elapsed_time) + ' sec')
+
+        self.log_message = 'test_populate_all_collections: finished - elapsed time = ' \
+                           + str(self.elapsed_time) + ' sec'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
 
 if __name__ == '__main__':
-    tester = OsmParserTester(osm_filename=os.path.join(os.path.dirname(__file__), testing_osm_filename))
-    # travel_requests_simulator_tester.test_parse_osm_file()
-    # travel_requests_simulator_tester.test_populate_all_collections()
+    osm_parser_tester = OsmParserTester(
+        osm_filename=os.path.join(os.path.dirname(__file__), testing_osm_filename)
+    )
+    while True:
+        time.sleep(0.01)
+        selection = raw_input(
+            '\n0.  exit'
+            '\n1.  test_parse_osm_file'
+            '\n2.  test_populate_all_collections'
+            '\nSelection: '
+        )
+        # 0. exit
+        if selection == '0':
+            break
+
+        # 1. test_parse_osm_file
+        elif selection == '1':
+            osm_parser_tester.test_parse_osm_file()
+
+        # 2. test_populate_all_collections
+        elif selection == '2':
+            osm_parser_tester.test_populate_all_collections()
+
+        else:
+            pass

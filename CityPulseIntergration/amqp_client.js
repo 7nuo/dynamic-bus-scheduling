@@ -20,27 +20,27 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+var N3 = require('n3');
 var amqp = require('amqplib/callback_api');
-var amqpEndpoint = 'amqp://guest:guest@131.227.92.55:8007/';
-// var amqpEndpoint = 'amqp://localhost:8007/';
-var ampqConnection = null;
+var amqpEndpoint = 'amqp://localhost:8007/';
+var amqpConnection = null;
 
 var queueName = 'dynamic-bus-scheduling';
-// var exchange = 'annotated_data';
+// exchanges: 'annotated_data', 'events'
 var exchange = 'events';
+// routingKeys: '#', 'Aarhus.Road.Traffic.195070', 'Aarhus.Road.Traffic.201345'
 var routingKey = '#';
-// var routingKey = 'Aarhus.Road.Traffic.201345';
-// var routingKey = 'Aarhus.Road.Traffic.195070';
-var N3 = require('n3');
+var trafficEventsSource = 'http://purl.oclc.org/NET/UNIS/sao/ec#TrafficJam';
 
 var MongoClient = require('mongodb').MongoClient;
 var mongodbHost = '127.0.0.1';
 var mongodbPort = '27017';
-var mongodbDatabaseName = 'monad';
+var mongodbDatabaseName = 'dynamic_bus_scheduling';
 var url = 'mongodb://' + mongodbHost + ':' + mongodbPort + '/' + mongodbDatabaseName;
 var mongodbDatabase = null;
 var trafficEventsCollection = null;
 
+var addToDatabase = true;
 var debug = true;
 
 function establishConnections() {
@@ -64,24 +64,26 @@ function establishMongodbDatabaseConnection() {
 function establishCityPulseDataBusConnection() {
     amqp.connect(amqpEndpoint, function(err, conn) {
         if (err) {
-            console.error("[AMQP]", err.message);
+            console.error('citypulse_data_bus_connection: error', err.message);
             return setTimeout(establishCityPulseDataBusConnection, 1000);
         }
-        conn.on("error", function(err) {
-            if (err.message !== "Connection closing") {
-                console.error("[AMQP] conn error", err.message);
+        conn.on('error', function(err) {
+            if (err.message !== 'Connection closing') {
+                console.error('citypulse_data_bus_connection: error', err.message);
             }
         });
-        conn.on("close", function() {
-            console.error("[AMQP] reconnecting");
+        conn.on('close', function() {
+            console.error('citypulse_data_bus_connection: reconnecting');
             return setTimeout(establishCityPulseDataBusConnection, 1000);
         });
-        console.log("[AMQP] connected");
-        ampqConnection = conn;
+        console.log('citypulse_data_bus_connection: connected');
+        amqpConnection = conn;
         whenConnectedToCityPulseDataBus();
     });
 }
 
+// Example of traffic jam event:
+//
 // [ { subject: 'http://purl.oclc.org/NET/UNIS/sao/sao#cc5fe3f9-2a52-4134-a85b-9b2990918abd',
 //     predicate: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
 //     object: 'http://purl.oclc.org/NET/UNIS/sao/ec#TrafficJam',
@@ -120,13 +122,17 @@ function establishCityPulseDataBusConnection() {
 //         graph: '' } ]
 
 function consumer() {
-    var ok = ampqConnection.createChannel(on_open);
+    var ok = amqpConnection.createChannel(on_open);
 
     function on_open(err, ch) {
         if (err != null) {
             console.error(err.message);
         }
-        ch.assertQueue(queueName, {"messageTtl": 600000, "autoDelete": true, "durable": false});
+        ch.assertQueue(queueName, {
+            'messageTtl': 600000,
+            'autoDelete': true,
+            'durable': false
+        });
         ch.bindQueue(queueName, exchange, routingKey);
 
         ch.consume(queueName, function(msg) {
@@ -140,13 +146,14 @@ function consumer() {
                     if (triple) {
                         triples.push(triple);
 
-                        if (triple.object.toString() == "http://purl.oclc.org/NET/UNIS/sao/ec#TrafficJam") {
+                        if (triple.object.toString() == trafficEventsSource) {
                             trafficJam = true;
                         }
                     }
                     else {
                         if (trafficJam) {
-                            var eventID, eventType, eventLevel, eventLatitude, eventLongitude, eventDate;
+                            var objectSplit, eventID, eventType, eventLevel, eventLatitude, eventLongitude,
+                                eventDatetime;
                             console.log(triples);
 
                             for (var i = 0; i < triples.length; i++) {
@@ -155,78 +162,55 @@ function consumer() {
                                 // subject: 'http://purl.oclc.org/NET/UNIS/sao/sao#cc5fe3f9-2a52-4134-a85b-9b2990918abd'
                                 // predicate: 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
                                 // object: 'http://purl.oclc.org/NET/UNIS/sao/ec#TrafficJam'
-                                if (triple.object.toString() == "http://purl.oclc.org/NET/UNIS/sao/ec#TrafficJam") {
+                                if (triple.object.toString() == trafficEventsSource) {
                                     var subjectSplit = triple.subject.split('#');
                                     eventID = subjectSplit[1];
-                                    eventType = "TrafficJam";
+                                    eventType = 'TrafficJam';
                                 }
                                 else {
                                     var predicateEnding = triple.predicate.split('#')[1];
 
                                     // predicate: 'http://purl.oclc.org/NET/UNIS/sao/sao#hasLevel'
                                     // object: '"2"^^http://www.w3.org/2001/XMLSchema#long'
-                                    if (predicateEnding == "hasLevel") {
-                                        var objectSplit = triple.object.split('^^');
+                                    if (predicateEnding == 'hasLevel') {
+                                        objectSplit = triple.object.split('^^');
                                         eventLevel = objectSplit[0].split('"')[1];
                                     }
                                     // predicate: 'http://www.w3.org/2003/01/geo/wgs84_pos#lat'
                                     // object: '"56.1155615424"^^http://www.w3.org/2001/XMLSchema#double'
-                                    else if (predicateEnding == "lat") {
-                                        var objectSplit = triple.object.split('^^');
+                                    else if (predicateEnding == 'lat') {
+                                        objectSplit = triple.object.split('^^');
                                         eventLatitude = parseFloat(objectSplit[0].split('"')[1]);
                                     }
                                     // predicate: 'http://www.w3.org/2003/01/geo/wgs84_pos#lon'
                                     // object: '"10.1870405674"^^http://www.w3.org/2001/XMLSchema#double'
-                                    else if (predicateEnding == "lon") {
-                                        var objectSplit = triple.object.split('^^');
+                                    else if (predicateEnding == 'lon') {
+                                        objectSplit = triple.object.split('^^');
                                         eventLongitude = parseFloat(objectSplit[0].split('"')[1]);
                                     }
                                     // predicate: 'http://purl.org/NET/c4dm/timeline.owl#time'
                                     // object: '"2016-10-11T11:13:21.000Z"^^http://www.w3.org/2001/XMLSchema#dateTime'
-                                    else if (predicateEnding == "time") {
-                                        var objectSplit = triple.object.split('^^');
-                                        eventDate = objectSplit[0].split('"')[1];
+                                    else if (predicateEnding == 'time') {
+                                        objectSplit = triple.object.split('^^');
+                                        eventDatetime = objectSplit[0].split('"')[1];
                                     }
                                 }
-                                console.log('I: ', i, ' - Triple: ', triple);
+                                // console.log('I: ', i, ' - Triple: ', triple);
                             }
                             if (debug) {
                                 console.log(
-                                    "eventID:", eventID,
-                                    ", eventType:", eventType,
-                                    ", eventLevel:", eventLevel,
-                                    ", eventLatitude: ", eventLatitude,
-                                    ", eventLongitude: ", eventLongitude,
-                                    ", eventDate: ", eventDate);
+                                    'eventID:', eventID,
+                                    ', eventType:', eventType,
+                                    ', eventLevel:', eventLevel,
+                                    ', eventLatitude: ', eventLatitude,
+                                    ', eventLongitude: ', eventLongitude,
+                                    ', eventDatetime: ', eventDatetime);
                             }
-
-                            // var eventIdSplit = triples[0].subject.split('#');
-                            // var eventId = eventIdSplit[1];
-                            //
-                            // var eventTypeSplit = triples[0].object.split('#');
-                            // var eventType = eventTypeSplit[1];
-                            //
-                            // var eventSeveritySplit = triples[2].object.split('^^');
-                            // var severityLevel = eventSeveritySplit[0].split('"')[1];
-                            //
-                            // var eventLatSplit = triples[4].object.split('^^');
-                            // var latitude = parseFloat(eventLatSplit[0].split('"')[1]);
-                            //
-                            // var eventLongSplit = triples[5].object.split('^^');
-                            // var longitude = parseFloat(eventLongSplit[0].split('"')[1]);
-                            //
-                            // var eventDateSplit = triples[8].object.split('^^');
-                            // var date = eventDateSplit[0].split('"')[1];
-                            //
-                            // if (debug) {
-                            //     console.log(
-                            //         "eventId:", eventId,
-                            //         ", eventType:", eventType,
-                            //         ", severityLevel:", severityLevel,
-                            //         ", latitude: ", latitude,
-                            //         ", longitude: ", longitude,
-                            //         ", date: ", date);
-                            // }
+                            if (addToDatabase) {
+                                insertTrafficEventDocument(
+                                    eventID, eventType, eventLevel, eventLatitude, eventLongitude, eventDatetime
+                                );
+                            }
                         }
                     }
                 });
@@ -237,7 +221,7 @@ function consumer() {
 
 function deleteTrafficEventDocument(eventId) {
     var key = {
-        "event_id": eventId.toString()
+        'event_id': eventId.toString()
     };
     trafficEventsCollection.deleteOne(key, function (err, result) {
         if (err) {
@@ -252,7 +236,7 @@ function deleteTrafficEventDocument(eventId) {
 function findTrafficEventDocument(eventId) {
     var trafficEventDocument = null;
     var key = {
-        "event_id": eventId.toString()
+        'event_id': eventId.toString()
     };
     trafficEventsCollection.findOne(key, function (err, result) {
         if (err) {
@@ -265,16 +249,15 @@ function findTrafficEventDocument(eventId) {
     return trafficEventDocument;
 }
 
-function insertTrafficEventDocument(eventId, eventType, severityLevel, latitude, longitude, date) {
+function insertTrafficEventDocument(eventId, eventType, eventLevel, eventLatitude, eventLongitude, eventDatetime) {
     var key = {
-        "event_id": eventId.toString()
+        'event_id': eventId.toString()
     };
     var data = {$set: {
-        "event_type": eventType,
-        "severity_level": severityLevel,
-        "latitude": latitude,
-        "longitude": longitude,
-        "date": date
+        'event_type': eventType,
+        'event_level': eventLevel,
+        'point': {'longitude': eventLongitude, 'latitude': eventLatitude},
+        'datetime': eventDatetime
     }};
     trafficEventsCollection.updateOne(key, data, {upsert:true},  function (err, result) {
         if (err) {
@@ -284,7 +267,7 @@ function insertTrafficEventDocument(eventId, eventType, severityLevel, latitude,
 }
 
 function whenConnectedToMongodbDatabase() {
-    trafficEventsCollection = mongodbDatabase.collection('TrafficEvents');
+    trafficEventsCollection = mongodbDatabase.collection('TrafficEventDocuments');
     // mongodbDatabase.close();
 }
 

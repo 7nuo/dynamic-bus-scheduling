@@ -42,15 +42,19 @@ __credits__ = [
 
 class TrafficDataParserTester(object):
     def __init__(self):
-        log(module_name='traffic_data_parser_test', log_type='INFO',
-            log_message='initialize_traffic_data_parser: starting')
+        self.module_name = 'traffic_data_parser_tester'
+        self.log_type = 'INFO'
+        self.log_message = 'initialize_traffic_data_parser: starting'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
+
         self.start_time = time.time()
         self.traffic_data_parser = TrafficDataParser()
         self.traffic_data_parser_process = None
         self.elapsed_time = time.time() - self.start_time
-        log(module_name='traffic_data_parser_test', log_type='INFO',
-            log_message='initialize_traffic_data_parser: finished - elapsed_time = ' +
-                        str(self.elapsed_time) + ' sec')
+
+        self.log_message = 'initialize_traffic_data_parser: finished - elapsed_time = ' \
+                           + str(self.elapsed_time) + ' sec'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
     def handle_traffic_data_updater_process(self):
         time_difference = 0
@@ -62,34 +66,47 @@ class TrafficDataParserTester(object):
             time_difference = time.time() - initial_time
 
     def start_traffic_data_parser_process(self):
-        log(module_name='traffic_data_parser_test', log_type='INFO',
-            log_message='traffic_data_parser_process: starting')
-        self.traffic_data_parser_process = Process(target=self.handle_traffic_data_updater_process, args=())
-        self.traffic_data_parser_process.start()
+        if self.traffic_data_parser_process is None:
+            self.traffic_data_parser_process = Process(
+                target=self.handle_traffic_data_updater_process,
+                args=()
+            )
+            self.traffic_data_parser_process.start()
+            self.log_message = 'traffic_data_parser_process: starting'
+        else:
+            self.log_message = 'traffic_data_parser_process: already started'
+
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
     def terminate_traffic_data_parser_process(self):
         if self.traffic_data_parser_process is not None:
             self.traffic_data_parser_process.terminate()
             self.traffic_data_parser_process.join()
-        log(module_name='traffic_data_parser_test', log_type='INFO',
-            log_message='traffic_data_parser_process: finished')
+            self.traffic_data_parser_process = None
+            self.log_message = 'traffic_data_parser_process: terminated'
+        else:
+            self.log_message = 'traffic_data_parser_process: None'
+
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
     def test_update_traffic_data(self):
-        log(module_name='traffic_data_parser_test', log_type='INFO',
-            log_message='update_traffic_data: starting')
+        self.log_message = 'update_traffic_data: starting'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
+
         self.start_time = time.time()
         self.traffic_data_parser.update_traffic_data()
         self.elapsed_time = time.time() - self.start_time
-        log(module_name='traffic_data_parser_test', log_type='INFO',
-            log_message='update_traffic_data: finished - elapsed_time = ' +
-                        str(self.elapsed_time) + ' sec')
+
+        self.log_message = 'update_traffic_data: finished - elapsed_time = ' \
+                           + str(self.elapsed_time) + ' sec'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
+
 
 if __name__ == '__main__':
     traffic_data_parser_tester = TrafficDataParserTester()
-    time.sleep(0.2)
-    selection = ''
 
     while True:
+        time.sleep(0.01)
         selection = raw_input(
             '\n0.  exit'
             '\n1.  update_traffic_data'
@@ -98,17 +115,21 @@ if __name__ == '__main__':
             '\nSelection: '
         )
 
+        # 0. exit
         if selection == '0':
             break
 
+        # 1. update_traffic_data
         elif selection == '1':
             traffic_data_parser_tester.test_update_traffic_data()
 
+        # 2. start_traffic_data_parser_process
         elif selection == '2':
             traffic_data_parser_tester.start_traffic_data_parser_process()
 
+        # 3. terminate_traffic_data_parser_process
         elif selection == '3':
             traffic_data_parser_tester.terminate_traffic_data_parser_process()
 
         else:
-            print 'Invalid input'
+            pass

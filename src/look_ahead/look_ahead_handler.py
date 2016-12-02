@@ -260,6 +260,9 @@ class LookAheadHandler(object):
 
         print_timetables(timetables=timetable_generator.timetables)
 
+        self.mongodb_database_connection.delete_timetable_documents(
+            line_id=bus_line.get('line_id')
+        )
         self.mongodb_database_connection.insert_timetable_documents(
             timetable_documents=timetable_generator.timetables
         )
@@ -341,6 +344,9 @@ class LookAheadHandler(object):
 
         print_timetables(timetables=timetable_updater.timetables)
 
+        self.mongodb_database_connection.delete_timetable_documents(
+            line_id=bus_line.get('line_id')
+        )
         self.mongodb_database_connection.insert_timetable_documents(
             timetable_documents=timetable_updater.timetables
         )
@@ -426,7 +432,7 @@ def generate_new_timetables_based_on_travel_requests(current_timetables, travel_
     #    The first step is to calculate the number_of_current_passengers in each one of the timetable_entries.
     #
     calculate_number_of_passengers_of_timetables(timetables=new_timetables)
-    # handle_overcrowded_timetables(timetables=new_timetables)
+    handle_overcrowded_timetables(timetables=new_timetables)
 
     # 9: (Adjust Departure Datetimes) At this point of processing, the number of travel_requests in each timetable
     #    is higher than the minimum_number_of_passengers_in_timetable and lower than the maximum_bus_capacity.
