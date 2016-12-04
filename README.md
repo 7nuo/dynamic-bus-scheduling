@@ -1,6 +1,10 @@
 # Bus Scheduling including Dynamic Events
 
-This application introduces a reasoning mechanism capable of evaluating travel requests and generating bus timetables with reduced average waiting time for passengers. Furthermore, the system has the potential to detect traffic flow and make adjustments to the regular path of each bus, so as to decrease the waiting time which is a result of traffic congestion.
+This project provides a realistic simulation of a transportation system, including connections among the road network of operation areas, bus lines consisted of multiple bus stops, routes and timetables for bus vehicles, travel requests registered by potential passengers, and factors which usually affect the normal schedule such as the levels of traffic density.
+
+In addition, a reasoning mechanism is introduced, capable of evaluating travel requests and generating timetables for bus vehicles, while limiting the average waiting time of passengers as well as the number of passengers per vehicle.
+
+Finally, traffic flow detection is utilized, in order to make adjustments to the regular path of each bus and limit the waiting time of passengers which could be increased due to traffic congestion.
 
 # Contributors
 
