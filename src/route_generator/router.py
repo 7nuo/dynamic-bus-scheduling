@@ -23,7 +23,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from src.route_generator.path_finder import find_path_between_two_nodes
+from src.route_generator.path_finder import identify_path_with_lowest_cost
 from src.route_generator.multiple_paths_finder import find_waypoints_between_two_nodes
 from src.common.logger import log
 from src.common.variables import mongodb_host, mongodb_port
@@ -221,7 +221,7 @@ class Router(object):
         if edges_dictionary is None:
             edges_dictionary = self.get_edges_dictionary()
 
-        route = find_path_between_two_nodes(
+        route = identify_path_with_lowest_cost(
             start=starting_bus_stop,
             end=ending_bus_stop,
             edges_dictionary=edges_dictionary

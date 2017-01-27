@@ -38,42 +38,58 @@ class Node(object):
     def __init__(self, osm_id, point_document):
         self.osm_id = osm_id
         self.point_document = point_document
-        self.f_score_distance = float('inf')
-        self.f_score_time_on_road = float('inf')
-        self.g_score_distance = float('inf')
-        self.g_score_time_on_road = float('inf')
-        self.heuristic_estimated_distance = float('inf')
-        self.heuristic_estimated_time_on_road = float('inf')
-        self.previous_nodes = []
+        self.real_distance_cost = float('inf')
+        self.real_travelling_time_cost = float('inf')
+        self.heuristic_distance_cost = float('inf')
+        self.heuristic_travelling_time_cost = float('inf')
+        self.total_distance_score = float('inf')
+        self.total_travelling_time_score = float('inf')
+        self.followed_path = []
 
-    def set_f_score(self, f_score_distance, f_score_time_on_road):
-        self.f_score_distance = f_score_distance
-        self.f_score_time_on_road = f_score_time_on_road
+    def get_real_cost(self):
+        return self.real_distance_cost, self.real_travelling_time_cost
 
-    def get_f_score(self):
-        return self.f_score_distance, self.f_score_time_on_road
+    def set_real_cost(self, real_distance_cost, real_travelling_time_cost):
+        self.real_distance_cost = real_distance_cost
+        self.real_travelling_time_cost = real_travelling_time_cost
 
-    def set_g_score(self, g_score_distance, g_score_time_on_road):
-        self.g_score_distance = g_score_distance
-        self.g_score_time_on_road = g_score_time_on_road
+    def get_heuristic_cost(self):
+        return self.heuristic_distance_cost, self.heuristic_travelling_time_cost
 
-    def get_g_score(self):
-        return self.g_score_distance, self.g_score_time_on_road
+    def set_heuristic_cost(self, heuristic_distance_cost, heuristic_travelling_time_cost):
+        self.heuristic_distance_cost = heuristic_distance_cost
+        self.heuristic_travelling_time_cost = heuristic_travelling_time_cost
 
-    def set_previous_nodes(self, previous_nodes):
-        self.previous_nodes = previous_nodes
+    def estimate_total_score(self):
+        self.total_distance_score = self.real_distance_cost + self.heuristic_distance_cost
 
-    def get_previous_nodes(self):
-        return self.previous_nodes
+    def get_total_score(self):
+        return self.total_distance_score, self.total_travelling_time_score
 
-    def add_previous_node(self, node):
-        self.previous_nodes.append(node)
+    def set_total_score(self, total_distance_score, total_travelling_time_score):
+        self.total_distance_score = total_distance_score
+        self.total_travelling_time_score = total_travelling_time_score
 
-    def clear_previous_nodes(self):
-        self.previous_nodes = []
+    def add_node_to_followed_path(self, node):
+        self.followed_path.append(node)
+
+    def clear_followed_path(self):
+        self.followed_path = []
+
+    def get_followed_path(self):
+        return self.followed_path
+
+    def set_followed_path(self, followed_path):
+        self.followed_path = followed_path
 
 
 class OrderedSet(object):
+    """
+    Node storing structure capable of keeping priority among nodes according to their
+    total_travelling_time_score values. Nodes with lower total_travelling_time_score are
+    retrieved first. This rule could be changed by modifying the index_of_insertion
+    function, which estimates the index of insertion for each new node.
+    """
     def __init__(self):
         self.nodes = []
 
@@ -98,7 +114,9 @@ class OrderedSet(object):
 
     def index_of_insertion(self, new_node):
         """
-        Retrieve the index in which a new node should be inserted, according to the corresponding f_score value.
+        Retrieve the index in which a new node should be inserted, comparing the corresponding
+        total_travelling_time_score values. The lower the total_travelling_time_score value,
+        the lower the index of insertion.
 
         :param new_node: Node
         :return index: int
@@ -106,7 +124,7 @@ class OrderedSet(object):
         index = 0
 
         for node in self.nodes:
-            if new_node.f_score_time_on_road < node.f_score_time_on_road:
+            if new_node.total_travelling_time_score < node.total_travelling_time_score:
                 break
             index += 1
 
@@ -123,26 +141,125 @@ class OrderedSet(object):
 
     def pop(self):
         """
-        Remove - retrieve the node with the lowest f_score values.
+        Remove - retrieve the node with the lowest total_travelling_time_score value.
 
-        :return: (f_score_distance, f_score_time_on_road), node
+        :return: node: Node
         """
         node = self.nodes.pop(0)
         return node
 
-    def remove(self, index):
-        """
-        Remove node at index.
 
-        :type index: int
-        """
-        self.nodes.pop(index)
-
-
-def find_path_between_two_nodes(start, end, edges_dictionary):
+def estimate_heuristic_cost(starting_point_document, ending_point_document):
     """
-    Implement the A* search algorithm in order to find the less time-consuming path
-    between the starting and the ending node.
+    Make a heuristic estimation regarding the cost of travelling from starting_point to ending_point.
+
+    :param starting_point_document: {'longitude', 'latitude'}
+    :param ending_point_document:  {'longitude', 'latitude'}
+    :return: (heuristic_distance_cost, heuristic_travelling_time_cost): (float, float) in (meters, seconds)
+    """
+    starting_point = Point(
+        longitude=starting_point_document.get('longitude'),
+        latitude=starting_point_document.get('latitude')
+    )
+    ending_point = Point(
+        longitude=ending_point_document.get('longitude'),
+        latitude=ending_point_document.get('latitude')
+    )
+    heuristic_distance_cost = distance(
+        point_one=starting_point,
+        point_two=ending_point
+    )
+    heuristic_travelling_time_cost = estimate_travelling_time(
+        distance_to_be_covered=heuristic_distance_cost,
+        max_speed=standard_speed
+    )
+    return heuristic_distance_cost, heuristic_travelling_time_cost
+
+
+def estimate_real_cost(starting_point_document, ending_point_document, max_speed, road_type, traffic_density):
+    """
+    Estimate the real cost of travelling from starting_point to ending_point.
+
+    :param starting_point_document: {'longitude', 'latitude'}
+    :param ending_point_document: {'longitude', 'latitude'}
+    :param max_speed: float
+    :param road_type: One of the road types that can be accessed by a bus (string).
+    :param traffic_density: float value between 0 and 1.
+    :return: (real_distance_cost, real_travelling_time_cost): (float, float) in (meters, seconds)
+    """
+    starting_point = Point(
+        longitude=starting_point_document.get('longitude'),
+        latitude=starting_point_document.get('latitude')
+    )
+    ending_point = Point(
+        longitude=ending_point_document.get('longitude'),
+        latitude=ending_point_document.get('latitude')
+    )
+    real_distance_cost = distance(
+        point_one=starting_point,
+        point_two=ending_point
+    )
+    real_travelling_time_cost = estimate_travelling_time(
+        distance_to_be_covered=real_distance_cost,
+        max_speed=max_speed,
+        road_type=road_type,
+        traffic_density=traffic_density
+    )
+    return real_distance_cost, real_travelling_time_cost
+
+
+def estimate_road_type_speed_decrease_factor(road_type):
+    """
+    Estimate a speed decrease factor, based on road_type.
+
+    :param road_type: One of the bus_road_types.
+    :return: 0 <= road_type_speed_decrease_factor <= 1
+    """
+    road_type_index = bus_road_types.index(road_type)
+    road_type_speed_decrease_factor = 1 - (float(road_type_index) / 50)
+    return road_type_speed_decrease_factor
+
+
+def estimate_traffic_speed_decrease_factor(traffic_density):
+    """
+    Estimate a speed decrease factor, based on the current levels of traffic_density.
+
+    :param traffic_density: float value between 0 and 1.
+    :return: 0 <= traffic_speed_decrease_factor <= 1
+    """
+    traffic_speed_decrease_factor = 1 - float(traffic_density)
+    return traffic_speed_decrease_factor
+
+
+def estimate_travelling_time(distance_to_be_covered, max_speed, road_type=None, traffic_density=None):
+    """
+    Estimate travelling_time.
+
+    :param distance_to_be_covered: float (in meters)
+    :param max_speed: float
+    :param road_type: One of the road types that can be accessed by a bus (string).
+    :param traffic_density: float value between 0 and 1.
+    :return: travelling_time: float (in seconds)
+    """
+    road_type_speed_decrease_factor = 1.0
+    traffic_speed_decrease_factor = 1.0
+
+    if road_type is not None:
+        road_type_speed_decrease_factor = estimate_road_type_speed_decrease_factor(road_type=road_type)
+
+    if traffic_density is not None:
+        traffic_speed_decrease_factor = estimate_traffic_speed_decrease_factor(traffic_density=traffic_density)
+
+    speed = road_type_speed_decrease_factor * traffic_speed_decrease_factor * (float(max_speed) * 1000 / 3600)
+    travelling_time = distance_to_be_covered / speed
+    return travelling_time
+
+
+def identify_path_with_lowest_cost(start, end, edges_dictionary):
+    """
+    This function is capable of identifying the path with the lowest cost value
+    (less time-consuming in this case), connecting the starting with the ending
+    node, implementing a variation of the A* search algorithm.
 
     :param start: {'osm_id', 'point': {'longitude', 'latitude'}}
     :param end: {'osm_id', 'point': {'longitude', 'latitude'}}
@@ -155,87 +272,114 @@ def find_path_between_two_nodes(start, end, edges_dictionary):
     :param edges_dictionary: {starting_node_osm_id -> [edge_document]}
 
     :return: path_between_two_nodes: {
-                 'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges', 'distances_from_starting_node',
-                 'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}
+                 'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                 'distances_from_starting_node', 'times_from_starting_node',
+                 'distances_from_previous_node', 'times_from_previous_node'
+             }
 
             (None if there is no path between the provided nodes)
     """
-    # A dictionary with the nodes that have already been evaluated: {node_osm_id -> node}
+    # A dictionary ({node_osm_id -> node}) containing nodes that have
+    # already been evaluated (cost values have been estimated).
     closed_set = {}
 
-    # The set of currently discovered nodes still to be evaluated. Initially, only the starting node is known.
+    # A node storing structure containing nodes whose neighbors
+    # should be evaluated (cost values should be estimated).
     open_set = OrderedSet()
 
+    # Initialize starting_node.
     starting_node_osm_id = start.get('osm_id')
     starting_node_point_document = start.get('point')
+    starting_node = Node(
+        osm_id=starting_node_osm_id,
+        point_document=starting_node_point_document
+    )
+
+    # Initialize ending_node.
     ending_node_osm_id = end.get('osm_id')
     ending_node_point_document = end.get('point')
+    ending_node = Node(
+        osm_id=ending_node_osm_id,
+        point_document=ending_node_point_document
+    )
 
-    # Initialize starting_node and ending_node.
-    starting_node = Node(osm_id=starting_node_osm_id, point_document=starting_node_point_document)
-    ending_node = Node(osm_id=ending_node_osm_id, point_document=ending_node_point_document)
+    # Real cost values of starting_node are equal to zero.
+    starting_node.set_real_cost(
+        real_distance_cost=0.0,
+        real_travelling_time_cost=0.0
+    )
 
-    # Distance and time from starting_node equal to zero.
-    starting_node.set_g_score(g_score_distance=0.0, g_score_time_on_road=0.0)
-
-    # Distance and time to ending node is estimated heuristically.
-    starting_node_f_score_distance, starting_node_f_score_time_on_road = heuristic_cost_estimate(
+    # Estimate heuristic cost values of starting_node.
+    heuristic_distance_cost, heuristic_travelling_time_cost = estimate_heuristic_cost(
         starting_point_document=starting_node.point_document,
         ending_point_document=ending_node.point_document
     )
-    starting_node.set_f_score(
-        f_score_distance=starting_node_f_score_distance,
-        f_score_time_on_road=starting_node_f_score_time_on_road
+    starting_node.set_heuristic_cost(
+        heuristic_distance_cost=heuristic_distance_cost,
+        heuristic_travelling_time_cost=heuristic_travelling_time_cost
     )
 
-    # Add the starting_node to the list of previous nodes.
-    starting_node.add_previous_node(node=starting_node)
+    # Estimate total score values of starting_node.
+    starting_node.estimate_total_score()
+
+    # Set the followed_path of starting_node.
+    starting_node.add_node_to_followed_path(node=starting_node)
 
     # Add the starting_node to the closed_set, since it has already been evaluated.
     closed_set[starting_node_osm_id] = starting_node
 
-    # Add the starting_node to the open_set, since its edges_dictionary should be evaluated.
+    # Add the starting_node to the open_set, since its neighbors should be evaluated.
     open_set.insert(new_node=starting_node)
 
-    # While there are more nodes, whose edges_dictionary have not been evaluated.
+    # The node with the lowest total_score value is retrieved from the open_set,
+    # as long as the number of stored nodes is greater than zero.
     while len(open_set) > 0:
 
         # During the first iteration of this loop, current_node will be equal to starting_node.
         current_node = open_set.pop()
 
-        # ending_node has been discovered: path should be reconstructed.
+        # Ending condition: ending_node has been discovered => followed path should be processed in order to
+        # retrieve its parameters (covered distance, travelling time, intermediate nodes, points, and edges).
         if current_node.osm_id == ending_node_osm_id:
-            return reconstruct_path(
-                list_of_nodes=current_node.get_previous_nodes(),
+            return process_followed_path(
+                list_of_nodes=current_node.get_followed_path(),
                 edges_dictionary=edges_dictionary
             )
 
-        # current_node does not have any edges_dictionary.
+        # Case that current_node has no neighbors.
         if current_node.osm_id not in edges_dictionary:
             continue
 
+        # Case that current_node has neighbors. Each neighbor should be evaluated,
+        # taking into consideration the parameters of corresponding edges.
         for edge in edges_dictionary.get(current_node.osm_id):
             next_node_osm_id = edge.get('ending_node').get('osm_id')
             next_node_point_document = edge.get('ending_node').get('point')
-
-            # Check whether the next_node has already been evaluated.
-            if next_node_osm_id in closed_set:
-                next_node = closed_set.get(next_node_osm_id)
-                # continue
-            else:
-                next_node = Node(osm_id=next_node_osm_id, point_document=next_node_point_document)
-                next_node.heuristic_estimated_distance, next_node.heuristic_estimated_time_on_road = \
-                    heuristic_cost_estimate(
-                        starting_point_document=next_node.point_document,
-                        ending_point_document=ending_node.point_document
-                    )
-
             max_speed = edge.get('max_speed')
             road_type = edge.get('road_type')
             traffic_density = edge.get('traffic_density')
 
-            # Calculate the difference in values between current_node and next_node.
-            additional_g_score_distance, additional_g_score_time_on_road = g_score_estimate(
+            # Check whether next_node has already been evaluated.
+            if next_node_osm_id in closed_set:
+                next_node = closed_set.get(next_node_osm_id)
+            else:
+                # Case that next_node has not been evaluated
+                next_node = Node(
+                    osm_id=next_node_osm_id,
+                    point_document=next_node_point_document
+                )
+                # Heuristic cost should be estimated.
+                heuristic_distance_cost, heuristic_travelling_time_cost = estimate_heuristic_cost(
+                    starting_point_document=next_node.point_document,
+                    ending_point_document=ending_node.point_document
+                )
+                next_node.set_heuristic_cost(
+                    heuristic_distance_cost=heuristic_distance_cost,
+                    heuristic_travelling_time_cost=heuristic_travelling_time_cost
+                )
+
+            # Estimate the real cost values for travelling from current_node to next_node.
+            additional_real_distance_cost, additional_real_travelling_time_cost = estimate_real_cost(
                 starting_point_document=current_node.point_document,
                 ending_point_document=next_node.point_document,
                 max_speed=max_speed,
@@ -243,49 +387,60 @@ def find_path_between_two_nodes(start, end, edges_dictionary):
                 traffic_density=traffic_density
             )
 
-            # Calculate new g_score values
-            new_g_score_distance = current_node.g_score_distance + additional_g_score_distance
-            new_g_score_time_on_road = current_node.g_score_time_on_road + additional_g_score_time_on_road
+            # Estimate the real cost values for travelling from starting_node to next_node.
+            new_real_distance_cost = current_node.real_distance_cost + additional_real_distance_cost
+            new_real_travelling_time_cost = current_node.real_travelling_time_cost + \
+                                            additional_real_travelling_time_cost
 
-            if next_node.g_score_time_on_road < new_g_score_time_on_road:
+            # Compare newly estimated real cost values with previous ones (in case next_node
+            # was evaluated again). If the previously followed_path has lower cost value,
+            # then the loop continues evaluating the next neighbor. (Non-evaluated nodes
+            # are initialized with real cost values equal to infinity).
+            if next_node.real_travelling_time_cost < new_real_travelling_time_cost:
                 continue
 
-            next_node.g_score_distance = new_g_score_distance
-            next_node.g_score_time_on_road = new_g_score_time_on_road
+            # Real cost values of next_node should be replaced.
+            next_node.set_real_cost(
+                real_distance_cost=new_real_distance_cost,
+                real_travelling_time_cost=new_real_travelling_time_cost
+            )
 
-            # Calculate new f_score values
-            next_node.f_score_distance = new_g_score_distance + next_node.heuristic_estimated_distance
-            next_node.f_score_time_on_road = new_g_score_time_on_road + next_node.heuristic_estimated_time_on_road
+            # Total cost values of next_nodes are estimated.
+            next_node.estimate_total_score()
 
-            # Add next_node to the list of previous nodes.
-            next_node.set_previous_nodes(previous_nodes=current_node.get_previous_nodes() + [next_node])
+            # Followed path of next_node is updated.
+            next_node.set_followed_path(
+                followed_path=current_node.get_followed_path() + [next_node]
+            )
 
-            # next_node has been evaluated.
+            # Since it has been evaluated, next_node is pushed into the closed_set.
             closed_set[next_node_osm_id] = next_node
 
-            # Add next_node to the open_set, so as to allow its edges_dictionary to be evaluated.
+            # Add next_node to the open_set, so as to allow its neighbors to be evaluated.
             if not open_set.exists(next_node_osm_id):
                 open_set.insert(new_node=next_node)
 
     return None
 
 
-def reconstruct_path(list_of_nodes, edges_dictionary):
+def process_followed_path(list_of_nodes, edges_dictionary):
     """
-    Get a dictionary containing the parameters of the path.
+    Process the followed path and retrieve a dictionary containing its parameters.
 
     :param list_of_nodes: The list of nodes which consist the optimal path.
-    
+
     edge_document: {
         '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
         'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
         'max_speed', 'road_type', 'way_id', 'traffic_density'}
 
     :param edges_dictionary: {starting_node_osm_id -> [edge_document]}
-    
+
     :return: path: {
-                 'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges', 'distances_from_starting_node',
-                 'times_from_starting_node', 'distances_from_previous_node', 'times_from_previous_node'}
+                 'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+                 'distances_from_starting_node', 'times_from_starting_node',
+                 'distances_from_previous_node', 'times_from_previous_node'
+             }
     """
     node_osm_ids = []
     points = []
@@ -293,33 +448,30 @@ def reconstruct_path(list_of_nodes, edges_dictionary):
     times_from_starting_node = []
     distances_from_previous_node = []
     times_from_previous_node = []
+    total_distance = 0.0
+    total_time = 0.0
 
-    partial_distance = 0
-    partial_time = 0
-    previous_distance = None
-    previous_time = None
-
+    # Process nodes of followed path.
     for node in list_of_nodes:
+        # Add osm_id and point_document of current node.
         node_osm_ids.append(node.osm_id)
         points.append(node.point_document)
-        distances_from_starting_node.append(node.g_score_distance)
-        times_from_starting_node.append(node.g_score_time_on_road)
 
-        if previous_distance is not None:
-            partial_distance = node.g_score_distance - previous_distance
+        # Add distance and travelling_time from starting to current node.
+        distances_from_starting_node.append(node.real_distance_cost)
+        times_from_starting_node.append(node.real_travelling_time_cost)
 
-        distances_from_previous_node.append(partial_distance)
-        previous_distance = node.g_score_distance
+        # Estimate distance from previous to current node, and update total_distance.
+        distance_from_previous_node = node.real_distance_cost - total_distance
+        distances_from_previous_node.append(distance_from_previous_node)
+        total_distance = node.real_distance_cost
 
-        if previous_time is not None:
-            partial_time = node.g_score_time_on_road - previous_time
+        # Estimate travelling_time from previous to current node, and update total_time.
+        time_from_previous_node = node.real_travelling_time_cost - total_time
+        times_from_previous_node.append(time_from_previous_node)
+        total_time = node.real_travelling_time_cost
 
-        times_from_previous_node.append(partial_time)
-        previous_time = node.g_score_time_on_road
-
-    total_distance = previous_distance
-    total_time = previous_time
-
+    # Identify followed edge_documents.
     followed_edges = []
 
     for i in range(0, len(node_osm_ids) - 1):
@@ -346,76 +498,4 @@ def reconstruct_path(list_of_nodes, edges_dictionary):
         'distances_from_previous_node': distances_from_previous_node,
         'times_from_previous_node': times_from_previous_node
     }
-
     return path
-
-
-def estimate_road_type_speed_decrease_factor(road_type):
-    """
-    Estimate a speed decrease factor, based on the type of the road.
-
-    :param road_type: One of the bus_road_types.
-    :return: 0 <= road_type_speed_decrease_factor <= 1
-    """
-    road_type_index = bus_road_types.index(road_type)
-    road_type_speed_decrease_factor = 1 - (float(road_type_index) / 50)
-    return road_type_speed_decrease_factor
-
-
-def estimate_traffic_speed_decrease_factor(traffic_density):
-    """
-    Estimate a speed decrease factor, based on the density of traffic.
-
-    :param traffic_density: float value between 0 and 1.
-    :return: 0 <= traffic_speed_decrease_factor <= 1
-    """
-    traffic_speed_decrease_factor = 1 - float(traffic_density)
-    return traffic_speed_decrease_factor
-
-
-def g_score_estimate(starting_point_document, ending_point_document, max_speed, road_type, traffic_density):
-    """
-    Estimate the cost of getting from the starting point to the ending point.
-
-    :param starting_point_document: {'longitude', 'latitude'}}
-    :param ending_point_document: {'longitude', 'latitude'}}
-    :param max_speed: float
-    :param road_type: One of the road types that can be accessed by a bus (string).
-    :param traffic_density: float value between 0 and 1.
-    :return: (f_score_distance in meters, f_score_time_on_road in seconds)
-    """
-    starting_point = Point(
-        longitude=starting_point_document.get('longitude'),
-        latitude=starting_point_document.get('latitude')
-    )
-    ending_point = Point(
-        longitude=ending_point_document.get('longitude'),
-        latitude=ending_point_document.get('latitude')
-    )
-    estimated_distance = distance(point_one=starting_point, point_two=ending_point)
-    road_type_speed_decrease_factor = estimate_road_type_speed_decrease_factor(road_type=road_type)
-    traffic_speed_decrease_factor = estimate_traffic_speed_decrease_factor(traffic_density=traffic_density)
-    estimated_time_on_road = estimated_distance / (road_type_speed_decrease_factor * traffic_speed_decrease_factor *
-                                                   (float(max_speed) * 1000 / 3600))
-    return estimated_distance, estimated_time_on_road
-
-
-def heuristic_cost_estimate(starting_point_document, ending_point_document):
-    """
-    Make a rough estimation regarding the cost of getting from the starting point to the ending point.
-
-    :param starting_point_document: {'longitude', 'latitude'}
-    :param ending_point_document:  {'longitude', 'latitude'}
-    :return: (f_score_distance in meters, f_score_time_on_road in seconds)
-    """
-    starting_point = Point(
-        longitude=starting_point_document.get('longitude'),
-        latitude=starting_point_document.get('latitude')
-    )
-    ending_point = Point(
-        longitude=ending_point_document.get('longitude'),
-        latitude=ending_point_document.get('latitude')
-    )
-    estimated_distance = distance(point_one=starting_point, point_two=ending_point)
-    estimated_time_on_road = estimated_distance / (float(standard_speed) * 1000 / 3600)
-    return estimated_distance, estimated_time_on_road
