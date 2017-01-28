@@ -24,7 +24,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 from src.route_generator.path_finder import identify_path_with_lowest_cost
-from src.route_generator.multiple_paths_finder import find_waypoints_between_two_nodes
+from src.route_generator.multiple_paths_finder import identify_all_paths
 from src.common.logger import log
 from src.common.variables import mongodb_host, mongodb_port
 from src.geospatial_data.point import distance, Point
@@ -293,7 +293,7 @@ class Router(object):
 
         edges_dictionary = self.get_edges_dictionary()
 
-        waypoints = find_waypoints_between_two_nodes(
+        waypoints = identify_all_paths(
             starting_node_osm_id=starting_bus_stop.get('osm_id'),
             ending_node_osm_id=ending_bus_stop.get('osm_id'),
             edges_dictionary=edges_dictionary
@@ -331,7 +331,7 @@ class Router(object):
             starting_bus_stop = bus_stops[i]
             ending_bus_stop = bus_stops[i + 1]
 
-            waypoints = find_waypoints_between_two_nodes(
+            waypoints = identify_all_paths(
                 starting_node_osm_id=starting_bus_stop.get('osm_id'),
                 ending_node_osm_id=ending_bus_stop.get('osm_id'),
                 edges_dictionary=edges_dictionary

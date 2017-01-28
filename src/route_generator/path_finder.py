@@ -346,7 +346,7 @@ def identify_path_with_lowest_cost(start, end, edges_dictionary):
                 edges_dictionary=edges_dictionary
             )
 
-        # Case that current_node has no neighbors.
+        # Continuation condition: current_node has no neighbors.
         if current_node.osm_id not in edges_dictionary:
             continue
 
@@ -425,7 +425,8 @@ def identify_path_with_lowest_cost(start, end, edges_dictionary):
 
 def process_followed_path(list_of_nodes, edges_dictionary):
     """
-    Process the followed path and retrieve a dictionary containing its parameters.
+    Process the nodes of followed path and retrieve a dictionary containing parameters such as
+    covered distance, travelling time, intermediate nodes, geographical points, and edges.
 
     :param list_of_nodes: The list of nodes which consist the optimal path.
 

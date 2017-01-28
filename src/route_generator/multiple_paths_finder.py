@@ -58,6 +58,11 @@ class MultiplePathsNode(object):
 
 
 class MultiplePathsSet(object):
+    """
+    Following the principles of breadth-first search, the neighbors of each node are explored first,
+    before moving to the next level neighbors. For this reason, a data storing structure is implemented
+    in order to store the nodes whose neighbors have not yet been explored.
+    """
     def __init__(self):
         self.node_osm_ids = []
         self.nodes = []
@@ -81,7 +86,7 @@ class MultiplePathsSet(object):
         """
         Insert a new node.
 
-        :param new_node: Node
+        :param new_node: MultiplePathsNode
         """
         new_node_osm_id = new_node.osm_id
         self.node_osm_ids.append(new_node_osm_id)
@@ -89,17 +94,49 @@ class MultiplePathsSet(object):
 
     def pop(self):
         """
+        Remove - retrieve the first node of followed path.
 
-        :return:
+        :return: node: MultiplePathsNode
         """
         node = self.nodes.pop(0)
         self.node_osm_ids.remove(node.osm_id)
         return node
 
 
-def find_waypoints_between_two_nodes(starting_node_osm_id, ending_node_osm_id, edges_dictionary):
+def get_edge(starting_node, ending_node, edges_dictionary):
     """
-    Find all the possible lists of edges which connect two nodes.
+    Get the edge_document which connects starting_node with ending_node.
+
+    :param starting_node: osm_id
+    :param ending_node: osm_id
+
+    edge_document: {
+        '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'max_speed', 'road_type', 'way_id', 'traffic_density'}
+
+    :param edges_dictionary: {starting_node_osm_id -> [edge_document]}
+    :return: edge: edge_document
+    """
+    edge = None
+    starting_node_edges = edges_dictionary[starting_node]
+
+    for starting_node_edge in starting_node_edges:
+        if starting_node_edge.get('ending_node').get('osm_id') == ending_node:
+            edge = starting_node_edge
+            break
+
+    return edge
+
+
+def identify_all_paths(starting_node_osm_id, ending_node_osm_id, edges_dictionary):
+    """
+    This function is capable of identifying all the possible paths connecting the
+    starting with the ending node, implementing a variation of the Breadth-first
+    search algorithm. Each path is represented by a list of edge_documents (waypoints),
+    including details about intermediate nodes, maximum allowed speed, road type, and
+    current levels of traffic density. The returned value of the function is a
+    double list of edge_documents.
 
     :param starting_node_osm_id: integer
     :param ending_node_osm_id: integer
@@ -112,38 +149,61 @@ def find_waypoints_between_two_nodes(starting_node_osm_id, ending_node_osm_id, e
     :param edges_dictionary: {starting_node_osm_id -> [edge_document]}
     :return: waypoints: [[edge_document]]
     """
+    # Returned value
     waypoints = []
-    closed_set = {}
+
+    #  A data storing structure used in order to keep the nodes
+    # whose neighbors should be considered.
     open_set = MultiplePathsSet()
 
+    # A dictionary ({node_osm_id -> node}) containing nodes
+    # whose neighbors have already been considered.
+    closed_set = {}
+
+    # starting_node is initialized and pushed into the open_set.
     starting_node = MultiplePathsNode(osm_id=starting_node_osm_id)
     starting_node.followed_paths = [[starting_node.osm_id]]
     open_set.push(new_node=starting_node)
 
+    # The node in the first position of the open_set is retrieved,
+    # as long as the number of stored nodes is above zero.
     while len(open_set) > 0:
         current_node = open_set.pop()
 
+        # Continuation condition: ending_node has been discovered.
         if current_node.osm_id == ending_node_osm_id:
 
+            # Each one of the followed paths is processed, in order to retrieve the
+            # corresponding edge_documents, and added to the returned double list.
             for followed_path in current_node.get_followed_paths():
-                waypoints.append(process_followed_path(followed_path=followed_path, edges_dictionary=edges_dictionary))
+                waypoints.append(process_followed_path(
+                    followed_path=followed_path,
+                    edges_dictionary=edges_dictionary)
+                )
 
             current_node.followed_paths = []
             continue
 
+        # Continuation condition: current_node is ignored in case it has no neighbors,
+        # or its neighbors have already been considered.
         if current_node.osm_id not in edges_dictionary or current_node.osm_id in closed_set:
             continue
 
+        # Following the edges of current_node, each one of its neighbors is considered.
         for edge in edges_dictionary.get(current_node.osm_id):
             next_node_osm_id = edge.get('ending_node').get('osm_id')
 
+            # Continuation condition: next_node has already been considered.
             if next_node_osm_id in closed_set:
                 continue
             else:
+                # Followed paths of next_node are updated and the node is pushed into the open_set,
+                # so as to allow its neighbors to be considered.
                 next_node = MultiplePathsNode(osm_id=next_node_osm_id)
                 next_node.set_followed_paths(followed_paths_of_previous_node=current_node.get_followed_paths())
                 open_set.push(new_node=next_node)
 
+        # Since all its neighbors have been considered, current_node is added to the closed_set.
         closed_set[current_node.osm_id] = current_node
 
     return waypoints
@@ -151,7 +211,8 @@ def find_waypoints_between_two_nodes(starting_node_osm_id, ending_node_osm_id, e
 
 def process_followed_path(followed_path, edges_dictionary):
     """
-    Get the edges which are included in the followed_path.
+    This function is able to process the nodes of followed_path and
+    identify the edge_documents which connect them.
 
     :param followed_path: [osm_id]
 
@@ -173,29 +234,3 @@ def process_followed_path(followed_path, edges_dictionary):
         detailed_followed_path.append(edge)
 
     return detailed_followed_path
-
-
-def get_edge(starting_node, ending_node, edges_dictionary):
-    """
-    Get the edge which connects the selected nodes.
-
-    :param starting_node: osm_id
-    :param ending_node: osm_id
-
-    edge_document: {
-        '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-        'max_speed', 'road_type', 'way_id', 'traffic_density'}
-
-    :param edges_dictionary: {starting_node_osm_id -> [edge_document]}
-    :return: edge
-    """
-    edge = None
-    starting_node_edges = edges_dictionary[starting_node]
-
-    for starting_node_edge in starting_node_edges:
-        if starting_node_edge.get('ending_node').get('osm_id') == ending_node:
-            edge = starting_node_edge
-            break
-
-    return edge
