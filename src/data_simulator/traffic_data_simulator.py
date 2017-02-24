@@ -26,7 +26,7 @@ SOFTWARE.
 import random
 from src.mongodb_database.mongodb_database_connection import MongodbDatabaseConnection
 from src.common.logger import log
-from src.common.variables import mongodb_host, mongodb_port
+from src.common.parameters import mongodb_host, mongodb_port
 
 __author__ = 'Eleftherios Anagnostopoulos'
 __email__ = 'eanagnostopoulos@hotmail.com'

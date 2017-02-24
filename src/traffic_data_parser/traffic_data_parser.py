@@ -23,7 +23,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from src.common.variables import mongodb_host, mongodb_port
+from src.common.parameters import mongodb_host, mongodb_port
 from src.mongodb_database.mongodb_database_connection import MongodbDatabaseConnection
 from src.common.logger import log
 from src.geospatial_data.point import Point, distance
@@ -41,10 +41,10 @@ class TrafficDataParser(object):
         self.mongodb_database_connection = MongodbDatabaseConnection(host=mongodb_host, port=mongodb_port)
         self.edge_documents = []
         self.traffic_event_documents = []
-        self.minimum_longitude = float('inf')
-        self.maximum_longitude = float('-inf')
         self.minimum_latitude = float('inf')
         self.maximum_latitude = float('-inf')
+        self.minimum_longitude = float('inf')
+        self.maximum_longitude = float('-inf')
         log(module_name='traffic_data_parser', log_type='DEBUG',
             log_message='mongodb_database_connection: established')
 
@@ -90,6 +90,25 @@ class TrafficDataParser(object):
             traffic_density_value = 0.0
 
         return traffic_density_value
+
+    def get_borders_of_operation_area(self):
+        """
+        Get the minimum and maximum values for longitude and latitude of the operation area.
+
+        :return: borders: {'minimum_latitude', 'maximum_latitude', 'minimum_longitude', 'maximum_longitude'}
+        """
+        if len(self.edge_documents) == 0:
+            self.retrieve_edge_documents()
+
+        self.set_borders_of_operation_area()
+
+        borders = {
+            'minimum_latitude': self.minimum_latitude,
+            'maximum_latitude': self.maximum_latitude,
+            'minimum_longitude': self.minimum_longitude,
+            'maximum_longitude': self.maximum_longitude
+        }
+        return borders
 
     @staticmethod
     def get_edge_document_with_minimum_distance(traffic_event_document, edge_documents):
@@ -148,7 +167,13 @@ class TrafficDataParser(object):
 
         return edge_document_with_minimum_distance
 
-    def set_borders_of_operation_area(self, edge_documents):
+    def retrieve_edge_documents(self):
+        self.edge_documents = self.mongodb_database_connection.find_edge_documents()
+
+    def retrieve_traffic_event_documents(self):
+        self.traffic_event_documents = self.mongodb_database_connection.find_traffic_event_documents()
+
+    def set_borders_of_operation_area(self):
         """
         Set the minimum and maximum values for longitude and latitude of the operation area.
 
@@ -157,10 +182,9 @@ class TrafficDataParser(object):
             'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
             'max_speed', 'road_type', 'way_id', 'traffic_density'
         }
-        :param edge_documents: [edge_document]
         :return: None
         """
-        for edge_document in edge_documents:
+        for edge_document in self.edge_documents:
             starting_node = edge_document.get('starting_node')
             starting_node_point_document = starting_node.get('point')
             starting_node_longitude = starting_node_point_document.get('longitude')
@@ -207,9 +231,9 @@ class TrafficDataParser(object):
         }
         :return: None
         """
-        self.edge_documents = self.mongodb_database_connection.find_edge_documents()
-        self.traffic_event_documents = self.mongodb_database_connection.find_traffic_event_documents()
-        self.set_borders_of_operation_area(edge_documents=self.edge_documents)
+        self.retrieve_edge_documents()
+        self.retrieve_traffic_event_documents()
+        self.set_borders_of_operation_area()
 
         for traffic_event_document in self.traffic_event_documents:
 

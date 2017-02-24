@@ -29,7 +29,7 @@ import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from src.common.logger import log
-from src.common.variables import traffic_data_parser_timeout, traffic_data_parser_max_operation_timeout
+from src.common.parameters import traffic_data_parser_timeout, traffic_data_parser_max_operation_timeout
 from src.traffic_data_parser.traffic_data_parser import TrafficDataParser
 
 __author__ = 'Eleftherios Anagnostopoulos'
@@ -89,6 +89,24 @@ class TrafficDataParserTester(object):
 
         log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
+    def test_get_borders_of_operation_area(self):
+        self.log_message = 'get_borders_of_operation_area: starting'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
+
+        self.start_time = time.time()
+        borders = self.traffic_data_parser.get_borders_of_operation_area()
+        self.elapsed_time = time.time() - self.start_time
+
+        self.log_message = 'minimum_latitude: ' + str(borders.get('minimum_latitude')) + \
+                           ' - maximum_latitude: ' + str(borders.get('maximum_latitude')) + \
+                           ' - minimum_longitude: ' + str(borders.get('minimum_longitude')) + \
+                           ' - maximum_longitude: ' + str(borders.get('maximum_longitude'))
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
+
+        self.log_message = 'get_borders_of_operation_area: finished - elapsed_time = ' \
+                           + str(self.elapsed_time) + ' sec'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
+
     def test_update_traffic_data(self):
         self.log_message = 'update_traffic_data: starting'
         log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
@@ -109,9 +127,10 @@ if __name__ == '__main__':
         time.sleep(0.01)
         selection = raw_input(
             '\n0.  exit'
-            '\n1.  update_traffic_data'
-            '\n2.  start_traffic_data_parser_process'
-            '\n3.  terminate_traffic_data_parser_process'
+            '\n1.  get_borders_of_operation_area'
+            '\n2.  update_traffic_data'
+            '\n3.  start_traffic_data_parser_process'
+            '\n4.  terminate_traffic_data_parser_process'
             '\nSelection: '
         )
 
@@ -119,16 +138,20 @@ if __name__ == '__main__':
         if selection == '0':
             break
 
-        # 1. update_traffic_data
+        # 1. get_borders_of_operation_area
         elif selection == '1':
+            traffic_data_parser_tester.test_get_borders_of_operation_area()
+
+        # 2. update_traffic_data
+        elif selection == '2':
             traffic_data_parser_tester.test_update_traffic_data()
 
-        # 2. start_traffic_data_parser_process
-        elif selection == '2':
+        # 3. start_traffic_data_parser_process
+        elif selection == '3':
             traffic_data_parser_tester.start_traffic_data_parser_process()
 
-        # 3. terminate_traffic_data_parser_process
-        elif selection == '3':
+        # 4. terminate_traffic_data_parser_process
+        elif selection == '4':
             traffic_data_parser_tester.terminate_traffic_data_parser_process()
 
         else:

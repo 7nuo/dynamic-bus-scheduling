@@ -29,8 +29,8 @@ import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from src.common.logger import log
-from src.common.variables import timetables_starting_datetime_testing_value, timetables_ending_datetime_testing_value, \
-    travel_requests_min_departure_datetime_testing_value, travel_requests_max_departure_datetime_testing_value, \
+from src.common.parameters import testing_timetables_starting_datetime, testing_timetables_ending_datetime, \
+    testing_travel_requests_min_departure_datetime, testing_travel_requests_max_departure_datetime, \
     look_ahead_timetables_generator_timeout, look_ahead_timetables_generator_max_operation_timeout, \
     look_ahead_timetables_updater_timeout, look_ahead_timetables_updater_max_operation_timeout, testing_bus_line_id, \
     testing_bus_stop_names
@@ -117,10 +117,10 @@ class LookAheadHandlerTester(object):
 
         self.start_time = time.time()
         self.look_ahead_handler.generate_timetables_for_bus_line(
-            timetables_starting_datetime=timetables_starting_datetime_testing_value,
-            timetables_ending_datetime=timetables_ending_datetime_testing_value,
-            requests_min_departure_datetime=travel_requests_min_departure_datetime_testing_value,
-            requests_max_departure_datetime=travel_requests_max_departure_datetime_testing_value,
+            timetables_starting_datetime=testing_timetables_starting_datetime,
+            timetables_ending_datetime=testing_timetables_ending_datetime,
+            requests_min_departure_datetime=testing_travel_requests_min_departure_datetime,
+            requests_max_departure_datetime=testing_travel_requests_max_departure_datetime,
             bus_line=bus_line,
             line_id=line_id
         )
@@ -136,10 +136,10 @@ class LookAheadHandlerTester(object):
 
         self.start_time = time.time()
         self.look_ahead_handler.generate_timetables_for_bus_lines(
-            timetables_starting_datetime=timetables_starting_datetime_testing_value,
-            timetables_ending_datetime=timetables_ending_datetime_testing_value,
-            requests_min_departure_datetime=travel_requests_min_departure_datetime_testing_value,
-            requests_max_departure_datetime=travel_requests_max_departure_datetime_testing_value,
+            timetables_starting_datetime=testing_timetables_starting_datetime,
+            timetables_ending_datetime=testing_timetables_ending_datetime,
+            requests_min_departure_datetime=testing_travel_requests_min_departure_datetime,
+            requests_max_departure_datetime=testing_travel_requests_max_departure_datetime,
         )
         self.elapsed_time = time.time() - self.start_time
 

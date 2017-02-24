@@ -23,7 +23,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from src.common.variables import bus_road_types, standard_speed
+from src.common.parameters import bus_road_types, standard_speed
 from src.geospatial_data.point import distance, Point
 
 __author__ = 'Eleftherios Anagnostopoulos'
@@ -258,8 +258,8 @@ def estimate_travelling_time(distance_to_be_covered, max_speed, road_type=None, 
 def identify_path_with_lowest_cost(start, end, edges_dictionary):
     """
     This function is capable of identifying the path with the lowest cost value
-    (less time-consuming in this case), connecting the starting with the ending
-    node, implementing a variation of the A* search algorithm.
+    (less time-consuming in this case) connecting the starting with ending node,
+    implementing a variation of the A* search algorithm.
 
     :param start: {'osm_id', 'point': {'longitude', 'latitude'}}
     :param end: {'osm_id', 'point': {'longitude', 'latitude'}}

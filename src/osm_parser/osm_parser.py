@@ -25,7 +25,7 @@ SOFTWARE.
 """
 import re
 from imposm.parser import OSMParser
-from src.common.variables import bus_road_types, standard_speed, mongodb_host, mongodb_port
+from src.common.parameters import bus_road_types, standard_speed, mongodb_host, mongodb_port
 from src.geospatial_data.point import Point
 from src.geospatial_data.address import Address
 from src.mongodb_database.mongodb_database_connection import MongodbDatabaseConnection

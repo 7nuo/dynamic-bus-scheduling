@@ -44,7 +44,10 @@ class MultiplePathsNode(object):
         if followed_path not in self.followed_paths:
             self.followed_paths.append(followed_path)
 
-    def set_followed_paths(self, followed_paths_of_previous_node):
+    def get_followed_paths(self):
+        return self.followed_paths
+
+    def update_followed_paths(self, followed_paths_of_previous_node):
         if len(followed_paths_of_previous_node) > 0:
             for followed_path_of_previous_node in followed_paths_of_previous_node:
                 followed_path = followed_path_of_previous_node + [self.osm_id]
@@ -52,9 +55,6 @@ class MultiplePathsNode(object):
         else:
             followed_path = [self.osm_id]
             self.followed_paths.append(followed_path)
-
-    def get_followed_paths(self):
-        return self.followed_paths
 
 
 class MultiplePathsSet(object):
@@ -144,8 +144,8 @@ def identify_all_paths(starting_node_osm_id, ending_node_osm_id, edges_dictionar
     edge_document: {
         '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
         'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-        'max_speed', 'road_type', 'way_id', 'traffic_density'}
-
+        'max_speed', 'road_type', 'way_id', 'traffic_density'
+    }
     :param edges_dictionary: {starting_node_osm_id -> [edge_document]}
     :return: waypoints: [[edge_document]]
     """
@@ -200,7 +200,7 @@ def identify_all_paths(starting_node_osm_id, ending_node_osm_id, edges_dictionar
                 # Followed paths of next_node are updated and the node is pushed into the open_set,
                 # so as to allow its neighbors to be considered.
                 next_node = MultiplePathsNode(osm_id=next_node_osm_id)
-                next_node.set_followed_paths(followed_paths_of_previous_node=current_node.get_followed_paths())
+                next_node.update_followed_paths(followed_paths_of_previous_node=current_node.get_followed_paths())
                 open_set.push(new_node=next_node)
 
         # Since all its neighbors have been considered, current_node is added to the closed_set.

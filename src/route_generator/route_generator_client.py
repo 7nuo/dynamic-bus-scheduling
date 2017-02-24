@@ -26,7 +26,7 @@ SOFTWARE.
 import requests
 import json
 from bson import ObjectId
-from src.common.variables import route_generator_host, route_generator_port, route_generator_request_timeout
+from src.common.parameters import route_generator_host, route_generator_port, route_generator_request_timeout
 
 __author__ = 'Eleftherios Anagnostopoulos'
 __email__ = 'eanagnostopoulos@hotmail.com'

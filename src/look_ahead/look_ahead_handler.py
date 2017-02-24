@@ -23,7 +23,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from src.common.variables import mongodb_host, mongodb_port
+from src.common.parameters import mongodb_host, mongodb_port
 from src.mongodb_database.mongodb_database_connection import MongodbDatabaseConnection
 from src.route_generator.route_generator_client import get_waypoints_between_two_bus_stops
 from src.common.logger import log
@@ -158,6 +158,17 @@ class LookAheadHandler(object):
         Generate timetables for a bus_line, for a selected datetime period,
         evaluating travel_requests of a specific datetime period.
 
+        - The input: timetables_starting_datetime and input: timetables_ending_datetime
+          are provided to the function, so as timetables for the specific datetime period
+          to be generated.
+
+        - The input: requests_min_departure_datetime and input: requests_max_departure_datetime
+          are provided to the function, so as travel_requests with departure_datetime corresponding
+          to the the specific datetime period to be evaluated.
+
+        - The input: bus_line or input: line_id is provided to the function,
+          so as timetables for the specific bus_line to be generated.
+
         bus_line_document: {
             '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         }
@@ -170,11 +181,12 @@ class LookAheadHandler(object):
         :return: None
         """
 
-        # 1: The inputs: bus_line or line_id are provided to the function, so as timetables for the corresponding
-        #    bus_line to be generated. The Look Ahead retrieves the list of bus_stops which correspond
-        #    to the selected bus_line.
+        # 1: The list of bus_stops corresponding to the provided bus_line is retrieved.
         #
-        # bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]}
+        # bus_stop_document: {
+        #     '_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}
+        # }
+        # bus_stops: [bus_stop_document]
         #
         if bus_line is None and line_id is None:
             return None
@@ -185,13 +197,9 @@ class LookAheadHandler(object):
 
         bus_stops = bus_line.get('bus_stops')
 
-        # 2: The inputs: timetable_starting_datetime and timetable_ending_datetime are provided to the function,
-        #    so as timetables to be generated for the specific datetime period.
-
-        # 3: The inputs: requests_min_departure_datetime and requests_max_departure_datetime are provided
-        #    to the function, so as to evaluate travel_requests for the specific datetime period.
-        #    The Look Ahead retrieves from the System Database the requests with
-        #    departure_datetime between these values.
+        # 2: The Look Ahead retrieves from the System Database the travel_requests with
+        #    departure_datetime higher than requests_min_departure_datetime and
+        #    lower than requests_max_departure_datetime.
         #
         # travel_request_document: {
         #     '_id', 'client_id', 'line_id',
@@ -207,8 +215,8 @@ class LookAheadHandler(object):
             max_departure_datetime=requests_max_departure_datetime
         )
 
-        # 4: (TimetableGenerator is initialized) The Look Ahead sends a request to the Route Generator so as
-        #    to identify the less time-consuming bus_route between the the bus_stops of the bus_line,
+        # 3: (TimetableGenerator is initialized) The Look Ahead sends a request to the Route Generator so as
+        #    to identify the less time-consuming bus_route between the bus_stops of bus_line,
         #    while taking into consideration the current levels of traffic density.
         #
         timetable_generator = TimetableGenerator(
@@ -226,7 +234,7 @@ class LookAheadHandler(object):
             bus_stops=timetable_generator.bus_stops
         )
 
-        # 5: Based on the response of the Route Generator, which includes details about the followed bus_route,
+        # 4: Based on the response of the Route Generator, which includes details about the followed bus_route,
         #    and using only one bus vehicle, the Look Ahead generates some initial timetables which cover the
         #    whole datetime period from timetables_starting_datetime to timetables_ending_datetime.
         #    Initially, the list of travel requests of these timetables is empty, and the departure_datetime and
@@ -367,7 +375,11 @@ class LookAheadHandler(object):
 
 def generate_new_timetables_based_on_travel_requests(current_timetables, travel_requests):
     """
-    Generate new timetables based on the travel_requests.
+    This function is capable of generating new_timetables, evaluating a list of travel_requests.
+    Initially, the timetables_entries of new_timetables are based on the corresponding timetable_entries
+    of current_timetables, and  their travel_requests entry is empty. In the next processing steps,
+    each travel_request is corresponded to the new_timetable which produces the minimum_individual_waiting_time
+    for the passenger, while updating in parallel the timetable_entries of new_timetables.
 
     timetable_document: {
         '_id', 'line_id',
@@ -397,6 +409,8 @@ def generate_new_timetables_based_on_travel_requests(current_timetables, travel_
     :param travel_requests: [travel_request_document]
     :return: new_timetables: [timetable_document]
     """
+    # The timetables_entries of new_timetables are initialized, based on the corresponding timetable_entries
+    # of current_timetables, and their travel_requests entry is empty.
     new_timetables = generate_additional_timetables(timetables=current_timetables)
 
     # 6: (Initial Clustering) Each one of the retrieved travel_requests is corresponded to the timetable

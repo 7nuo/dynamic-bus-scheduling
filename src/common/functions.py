@@ -23,12 +23,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-# import multiprocessing
-import os
-import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
-from src.common.parameters import route_generator_host, route_generator_port
-
 __author__ = 'Eleftherios Anagnostopoulos'
 __email__ = 'eanagnostopoulos@hotmail.com'
 __credits__ = [
@@ -37,8 +31,29 @@ __credits__ = [
 ]
 
 
-bind = route_generator_host + ':' + route_generator_port
-# workers = multiprocessing.cpu_count() * 2 + 1
-workers = 1
-worker_class = "gevent"
-backlog = 2048  # Number of requests to keep in the backlog if every worker is busy
+def quicksort(list_to_be_sorted, comparison_list, low, high):
+    if low < high:
+        p = partition(list_to_be_sorted=list_to_be_sorted, comparison_list=comparison_list, low=low, high=high)
+        quicksort(list_to_be_sorted=list_to_be_sorted, comparison_list=comparison_list, low=low, high=p-1)
+        quicksort(list_to_be_sorted=list_to_be_sorted, comparison_list=comparison_list, low=p+1, high=high)
+
+
+def partition(list_to_be_sorted, comparison_list, low, high):
+    pivot = comparison_list[high]
+    i = low
+
+    for j in range(low, high):
+        if comparison_list[j] <= pivot:
+            swap(l=list_to_be_sorted, first=i, second=j)
+            swap(l=comparison_list, first=i, second=j)
+            i += 1
+
+    swap(l=list_to_be_sorted, first=i, second=high)
+    swap(l=comparison_list, first=i, second=high)
+    return i
+
+
+def swap(l, first, second):
+    temp = l[first]
+    l[first] = l[second]
+    l[second] = temp

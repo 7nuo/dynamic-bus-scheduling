@@ -28,9 +28,9 @@ from multiprocessing import Process
 import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
-from src.common.variables import testing_osm_filename, testing_bus_stop_names, testing_bus_line_id, \
-    travel_requests_min_departure_datetime_testing_value, travel_requests_max_departure_datetime_testing_value, \
-    travel_requests_generator_min_number_of_documents, travel_requests_generator_max_number_of_documents
+from src.common.parameters import testing_osm_filename, testing_bus_stop_names, testing_bus_line_id, \
+    testing_travel_requests_min_departure_datetime, testing_travel_requests_max_departure_datetime, \
+    travel_requests_simulator_min_number_of_documents, travel_requests_simulator_max_number_of_documents
 from src.common.logger import log
 from tests.look_ahead_test import LookAheadHandlerTester
 from tests.mongodb_database_connection_test import MongodbDatabaseConnectionTester
@@ -331,7 +331,7 @@ if __name__ == '__main__':
         elif selection == '12':
             application_tester.travel_requests_simulator_tester.test_generate_travel_request_documents(
                 line_id=testing_bus_line_id,
-                initial_datetime=travel_requests_min_departure_datetime_testing_value,
+                initial_datetime=testing_travel_requests_min_departure_datetime,
                 number_of_travel_request_documents=10000
             )
 
@@ -339,8 +339,8 @@ if __name__ == '__main__':
         elif selection == '13':
             application_tester.mongodb_database_connection_tester.print_travel_request_documents(
                 line_ids=[testing_bus_line_id],
-                min_departure_datetime=travel_requests_min_departure_datetime_testing_value,
-                max_departure_datetime=travel_requests_max_departure_datetime_testing_value,
+                min_departure_datetime=testing_travel_requests_min_departure_datetime,
+                max_departure_datetime=testing_travel_requests_max_departure_datetime,
                 counter=10
             )
 
@@ -423,13 +423,13 @@ if __name__ == '__main__':
         # 23. (travel_requests_simulator) - start_travel_requests_generator_process
         elif selection == '23':
             # application_tester.travel_requests_simulator_tester.start_travel_requests_generator_process(
-            #     initial_datetime=travel_requests_min_departure_datetime_testing_value,
-            #     min_number_of_travel_request_documents=travel_requests_generator_min_number_of_documents,
-            #     max_number_of_travel_request_documents=travel_requests_generator_max_number_of_documents
+            #     initial_datetime=testing_travel_requests_min_departure_datetime,
+            #     min_number_of_travel_request_documents=travel_requests_simulator_min_number_of_documents,
+            #     max_number_of_travel_request_documents=travel_requests_simulator_max_number_of_documents
             # )
-            initial_datetime = travel_requests_min_departure_datetime_testing_value
-            min_number_of_travel_request_documents = travel_requests_generator_min_number_of_documents
-            max_number_of_travel_request_documents = travel_requests_generator_max_number_of_documents
+            initial_datetime = testing_travel_requests_min_departure_datetime
+            min_number_of_travel_request_documents = travel_requests_simulator_min_number_of_documents
+            max_number_of_travel_request_documents = travel_requests_simulator_max_number_of_documents
 
             travel_requests_generator_process = Process(
                 target=application_tester.travel_requests_simulator_tester.test_travel_requests_generator_process,

@@ -30,9 +30,9 @@ import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from src.data_simulator.travel_requests_simulator import TravelRequestsSimulator
 from src.common.logger import log
-from src.common.variables import travel_requests_generator_timeout, travel_requests_generator_max_operation_timeout, \
-    travel_requests_min_departure_datetime_testing_value, travel_requests_generator_min_number_of_documents, \
-    travel_requests_generator_max_number_of_documents, testing_bus_line_id
+from src.common.parameters import travel_requests_simulator_timeout, travel_requests_simulator_max_operation_timeout, \
+    testing_travel_requests_min_departure_datetime, travel_requests_simulator_min_number_of_documents, \
+    travel_requests_simulator_max_number_of_documents, testing_bus_line_id
 
 __author__ = 'Eleftherios Anagnostopoulos'
 __email__ = 'eanagnostopoulos@hotmail.com'
@@ -207,13 +207,13 @@ class TravelRequestsSimulatorTester(object):
         time_difference = 0
         initial_time = time.time()
 
-        while time_difference < travel_requests_generator_max_operation_timeout:
+        while time_difference < travel_requests_simulator_max_operation_timeout:
             self.test_generate_random_travel_request_documents(
                 initial_datetime=initial_datetime,
                 min_number_of_travel_request_documents=min_number_of_travel_request_documents,
                 max_number_of_travel_request_documents=max_number_of_travel_request_documents
             )
-            time.sleep(travel_requests_generator_timeout)
+            time.sleep(travel_requests_simulator_timeout)
             time_difference = time.time() - initial_time
 
 
@@ -239,16 +239,16 @@ if __name__ == '__main__':
         elif selection == '1':
             travel_requests_simulator_tester.test_generate_travel_request_documents(
                 line_id=testing_bus_line_id,
-                initial_datetime=travel_requests_min_departure_datetime_testing_value,
+                initial_datetime=testing_travel_requests_min_departure_datetime,
                 number_of_travel_request_documents=number_of_travel_requests_documents
             )
 
         # 2. start_travel_requests_generator_process
         elif selection == '2':
             travel_requests_simulator_tester.start_travel_requests_generator_process(
-                initial_datetime=travel_requests_min_departure_datetime_testing_value,
-                min_number_of_travel_request_documents=travel_requests_generator_min_number_of_documents,
-                max_number_of_travel_request_documents=travel_requests_generator_max_number_of_documents
+                initial_datetime=testing_travel_requests_min_departure_datetime,
+                min_number_of_travel_request_documents=travel_requests_simulator_min_number_of_documents,
+                max_number_of_travel_request_documents=travel_requests_simulator_max_number_of_documents
             )
 
         # 3. terminate_travel_requests_generator_process

@@ -24,8 +24,9 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 from datetime import datetime, timedelta, time
-from src.common.variables import maximum_bus_capacity, average_waiting_time_threshold, \
+from src.common.parameters import maximum_bus_capacity, average_waiting_time_threshold, \
     individual_waiting_time_threshold, minimum_number_of_passengers_in_timetable
+from src.common.functions import quicksort
 from src.route_generator.route_generator_client import get_route_between_multiple_bus_stops
 
 __author__ = 'Eleftherios Anagnostopoulos'
@@ -2573,31 +2574,3 @@ def sort_timetables_by_starting_datetime(timetables):
     """
     starting_datetimes = get_starting_datetimes_of_timetables(timetables=timetables)
     quicksort(list_to_be_sorted=timetables, comparison_list=starting_datetimes, low=0, high=len(timetables)-1)
-
-
-def quicksort(list_to_be_sorted, comparison_list, low, high):
-    if low < high:
-        p = partition(list_to_be_sorted=list_to_be_sorted, comparison_list=comparison_list, low=low, high=high)
-        quicksort(list_to_be_sorted=list_to_be_sorted, comparison_list=comparison_list, low=low, high=p-1)
-        quicksort(list_to_be_sorted=list_to_be_sorted, comparison_list=comparison_list, low=p+1, high=high)
-
-
-def partition(list_to_be_sorted, comparison_list, low, high):
-    pivot = comparison_list[high]
-    i = low
-
-    for j in range(low, high):
-        if comparison_list[j] <= pivot:
-            swap(l=list_to_be_sorted, first=i, second=j)
-            swap(l=comparison_list, first=i, second=j)
-            i += 1
-
-    swap(l=list_to_be_sorted, first=i, second=high)
-    swap(l=comparison_list, first=i, second=high)
-    return i
-
-
-def swap(l, first, second):
-    temp = l[first]
-    l[first] = l[second]
-    l[second] = temp

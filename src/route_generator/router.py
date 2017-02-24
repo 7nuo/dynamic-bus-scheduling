@@ -26,7 +26,7 @@ SOFTWARE.
 from src.route_generator.path_finder import identify_path_with_lowest_cost
 from src.route_generator.multiple_paths_finder import identify_all_paths
 from src.common.logger import log
-from src.common.variables import mongodb_host, mongodb_port
+from src.common.parameters import mongodb_host, mongodb_port
 from src.geospatial_data.point import distance, Point
 from src.mongodb_database.mongodb_database_connection import MongodbDatabaseConnection
 

@@ -29,7 +29,7 @@ import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
 from src.common.logger import log
-from src.common.variables import traffic_data_generator_timeout, traffic_data_generator_max_operation_timeout, \
+from src.common.parameters import traffic_data_simulator_timeout, traffic_data_simulator_max_operation_timeout, \
     testing_bus_stop_names
 from src.data_simulator.traffic_data_simulator import TrafficDataSimulator
 
@@ -196,9 +196,9 @@ class TrafficDataSimulatorTester(object):
         time_difference = 0
         initial_time = time.time()
 
-        while time_difference < traffic_data_generator_max_operation_timeout:
+        while time_difference < traffic_data_simulator_max_operation_timeout:
             self.test_generate_traffic_data_for_bus_lines()
-            time.sleep(traffic_data_generator_timeout)
+            time.sleep(traffic_data_simulator_timeout)
             time_difference = time.time() - initial_time
 
 

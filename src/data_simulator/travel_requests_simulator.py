@@ -27,7 +27,7 @@ import random
 from datetime import timedelta
 from src.mongodb_database.mongodb_database_connection import MongodbDatabaseConnection
 from src.common.logger import log
-from src.common.variables import mongodb_host, mongodb_port
+from src.common.parameters import mongodb_host, mongodb_port, travel_requests_simulator_datetime_distribution_weights
 
 __author__ = 'Eleftherios Anagnostopoulos'
 __email__ = 'eanagnostopoulos@hotmail.com'
@@ -147,33 +147,37 @@ class TravelRequestsSimulator(object):
         # 3: The Travel Requests Simulator generates the travel_request_documents, taking into consideration
         #    the variation of transportation demand during the hours of the day.
         #
-        weighted_datetimes = [
-            (initial_datetime + timedelta(hours=0), 1),
-            (initial_datetime + timedelta(hours=1), 1),
-            (initial_datetime + timedelta(hours=2), 1),
-            (initial_datetime + timedelta(hours=3), 1),
-            (initial_datetime + timedelta(hours=4), 1),
-            (initial_datetime + timedelta(hours=5), 1),
-            (initial_datetime + timedelta(hours=6), 1),
-            (initial_datetime + timedelta(hours=7), 1),
-            (initial_datetime + timedelta(hours=8), 1),
-            (initial_datetime + timedelta(hours=9), 1),
-            (initial_datetime + timedelta(hours=10), 1),
-            (initial_datetime + timedelta(hours=11), 1),
-            (initial_datetime + timedelta(hours=12), 1),
-            (initial_datetime + timedelta(hours=13), 1),
-            (initial_datetime + timedelta(hours=14), 1),
-            (initial_datetime + timedelta(hours=15), 1),
-            (initial_datetime + timedelta(hours=16), 1),
-            (initial_datetime + timedelta(hours=17), 1),
-            (initial_datetime + timedelta(hours=18), 1),
-            (initial_datetime + timedelta(hours=19), 1),
-            (initial_datetime + timedelta(hours=20), 1),
-            (initial_datetime + timedelta(hours=21), 1),
-            (initial_datetime + timedelta(hours=22), 1),
-            (initial_datetime + timedelta(hours=23), 1)
-        ]
-        datetime_population = [val for val, cnt in weighted_datetimes for i in range(cnt)]
+        # distribution_weighted_datetimes = [
+        #     (initial_datetime + timedelta(hours=0), 1),
+        #     (initial_datetime + timedelta(hours=1), 1),
+        #     (initial_datetime + timedelta(hours=2), 1),
+        #     (initial_datetime + timedelta(hours=3), 1),
+        #     (initial_datetime + timedelta(hours=4), 1),
+        #     (initial_datetime + timedelta(hours=5), 1),
+        #     (initial_datetime + timedelta(hours=6), 1),
+        #     (initial_datetime + timedelta(hours=7), 1),
+        #     (initial_datetime + timedelta(hours=8), 1),
+        #     (initial_datetime + timedelta(hours=9), 1),
+        #     (initial_datetime + timedelta(hours=10), 1),
+        #     (initial_datetime + timedelta(hours=11), 1),
+        #     (initial_datetime + timedelta(hours=12), 1),
+        #     (initial_datetime + timedelta(hours=13), 1),
+        #     (initial_datetime + timedelta(hours=14), 1),
+        #     (initial_datetime + timedelta(hours=15), 1),
+        #     (initial_datetime + timedelta(hours=16), 1),
+        #     (initial_datetime + timedelta(hours=17), 1),
+        #     (initial_datetime + timedelta(hours=18), 1),
+        #     (initial_datetime + timedelta(hours=19), 1),
+        #     (initial_datetime + timedelta(hours=20), 1),
+        #     (initial_datetime + timedelta(hours=21), 1),
+        #     (initial_datetime + timedelta(hours=22), 1),
+        #     (initial_datetime + timedelta(hours=23), 1)
+        # ]
+        distribution_weighted_datetimes = [
+            (initial_datetime + timedelta(hours=i),
+             travel_requests_simulator_datetime_distribution_weights[i]) for i in range(0, 24)
+            ]
+        datetime_population = [val for val, cnt in distribution_weighted_datetimes for i in range(cnt)]
         travel_request_documents = []
 
         for i in range(0, number_of_travel_request_documents):
