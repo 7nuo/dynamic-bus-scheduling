@@ -334,6 +334,7 @@ class LookAheadHandler(object):
         current_average_waiting_time_of_timetables = calculate_average_waiting_time_of_timetables_in_seconds(
             timetables=timetable_updater.timetables
         )
+        print_timetables(timetables=timetable_updater.timetables)
 
         while True:
             new_timetables = generate_new_timetables_based_on_travel_requests(

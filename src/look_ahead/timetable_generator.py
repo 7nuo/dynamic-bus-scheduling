@@ -359,16 +359,20 @@ def adjust_timetable_entries(timetable, ideal_departure_datetimes):
     for i in range(0, number_of_timetable_entries):
         timetable_entry = timetable_entries[i]
         total_time = timetable_entry.get('route').get('total_time')
-        ideal_starting_datetime = ideal_departure_datetimes[i]
+        ideal_departure_datetime = ideal_departure_datetimes[i]
 
         if i == 0:
-            departure_datetime = ceil_datetime_minutes(starting_datetime=ideal_starting_datetime)
+            departure_datetime = ideal_departure_datetime
         else:
             previous_departure_datetime = timetable_entries[i - 1].get('departure_datetime')
-            departure_datetime = ceil_datetime_minutes(
-                starting_datetime=previous_departure_datetime + timedelta(seconds=total_time)
-            )
+            departure_datetime = previous_departure_datetime + timedelta(seconds=total_time)
 
+            # if potential_departure_datetime < ideal_departure_datetime:
+            #     departure_datetime = ideal_departure_datetime
+            # else:
+            #     departure_datetime = potential_departure_datetime
+
+        # departure_datetime = ceil_datetime_minutes(starting_datetime=departure_datetime)
         arrival_datetime = departure_datetime + timedelta(seconds=total_time)
         timetable_entry['departure_datetime'] = departure_datetime
         timetable_entry['arrival_datetime'] = arrival_datetime
@@ -2375,7 +2379,7 @@ def print_timetable(timetable, timetable_entries_control=False, travel_requests_
 
 
 def print_timetables(timetables, timetables_control=False, timetable_entries_control=False,
-                     travel_requests_control=False):
+                     travel_requests_control=False, counter=None):
     """
     Print multiple timetable_documents.
 
@@ -2400,6 +2404,7 @@ def print_timetables(timetables, timetables_control=False, timetable_entries_con
     :param timetables_control: bool
     :param timetable_entries_control: bool
     :param travel_requests_control: bool
+    :param counter: int
     :return: None
     """
     sort_timetables_by_starting_datetime(timetables=timetables)
@@ -2424,8 +2429,13 @@ def print_timetables(timetables, timetables_control=False, timetable_entries_con
         '- average_number_of_passengers_in_timetables:', average_number_of_passengers_in_timetables, \
         '- average_waiting_time:', average_waiting_time
 
+    if counter is not None and counter < number_of_timetables:
+        timetables_to_be_printed = list(timetables[0:counter])
+    else:
+        timetables_to_be_printed = list(timetables)
+
     if timetables_control:
-        for timetable in timetables:
+        for timetable in timetables_to_be_printed:
             print_timetable(
                 timetable=timetable,
                 timetable_entries_control=timetable_entries_control,

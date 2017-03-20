@@ -220,7 +220,7 @@ class MongodbDatabaseConnection(object):
         Set the traffic_density values of all edge documents to 0.
         """
         key = {}
-        data = {'$set': {'traffic_density': 0}}
+        data = {'$set': {'traffic_density': 0.0}}
         self.edge_documents_collection.update_many(key, data, upsert=False)
 
     def clear_traffic_event_documents_collection(self):
@@ -3073,8 +3073,9 @@ class MongodbDatabaseConnection(object):
                     detailed_bus_stop_waypoints_document=detailed_bus_stop_waypoints_document
                 )
 
-    def print_timetable_documents(self, object_ids=None, line_ids=None, counter=None, timetables_control=True,
-                                  timetable_entries_control=False, travel_requests_control=False):
+    def print_timetable_documents(self, object_ids=None, line_ids=None, timetables_control=True,
+                                  timetable_entries_control=False, travel_requests_control=False,
+                                  counter=None):
         """
         Print multiple timetable_documents.
 
@@ -3097,31 +3098,22 @@ class MongodbDatabaseConnection(object):
         }
         :param object_ids: [ObjectId]
         :param line_ids: [int]
-        :param counter: int
         :param timetables_control: bool
         :param timetable_entries_control: bool
         :param travel_requests_control: bool
-        :return: timetable_documents: [timetable_document]
+        :param counter: int
+        :return: None
         """
         timetable_documents = self.find_timetable_documents(
             object_ids=object_ids,
             line_ids=line_ids,
         )
-        number_of_timetable_documents = len(timetable_documents)
-
-        if counter is not None and counter < number_of_timetable_documents:
-            if counter == 0:
-                timetable_documents = []
-            elif counter == 1:
-                timetable_documents = [timetable_documents[0]]
-            else:
-                timetable_documents = timetable_documents[0:(counter-1)]
-
         print_timetables(
             timetables=timetable_documents,
             timetables_control=timetables_control,
             timetable_entries_control=timetable_entries_control,
-            travel_requests_control=travel_requests_control
+            travel_requests_control=travel_requests_control,
+            counter=counter
         )
 
     @staticmethod

@@ -121,6 +121,9 @@ def test_get_route_between_multiple_bus_stops(bus_stops=None, bus_stop_names=Non
         log_message='get_route_between_multiple_bus_stops: starting')
     start_time = time.time()
 
+    route_distance = 0
+    route_traveling_time = 0
+
     # response = [{
     #     'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
     #     'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -141,7 +144,9 @@ def test_get_route_between_multiple_bus_stops(bus_stops=None, bus_stop_names=Non
 
         if intermediate_route is not None:
             total_distance = intermediate_route.get('total_distance')
+            route_distance += total_distance
             total_time = intermediate_route.get('total_time')
+            route_traveling_time += total_time
             node_osm_ids = intermediate_route.get('node_osm_ids')
             points = intermediate_route.get('points')
             edges = intermediate_route.get('edges')
@@ -167,6 +172,12 @@ def test_get_route_between_multiple_bus_stops(bus_stops=None, bus_stop_names=Non
                      '\nroute: None'
 
         print output
+
+    route_average_speed = (route_distance / 1000) / (route_traveling_time / 3600)
+
+    print '\nroute_distance: ' + str(route_distance / 1000) + \
+          ' - route_traveling_time: ' + str(route_traveling_time / 60) + \
+          ' - route_average_speed: ' + str(route_average_speed)
 
     elapsed_time = time.time() - start_time
     time.sleep(0.1)

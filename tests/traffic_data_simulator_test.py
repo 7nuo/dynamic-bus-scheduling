@@ -201,6 +201,28 @@ class TrafficDataSimulatorTester(object):
             time.sleep(traffic_data_simulator_timeout)
             time_difference = time.time() - initial_time
 
+    def test_set_traffic_density_limits(self, lowest_traffic_density_value, highest_traffic_density_value):
+        """
+        Set the lowest and highest traffic density values.
+
+        :param lowest_traffic_density_value: float: [0, 1]
+        :param highest_traffic_density_value: float: [0, 1]
+        :return: None
+        """
+        self.log_message = 'test_set_traffic_density_limits: starting'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
+
+        self.start_time = time.time()
+        self.traffic_data_simulator.set_traffic_density_limits(
+            lowest_traffic_density_value=lowest_traffic_density_value,
+            highest_traffic_density_value=highest_traffic_density_value
+        )
+        self.elapsed_time = time.time() - self.start_time
+
+        self.log_message = 'test_set_traffic_density_limits: finished - elapsed_time = ' \
+                           + str(self.elapsed_time) + ' sec'
+        log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
+
 
 if __name__ == '__main__':
     traffic_data_simulator_tester = TrafficDataSimulatorTester()

@@ -39,6 +39,8 @@ __credits__ = [
 class TrafficDataSimulator(object):
     def __init__(self):
         self.mongodb_database_connection = MongodbDatabaseConnection(host=mongodb_host, port=mongodb_port)
+        self.lowest_traffic_density_value = 0
+        self.highest_traffic_density_value = 1
         log(module_name='traffic_data_simulator', log_type='DEBUG',
             log_message='mongodb_database_connection: established')
 
@@ -165,10 +167,25 @@ class TrafficDataSimulator(object):
         number_of_produced_traffic_values = random.randint(0, number_of_edge_object_ids - 1)
 
         for i in range(0, number_of_produced_traffic_values):
-            edge_object_ids_index = random.randint(0, number_of_edge_object_ids - 1)
+            # edge_object_ids_index = random.randint(0, number_of_edge_object_ids - 1)
+            edge_object_ids_index = i
             edge_object_id = edge_object_ids[edge_object_ids_index]
-            new_traffic_density_value = random.uniform(0, 1)
+            new_traffic_density_value = random.uniform(
+                self.lowest_traffic_density_value,
+                self.highest_traffic_density_value
+            )
             self.mongodb_database_connection.update_traffic_density(
                 edge_object_id=edge_object_id,
                 new_traffic_density_value=new_traffic_density_value
             )
+
+    def set_traffic_density_limits(self, lowest_traffic_density_value, highest_traffic_density_value):
+        """
+        Set the lowest and highest traffic density values.
+
+        :param lowest_traffic_density_value: float: [0, 1]
+        :param highest_traffic_density_value: float: [0, 1]
+        :return: None
+        """
+        self.lowest_traffic_density_value = lowest_traffic_density_value
+        self.highest_traffic_density_value = highest_traffic_density_value

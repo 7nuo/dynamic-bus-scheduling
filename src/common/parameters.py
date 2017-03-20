@@ -23,7 +23,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-from datetime import datetime
+from datetime import datetime, timedelta
 
 __author__ = 'Eleftherios Anagnostopoulos'
 __email__ = 'eanagnostopoulos@hotmail.com'
@@ -139,7 +139,7 @@ testing_bus_line_id = 1
 
 now = datetime.now()
 today = datetime(now.year, now.month, now.day, 0, 0, 0, 00000)
-tomorrow = datetime(now.year, now.month, now.day+1, 0, 0, 0, 00000)
+tomorrow = today + timedelta(days=1)
 
 testing_travel_requests_min_departure_datetime = today
 testing_travel_requests_max_departure_datetime = tomorrow

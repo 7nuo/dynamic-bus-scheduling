@@ -147,6 +147,7 @@ if __name__ == '__main__':
         # 1. (mongodb_database) - clear_collections
         elif selection == '1':
             while True:
+                time.sleep(0.01)
                 inner_selection = raw_input(
                     '\n0.  back'
                     '\n1.  clear_all_collections'
@@ -161,6 +162,7 @@ if __name__ == '__main__':
                     '\n10. clear_traffic_event_documents_collection'
                     '\n11. clear_travel_request_documents_collection'
                     '\n12. clear_way_documents_collection'
+                    '\n13. clear_traffic_density'
                     '\nSelection: '
                 )
 
@@ -217,6 +219,10 @@ if __name__ == '__main__':
                 elif inner_selection == '12':
                     application_tester.mongodb_database_connection_tester.clear_way_documents_collection()
 
+                # 13. clear_traffic_density
+                elif inner_selection == '13':
+                    application_tester.mongodb_database_connection_tester.clear_traffic_density()
+
                 else:
                     pass
 
@@ -231,6 +237,7 @@ if __name__ == '__main__':
         # 4. (mongodb_database) - print_collections
         elif selection == '4':
             while True:
+                time.sleep(0.01)
                 inner_selection = raw_input(
                     '\n0.  back'
                     '\n1.  print_address_documents'
@@ -329,10 +336,14 @@ if __name__ == '__main__':
 
         # 12. (travel_requests_simulator) - test_generate_travel_request_documents
         elif selection == '12':
+            number_of_travel_request_documents = int(raw_input(
+                '\n12. (travel_requests_simulator) - test_generate_travel_request_documents'
+                '\nnumber_of_travel_request_documents: ')
+            )
             application_tester.travel_requests_simulator_tester.test_generate_travel_request_documents(
                 line_id=testing_bus_line_id,
                 initial_datetime=testing_travel_requests_min_departure_datetime,
-                number_of_travel_request_documents=10000
+                number_of_travel_request_documents=number_of_travel_request_documents
             )
 
         # 13. (mongodb_database) - print_travel_request_documents
@@ -352,19 +363,38 @@ if __name__ == '__main__':
 
         # 15. (mongodb_database) - print_timetable_documents
         elif selection == '15':
+            number_of_timetable_documents = int(raw_input(
+                '\n15. (mongodb_database) - print_timetable_documents'
+                '\nnumber_of_timetable_documents: ')
+            )
             application_tester.mongodb_database_connection_tester.print_timetable_documents(
                 line_ids=[testing_bus_line_id],
-                counter=1,
                 timetables_control=True,
                 timetable_entries_control=True,
-                travel_requests_control=True
+                travel_requests_control=True,
+                counter=number_of_timetable_documents
             )
 
         # 16. (traffic_data_simulator) - test_generate_traffic_data_between_multiple_bus_stops
         elif selection == '16':
-            application_tester.traffic_data_simulator_tester.test_generate_traffic_data_between_multiple_bus_stops(
-                bus_stop_names=testing_bus_stop_names
+            lowest_traffic_density_value = float(raw_input(
+                '\n16. (traffic_data_simulator) - test_generate_traffic_data_between_multiple_bus_stops'
+                '\nlowest_traffic_density_value: ')
             )
+            highest_traffic_density_value = float(raw_input(
+                'highest_traffic_density_value: ')
+            )
+            if (0 <= lowest_traffic_density_value <= 1 and 0 <= highest_traffic_density_value <= 1 and
+                        lowest_traffic_density_value < highest_traffic_density_value):
+                application_tester.traffic_data_simulator_tester.test_set_traffic_density_limits(
+                    lowest_traffic_density_value=lowest_traffic_density_value,
+                    highest_traffic_density_value=highest_traffic_density_value
+                )
+                application_tester.traffic_data_simulator_tester.test_generate_traffic_data_between_multiple_bus_stops(
+                    bus_stop_names=testing_bus_stop_names
+                )
+            else:
+                pass
 
         # 17. (mongodb_database) - print_traffic_density_documents
         elif selection == '17':

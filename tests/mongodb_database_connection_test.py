@@ -140,6 +140,16 @@ class MongodbDatabaseConnectionTester(object):
             log_message='clear_timetable_documents_collection: finished - elapsed_time = ' +
                         str(self.elapsed_time) + ' sec')
 
+    def clear_traffic_density(self):
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_traffic_density: starting')
+        self.start_time = time.time()
+        self.mongodb_database_connection.clear_traffic_density()
+        self.elapsed_time = time.time() - self.start_time
+        log(module_name='mongodb_database_connection_test', log_type='INFO',
+            log_message='clear_traffic_density: finished - elapsed_time = ' +
+                        str(self.elapsed_time) + ' sec')
+
     def clear_traffic_event_documents_collection(self):
         log(module_name='mongodb_database_connection_test', log_type='INFO',
             log_message='clear_traffic_event_documents_collection: starting')

@@ -24,7 +24,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 from datetime import timedelta
-from src.look_ahead.timetable_generator import ceil_datetime_minutes
+from src.look_ahead.timetable_generator import adjust_timetable_entries, ceil_datetime_minutes
 from src.route_generator.route_generator_client import get_route_between_multiple_bus_stops
 
 __author__ = 'Eleftherios Anagnostopoulos'
@@ -119,26 +119,36 @@ def update_entries_of_timetable(timetable, route_generator_response):
     """
     timetable_entries = timetable.get('timetable_entries')
     number_of_timetable_entries = len(timetable_entries)
+    ideal_departure_datetimes = [timetable_entry.get('departure_datetime') for timetable_entry in timetable_entries]
     intermediate_routes = [intermediate_response.get('route') for intermediate_response in route_generator_response]
-    total_times = [intermediate_route.get('total_time') for intermediate_route in intermediate_routes]
+    # total_times = [intermediate_route.get('total_time') for intermediate_route in intermediate_routes]
 
     for i in range(0, number_of_timetable_entries):
         timetable_entry = timetable_entries[i]
-        total_time = total_times[i]
-        departure_datetime = timetable_entry.get('departure_datetime')
+        intermediate_route = intermediate_routes[i]
+        timetable_entry['route'] = intermediate_route
+        # total_time = timetable_entry.get('route').get('total_time')
+        # # total_time = total_times[i]
+        # departure_datetime = timetable_entry.get('departure_datetime')
+        #
+        # if i > 0:
+        #     previous_timetable_entry = timetable_entries[i - 1]
+        #     previous_arrival_datetime = previous_timetable_entry.get('arrival_datetime')
+        #     # departure_datetime_based_on_previous_arrival_datetime = previous_arrival_datetime
+        #     departure_datetime_based_on_previous_arrival_datetime = ceil_datetime_minutes(
+        #         starting_datetime=previous_arrival_datetime
+        #     )
+        #     if departure_datetime_based_on_previous_arrival_datetime > departure_datetime:
+        #         departure_datetime = departure_datetime_based_on_previous_arrival_datetime
+        #         timetable_entry['departure_datetime'] = departure_datetime
+        #
+        # arrival_datetime = departure_datetime + timedelta(seconds=total_time)
+        # timetable_entry['arrival_datetime'] = arrival_datetime
 
-        if i > 0:
-            previous_timetable_entry = timetable_entries[i - 1]
-            previous_arrival_datetime = previous_timetable_entry.get('arrival_datetime')
-            departure_datetime_based_on_previous_arrival_datetime = ceil_datetime_minutes(
-                starting_datetime=previous_arrival_datetime
-            )
-            if departure_datetime_based_on_previous_arrival_datetime > departure_datetime:
-                departure_datetime = departure_datetime_based_on_previous_arrival_datetime
-                timetable_entry['departure_datetime'] = departure_datetime
-
-        arrival_datetime = departure_datetime + timedelta(seconds=total_time)
-        timetable_entry['arrival_datetime'] = arrival_datetime
+    adjust_timetable_entries(
+        timetable=timetable,
+        ideal_departure_datetimes=ideal_departure_datetimes
+    )
 
 
 def update_entries_of_timetables(timetables, route_generator_response):

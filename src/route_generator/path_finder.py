@@ -227,7 +227,7 @@ def estimate_traffic_speed_decrease_factor(traffic_density):
     :param traffic_density: float value between 0 and 1.
     :return: 0 <= traffic_speed_decrease_factor <= 1
     """
-    traffic_speed_decrease_factor = 1 - float(traffic_density)
+    traffic_speed_decrease_factor = 1 - (float(traffic_density) * 0.75)
     return traffic_speed_decrease_factor
 
 
