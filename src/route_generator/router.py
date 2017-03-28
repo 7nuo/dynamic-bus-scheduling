@@ -1,6 +1,8 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 """
+- LICENCE
+
 The MIT License (MIT)
 
 Copyright (c) 2016 Eleftherios Anagnostopoulos for Ericsson AB (EU FP7 CityPulse Project)
@@ -22,6 +24,119 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+
+- DESCRIPTION OF DOCUMENTS
+
+-- MongoDB Database Documents:
+
+address_document: {
+    '_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}
+}
+bus_line_document: {
+    '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+}
+bus_stop_document: {
+    '_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}
+}
+bus_stop_waypoints_document: {
+    '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'waypoints': [[edge_object_id]]
+}
+bus_vehicle_document: {
+    '_id', 'bus_vehicle_id', 'maximum_capacity',
+    'routes': [{'starting_datetime', 'ending_datetime', 'timetable_id'}]
+}
+detailed_bus_stop_waypoints_document: {
+    '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'waypoints': [[edge_document]]
+}
+edge_document: {
+    '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+    'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+    'max_speed', 'road_type', 'way_id', 'traffic_density'
+}
+node_document: {
+    '_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}
+}
+point_document: {
+    '_id', 'osm_id', 'point': {'longitude', 'latitude'}
+}
+timetable_document: {
+    '_id', 'timetable_id', 'line_id', 'bus_vehicle_id',
+    'timetable_entries': [{
+        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+        'number_of_deboarding_passengers', 'number_of_current_passengers',
+        'route': {
+            'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+            'distances_from_starting_node', 'times_from_starting_node',
+            'distances_from_previous_node', 'times_from_previous_node'
+        }
+    }],
+    'travel_requests': [{
+        '_id', 'client_id', 'line_id',
+        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        'departure_datetime', 'arrival_datetime',
+        'starting_timetable_entry_index', 'ending_timetable_entry_index'
+    }]
+}
+traffic_event_document: {
+    '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
+}
+travel_request_document: {
+    '_id', 'client_id', 'line_id',
+    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'departure_datetime', 'arrival_datetime',
+    'starting_timetable_entry_index', 'ending_timetable_entry_index'
+}
+way_document: {
+    '_id', 'osm_id', 'tags', 'references'
+}
+
+-- Route Generator Responses:
+
+get_route_between_two_bus_stops: {
+    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'route': {
+        'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+        'distances_from_starting_node', 'times_from_starting_node',
+        'distances_from_previous_node', 'times_from_previous_node'
+    }
+}
+get_route_between_multiple_bus_stops: [{
+    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'route': {
+        'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+        'distances_from_starting_node', 'times_from_starting_node',
+        'distances_from_previous_node', 'times_from_previous_node'
+    }
+}]
+get_waypoints_between_two_bus_stops: {
+    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'waypoints': [[{
+        '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'max_speed', 'road_type', 'way_id', 'traffic_density'
+    }]]
+}
+get_waypoints_between_multiple_bus_stops: [{
+    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'waypoints': [[{
+        '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'max_speed', 'road_type', 'way_id', 'traffic_density'
+    }]]
+}]
 """
 from src.route_generator.path_finder import identify_path_with_lowest_cost
 from src.route_generator.multiple_paths_finder import identify_all_paths
@@ -46,8 +161,6 @@ class Router(object):
     def get_bus_stop(self, name=None, provided_point=None, longitude=None, latitude=None):
         """
         Get a bus_stop_document.
-
-        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
 
         :param name: string
         :param provided_point: Point
@@ -82,8 +195,6 @@ class Router(object):
         """
         Get the bus stop which is closest to a geographic point.
 
-        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
-
         :param bus_stop_documents: [bus_stop_document]
         :param provided_point: Point
         :return closest_bus_stop: bus_stop_document
@@ -113,8 +224,6 @@ class Router(object):
     def get_bus_stops(self, names):
         """
         Get multiple bus_stop_documents.
-
-        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
 
         :param names: [string]
         :return: bus_stops: [bus_stop_document]
@@ -191,26 +300,14 @@ class Router(object):
                                         starting_bus_stop_name=None, ending_bus_stop_name=None,
                                         edges_dictionary=None):
         """
-        Find a route between two bus_stops.
+        Identify the less time-consuming route between two bus_stops.
 
-        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
-
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
         :param starting_bus_stop: bus_stop_document
         :param ending_bus_stop: bus_stop_document
         :param starting_bus_stop_name: string
         :param ending_bus_stop_name: string
         :param edges_dictionary: {starting_node_osm_id -> [edge_document]}
-        :return response: {
-                    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                    'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                              'distances_from_starting_node', 'times_from_starting_node',
-                              'distances_from_previous_node', 'times_from_previous_node'}}
+        :return response: get_route_between_two_bus_stops
         """
         if starting_bus_stop is None and starting_bus_stop_name is not None:
             starting_bus_stop = self.get_bus_stop(name=starting_bus_stop_name)
@@ -235,18 +332,11 @@ class Router(object):
 
     def get_route_between_multiple_bus_stops(self, bus_stops=None, bus_stop_names=None):
         """
-        Find a route between multiple bus_stop, based on their names.
+        Identify the less time-consuming route between multiple bus_stops.
 
-        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
-
-        :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        :param bus_stops: [bus_stop_document]
         :param bus_stop_names: string
-        :return response: [{
-                    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                    'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                              'distances_from_starting_node', 'times_from_starting_node',
-                              'distances_from_previous_node', 'times_from_previous_node'}}]
+        :return response: get_route_between_multiple_bus_stops
         """
         response = []
         edges_dictionary = self.get_edges_dictionary()
@@ -270,20 +360,13 @@ class Router(object):
     def get_waypoints_between_two_bus_stops(self, starting_bus_stop=None, ending_bus_stop=None,
                                             starting_bus_stop_name=None, ending_bus_stop_name=None):
         """
-        Find the waypoints of all possible routes between two bus_stops, based on their names.
-
-        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
+        Identify all possible route connections between two bus_stops.
 
         :param starting_bus_stop: bus_stop_document
         :param ending_bus_stop: bus_stop_document
         :param starting_bus_stop_name: string
         :param ending_bus_stop_name: string
-        :return response: {
-                    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                    'waypoints': [[{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                    'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                    'max_speed', 'road_type', 'way_id', 'traffic_density'}]]}
+        :return response: get_waypoints_between_two_bus_stops
         """
         if starting_bus_stop is None and starting_bus_stop_name is not None:
             starting_bus_stop = self.get_bus_stop(name=starting_bus_stop_name)
@@ -307,18 +390,11 @@ class Router(object):
 
     def get_waypoints_between_multiple_bus_stops(self, bus_stops=None, bus_stop_names=None):
         """
-        Find the waypoints of all possible routes between multiple bus_stops, based on their names.
+        Identify all possible route connections between multiple bus_stops.
 
-        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
-
-        :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+        :param bus_stops: [bus_stop_document]
         :param bus_stop_names: string
-        :return response: [{
-                    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                    'waypoints': [[{'_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                    'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-                                    'max_speed', 'road_type', 'way_id', 'traffic_density'}]]}]
+        :return response: get_waypoints_between_multiple_bus_stops
         """
         response = []
 

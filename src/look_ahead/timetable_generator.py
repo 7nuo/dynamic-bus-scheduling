@@ -1,6 +1,8 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 """
+- LICENCE
+
 The MIT License (MIT)
 
 Copyright (c) 2016 Eleftherios Anagnostopoulos for Ericsson AB (EU FP7 CityPulse Project)
@@ -22,6 +24,119 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+
+- DESCRIPTION OF DOCUMENTS
+
+-- MongoDB Database Documents:
+
+address_document: {
+    '_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}
+}
+bus_line_document: {
+    '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+}
+bus_stop_document: {
+    '_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}
+}
+bus_stop_waypoints_document: {
+    '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'waypoints': [[edge_object_id]]
+}
+bus_vehicle_document: {
+    '_id', 'bus_vehicle_id', 'maximum_capacity',
+    'routes': [{'starting_datetime', 'ending_datetime', 'timetable_id'}]
+}
+detailed_bus_stop_waypoints_document: {
+    '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'waypoints': [[edge_document]]
+}
+edge_document: {
+    '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+    'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+    'max_speed', 'road_type', 'way_id', 'traffic_density'
+}
+node_document: {
+    '_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}
+}
+point_document: {
+    '_id', 'osm_id', 'point': {'longitude', 'latitude'}
+}
+timetable_document: {
+    '_id', 'timetable_id', 'line_id', 'bus_vehicle_id',
+    'timetable_entries': [{
+        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+        'number_of_deboarding_passengers', 'number_of_current_passengers',
+        'route': {
+            'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+            'distances_from_starting_node', 'times_from_starting_node',
+            'distances_from_previous_node', 'times_from_previous_node'
+        }
+    }],
+    'travel_requests': [{
+        '_id', 'client_id', 'line_id',
+        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        'departure_datetime', 'arrival_datetime',
+        'starting_timetable_entry_index', 'ending_timetable_entry_index'
+    }]
+}
+traffic_event_document: {
+    '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
+}
+travel_request_document: {
+    '_id', 'client_id', 'line_id',
+    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'departure_datetime', 'arrival_datetime',
+    'starting_timetable_entry_index', 'ending_timetable_entry_index'
+}
+way_document: {
+    '_id', 'osm_id', 'tags', 'references'
+}
+
+-- Route Generator Responses:
+
+get_route_between_two_bus_stops: {
+    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'route': {
+        'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+        'distances_from_starting_node', 'times_from_starting_node',
+        'distances_from_previous_node', 'times_from_previous_node'
+    }
+}
+get_route_between_multiple_bus_stops: [{
+    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'route': {
+        'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+        'distances_from_starting_node', 'times_from_starting_node',
+        'distances_from_previous_node', 'times_from_previous_node'
+    }
+}]
+get_waypoints_between_two_bus_stops: {
+    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'waypoints': [[{
+        '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'max_speed', 'road_type', 'way_id', 'traffic_density'
+    }]]
+}
+get_waypoints_between_multiple_bus_stops: [{
+    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'waypoints': [[{
+        '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'max_speed', 'road_type', 'way_id', 'traffic_density'
+    }]]
+}]
 """
 from datetime import datetime, timedelta, time
 from src.common.parameters import maximum_bus_capacity, average_waiting_time_threshold, \
@@ -43,39 +158,6 @@ class TimetableGenerator(object):
         Initialize the TimetableGenerator, send a request to the RouteGenerator and receive the less time-consuming
         route which connects the provided bus stops.
 
-        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
-
-        travel_request_document: {
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'
-        }
-        timetable_document: {
-            '_id', 'line_id',
-            'timetable_entries': [{
-                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-                'number_of_deboarding_passengers', 'number_of_current_passengers',
-                'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                          'distances_from_starting_node', 'times_from_starting_node',
-                          'distances_from_previous_node', 'times_from_previous_node'}}],
-            'travel_requests': [{
-                '_id', 'client_id', 'line_id',
-                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime',
-                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-        }
-        route_generator_response: [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}
-        }]
         :param line_id: int
         :param bus_stops: [bus_stop_document]
         :param travel_requests: [travel_request_document]
@@ -107,23 +189,6 @@ def add_timetable_to_timetables_sorted_by_starting_datetime(timetable, timetable
     """
     Add a provided timetable to the timetables list, sorted by its starting_datetime.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetable: timetable_document
     :param timetables: [timetable_document]
     :return: None (Updates timetables)
@@ -148,13 +213,6 @@ def add_travel_request_sorted_by_departure_datetime(travel_request, travel_reque
     Add a travel_request to the corresponding index position of the travel_requests list,
     so as to keep the list sorted by the departure_datetime value.
 
-    travel_request_document: {
-        '_id', 'client_id', 'line_id',
-        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'departure_datetime', 'arrival_datetime',
-        'starting_timetable_entry_index', 'ending_timetable_entry_index'
-    }
     :param travel_request: travel_request_document
     :param travel_requests: [travel_request_document]
     :return: None (Updates travel_requests)
@@ -177,30 +235,6 @@ def add_travel_request_to_timetable_with_adjustments(travel_request, timetable):
     """
     Add a travel_request to the list of travel_requests of a timetable, adjusting the timetable_entries.
 
-    travel_request_document: {
-        '_id', 'client_id', 'line_id',
-        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'departure_datetime', 'arrival_datetime',
-        'starting_timetable_entry_index', 'ending_timetable_entry_index'
-    }
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param travel_request: travel_request_document
     :param timetable: timetable_document
     :return: None (Updates timetable)
@@ -214,30 +248,6 @@ def add_travel_request_to_timetable_without_adjustments(travel_request, timetabl
     """
     Add a travel_request to the list of travel_requests of a timetable, without adjusting the timetable_entries.
 
-    travel_request_document: {
-        '_id', 'client_id', 'line_id',
-        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'departure_datetime', 'arrival_datetime',
-        'starting_timetable_entry_index', 'ending_timetable_entry_index'
-    }
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param travel_request: travel_request_document
     :param timetable: timetable_document
     :return: None (Updates timetable)
@@ -251,23 +261,6 @@ def adjust_departure_datetimes_of_timetable(timetable):
     Adjust the departure datetimes of a timetable, taking into consideration
     the departure datetimes of its corresponding travel requests.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetable: timetable_document
     :return: None (Updates timetable)
     """
@@ -303,23 +296,6 @@ def adjust_departure_datetimes_of_timetables(timetables):
     Adjust the departure datetimes of each one of the timetables, taking into consideration
     the departure datetimes of its corresponding travel requests.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetables: [timetable_document]
     :return: None (Updates timetables)
     """
@@ -332,23 +308,6 @@ def adjust_timetable_entries(timetable, ideal_departure_datetimes):
     Adjust the timetable entries, combining the ideal departure datetimes and
     the required traveling time from one bus stop to another.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetable: timetable_document
     :param ideal_departure_datetimes: [datetime]
     :return: None (Updates timetable)
@@ -382,23 +341,6 @@ def calculate_average_number_of_travel_requests_in_timetables(timetables):
     """
     Calculate the average number of travel_requests in timetables.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetables: [timetable_document]
     :return: average_number_of_travel_requests: float
     """
@@ -418,23 +360,6 @@ def calculate_average_waiting_time_of_timetable_in_seconds(timetable):
     """
     Calculate the average waiting time of a timetable in seconds.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetable: timetable_document
     :return: average_waiting_time_in_seconds (float)
     """
@@ -458,23 +383,6 @@ def calculate_average_waiting_time_of_timetables_in_seconds(timetables):
     """
     Calculate the average waiting time of a list of timetables in seconds.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetables: [timetable_document]
     :return: average_waiting_time_in_seconds (float)
     """
@@ -496,30 +404,6 @@ def calculate_departure_datetime_differences_between_travel_request_and_timetabl
     """
     Calculate the datetime difference between a travel request and a list of timetables.
 
-    travel_request_document: {
-        '_id', 'client_id', 'line_id',
-        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'departure_datetime', 'arrival_datetime',
-        'starting_timetable_entry_index', 'ending_timetable_entry_index'
-    }
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param travel_request: timetable_document
     :param timetables: [timetable_document]
     :return: departure_datetime_differences: [{
@@ -577,23 +461,6 @@ def calculate_number_of_passengers_of_timetable(timetable):
     Calculate the number of onboarding, deboarding, and current passengers for each timetable entry,
     and update the corresponding values.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetable: timetable_document
     :return: None (Updates timetable)
     """
@@ -628,23 +495,6 @@ def calculate_number_of_passengers_of_timetables(timetables):
     Calculate the number of onboarding, deboarding, and current passengers for each timetable entry,
     and update the corresponding values in each one of timetables.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetables: [timetable_document]
     :return: None (Updates timetables)
     """
@@ -656,23 +506,6 @@ def calculate_total_number_of_travel_requests_in_timetables(timetables):
     """
     Calculate the total number of travel_requests in timetables.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetables: [timetable_document]
     :return: total_number_of_travel_requests: int
     """
@@ -690,13 +523,6 @@ def calculate_waiting_time_of_travel_request_in_seconds(travel_request, timetabl
     """
     Calculate the waiting time (in seconds) of a travel request.
 
-    travel_request_document: {
-        '_id', 'client_id', 'line_id',
-        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'departure_datetime', 'arrival_datetime',
-        'starting_timetable_entry_index', 'ending_timetable_entry_index'
-    }
     :param travel_request: travel_request_document
 
     :param timetable_entries: [{
@@ -727,30 +553,6 @@ def calculate_waiting_time_of_travel_requests_of_timetable(timetable):
     """
     Calculate the waiting time (in seconds) of each travel request of a timetable.
 
-    travel_request_document: {
-        '_id', 'client_id', 'line_id',
-        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'departure_datetime', 'arrival_datetime',
-        'starting_timetable_entry_index', 'ending_timetable_entry_index'
-    }
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetable: timetable_document
     :return: waiting_time_of_travel_requests: [{
                  'travel_request': travel_request_document, 'waiting_time': float (in seconds)}]
@@ -786,23 +588,6 @@ def check_average_waiting_time_of_timetable(timetable):
     """
     Check if the average_waiting_time_of_timetable exceeds the average_waiting_time_threshold.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetable: timetable_document
     :return: False if the average_waiting_time_of_timetable exceeds the average_waiting_time_threshold. Otherwise True.
     """
@@ -819,23 +604,6 @@ def check_number_of_passengers_of_timetable(timetable):
     """
     Check if the number of passengers of a timetable exceeds the bus vehicle capacity.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetable: timetable_document
     :return: True, if timetable can be served by one bus, otherwise False.
     """
@@ -854,23 +622,6 @@ def clear_number_of_passengers_of_timetable(timetable):
     """
     Clear the number of passengers of a timetable.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetable: timetable_document
     :return: None (Updates timetable)
     """
@@ -886,23 +637,6 @@ def clear_travel_requests_of_timetable(timetable):
     """
     Clear the travel_requests of a timetable.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetable: timetable_document
     :return: None (Updates timetable)
     """
@@ -914,23 +648,6 @@ def clear_travel_requests_of_timetables(timetables):
     """
     Clear the travel_requests of multiple timetables.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetables: [timetable_document]
     :return: None (Updates timetables)
     """
@@ -996,15 +713,6 @@ def correspond_travel_requests_to_bus_stops(travel_requests, bus_stops):
     bus_stops list indexes 5 and 6 respectively, not 2 and 6.
     This operation is achieved using this function, which adds the parameters 'starting_timetable_entry_index' and
     'ending_timetable_entry_index' to each travel_request.
-    
-    travel_request_document: {
-        '_id', 'client_id', 'line_id',
-        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'departure_datetime', 'arrival_datetime',
-        'starting_timetable_entry_index', 'ending_timetable_entry_index'
-    }
-    bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
 
     :param travel_requests: [travel_request_document]
     :param bus_stops: [bus_stop_document]
@@ -1035,30 +743,6 @@ def correspond_travel_requests_to_timetables(travel_requests, timetables):
     Correspond each travel request to a timetable, so as to produce
     the minimum waiting time for each passenger.
 
-    travel_request_document: {
-        '_id', 'client_id', 'line_id',
-        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'departure_datetime', 'arrival_datetime',
-        'starting_timetable_entry_index', 'ending_timetable_entry_index'
-    }
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param travel_requests: [travel_request_document]
     :param timetables: [timetable_document]
     :return: None (Updates timetables)
@@ -1087,9 +771,14 @@ def datetime_to_seconds(provided_datetime):
     :param provided_datetime: datetime
     :return: seconds: float
     """
-    seconds = provided_datetime.year * 31556926 + provided_datetime.month * 2629743.83 + \
-              provided_datetime.day * 86400 + provided_datetime.hour * 3600 + provided_datetime.minute * 60 + \
-              provided_datetime.second
+    seconds = (
+        provided_datetime.year * 31556926 +
+        provided_datetime.month * 2629743.83 +
+        provided_datetime.day * 86400 +
+        provided_datetime.hour * 3600 +
+        provided_datetime.minute * 60 +
+        provided_datetime.second
+    )
     return seconds
 
 
@@ -1098,23 +787,6 @@ def divide_timetable(timetable):
     Create a copy of the initial timetable, split the requests of the initial timetable into the two timetables,
     adjust the departure_datetimes of both timetables, and return the new timetable.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetable: timetable_document
     :return: additional_timetable
     """
@@ -1141,23 +813,6 @@ def divide_timetable_based_on_average_waiting_time(timetable):
     Check if a timetable should be divided, based on the number of travel requests and the average_waiting_time
     of the old and the two new timetables.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetable: timetable_document
     :return: additional_timetable if the timetable was divided, otherwise None.
     """
@@ -1218,13 +873,6 @@ def estimate_ideal_departure_datetimes_of_travel_request(travel_request, total_t
     Using the required traveling times from bus stop to bus stop (total_times), it is possible to
     estimate the ideal departure datetimes from all timetable entries.
 
-    travel_request_document: {
-        '_id', 'client_id', 'line_id',
-        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'departure_datetime', 'arrival_datetime',
-        'starting_timetable_entry_index', 'ending_timetable_entry_index'
-    }
     :param travel_request: travel_request_document
     :param total_times: [float] (in seconds)
     :return: ideal_departure_datetimes: [departure_datetime]
@@ -1268,23 +916,6 @@ def estimate_number_of_bus_vehicles_for_timetables(timetables):
     """
     Estimate the required number of bus_vehicles, in order to serve a list of timetables.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetables: [timetable_document]
     :return: number_of_bus_vehicles: int
     """
@@ -1301,23 +932,6 @@ def generate_additional_timetable(timetable):
     """
     Generate an additional timetable, copying the timetable_entries of an existing one.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetable: timetable_document
     :return: additional_timetable
     """
@@ -1344,23 +958,6 @@ def generate_additional_timetable(timetable):
 def generate_additional_timetables(timetables):
     """
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetables: [timetable_document]
     :return: additional_timetables
     """
@@ -1377,23 +974,6 @@ def generate_initial_timetables(line_id, timetables_starting_datetime, timetable
                                 route_generator_response):
     """
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param line_id: int
     :param timetables_starting_datetime: datetime
     :param timetables_ending_datetime: datetime
@@ -1426,23 +1006,6 @@ def generate_new_timetable(line_id, timetable_starting_datetime, route_generator
     """
     Generate a timetable starting from a provided datetime.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param line_id: int
     :param timetable_starting_datetime: datetime
 
@@ -1485,30 +1048,6 @@ def generate_new_timetable_for_travel_requests(timetable, travel_requests):
     Create a copy of the initial timetable, set the travel_requests, adjust the departure_datetimes
     based on the travel_requests, calculate the number of passengers, and return the new timetable.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
-    travel_request_document: {
-        '_id', 'client_id', 'line_id',
-        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'departure_datetime', 'arrival_datetime',
-        'starting_timetable_entry_index', 'ending_timetable_entry_index'
-    }
     :param timetable: timetable_document
     :param travel_requests: [travel_request_document]
     :return: additional_timetable
@@ -1543,23 +1082,6 @@ def get_ending_datetime_of_timetable(timetable):
     Get the ending_datetime of a timetable, which corresponds to
     the arrival_datetime of the last timetable entry.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetable: timetable_document
     :return: None (Updates timetable)
     """
@@ -1573,23 +1095,6 @@ def get_overcrowded_timetables(timetables):
     """
     Get the timetables with number of passengers which exceeds the bus vehicle capacity.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetables: [timetable_document]
     :return: overcrowded_timetables: [timetable_document]
     """
@@ -1607,23 +1112,6 @@ def get_starting_datetime_of_timetable(timetable):
     Get the starting_datetime of a timetable, which corresponds to
     the departure_datetime of the first timetable entry.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetable: timetable_document
     :return: starting_datetime_of_timetable: datetime
     """
@@ -1637,23 +1125,6 @@ def get_starting_datetimes_of_timetables(timetables):
     """
     Retrieve a list containing the starting_datetimes of timetables.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetables: [timetable_document]
     :return: starting_datetimes: datetime
     """
@@ -1671,13 +1142,6 @@ def get_starting_timetable_entry_dictionary(travel_requests):
     Create a dictionary containing the starting_timetable_entry_index as key,
     and a list of corresponding_travel_requests as value.
 
-    travel_request_document: {
-        '_id', 'client_id', 'line_id',
-        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'departure_datetime', 'arrival_datetime',
-        'starting_timetable_entry_index', 'ending_timetable_entry_index'
-    }
     :param travel_requests: [travel_request_document]
     :return: starting_timetable_entry_dictionary: {starting_timetable_entry_index: corresponding_travel_requests}
     """
@@ -1703,23 +1167,6 @@ def get_timetable_with_minimum_departure_datetime_difference(departure_datetime_
     """
     Get the timetable with the minimum departure_datetime difference.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param departure_datetime_differences: [{
                  'timetable': timetable_document, 'departure_datetime_difference': float (in seconds)}]
 
@@ -1744,23 +1191,6 @@ def get_timetables_with_average_waiting_time_above_threshold(timetables):
     """
     Retrieve a list containing the timetables_with_average_waiting_time_above_threshold.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetables: [timetable_document]
     :return: timetables_with_average_waiting_time_above_threshold: timetable_document
     """
@@ -1776,33 +1206,9 @@ def get_timetables_with_average_waiting_time_above_threshold(timetables):
 def get_travel_requests_of_timetable_with_waiting_time_above_threshold(timetable):
     """
 
-    travel_request_document: {
-        '_id', 'client_id', 'line_id',
-        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'departure_datetime', 'arrival_datetime',
-        'starting_timetable_entry_index', 'ending_timetable_entry_index'
-    }
     waiting_time_of_travel_requests: [{
         'travel_request': travel_request_document, 'waiting_time': float (in seconds)
     }]
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetable: timetable_document
 
     :return: travel_requests_with_waiting_time_above_threshold: [{
@@ -1824,23 +1230,6 @@ def get_travel_requests_of_timetable_with_waiting_time_above_threshold(timetable
 def handle_timetables_with_average_waiting_time_above_threshold(timetables):
     """
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetables: [timetable_document]
     :return: None (Updates timetables)
     """
@@ -1871,23 +1260,6 @@ def handle_overcrowded_timetables(timetables):
     The whole procedure is repeated until there is no timetable where the number of passengers
     exceeds the maximum_bus_capacity.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetables: [timetable_document]
     :return: None (Updates timetables)
     """
@@ -1911,13 +1283,6 @@ def partition_travel_requests_by_departure_datetime(travel_requests):
     Split a list of travel_requests into two lists, based on their departure_datetime values,
     and return a double list containing both of them.
 
-    travel_request_document: {
-        '_id', 'client_id', 'line_id',
-        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'departure_datetime', 'arrival_datetime',
-        'starting_timetable_entry_index', 'ending_timetable_entry_index'
-    }
     :param travel_requests: [travel_request_document]
 
     :return: travel_requests_for_timetables: {
@@ -1952,30 +1317,6 @@ def partition_travel_requests_in_timetables(travel_requests, timetables):
     """
     Partition a list of travel_requests in two timetables, and update their corresponding entries.
 
-    travel_request_document: {
-        '_id', 'client_id', 'line_id',
-        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'departure_datetime', 'arrival_datetime',
-        'starting_timetable_entry_index', 'ending_timetable_entry_index'
-    }
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param travel_requests: [travel_request_document]
     :param timetables: [timetable_document]
     :return: None (Updates timetables)
@@ -1996,13 +1337,6 @@ def partition_travel_requests_list(travel_requests):
     """
     Partition a list of travel_requests into two lists, and return a dictionary containing both of them.
 
-    travel_request_document: {
-        '_id', 'client_id', 'line_id',
-        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'departure_datetime', 'arrival_datetime',
-        'starting_timetable_entry_index', 'ending_timetable_entry_index'
-    }
     :param travel_requests: [travel_request_document]
     :return: travel_requests_lists: {'first_list': [travel_request_document], 'second_list': [travel_request_document]}
     """
@@ -2061,30 +1395,6 @@ def partition_travel_requests_list(travel_requests):
 def handle_travel_requests_of_timetable_with_waiting_time_above_threshold(timetable, timetables):
     """
 
-    travel_request_document: {
-        '_id', 'client_id', 'line_id',
-        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'departure_datetime', 'arrival_datetime',
-        'starting_timetable_entry_index', 'ending_timetable_entry_index'
-    }
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     travel_requests_with_waiting_time_above_threshold: [{
         'travel_request': travel_request_document, 'waiting_time': float (in seconds)
     }]
@@ -2163,23 +1473,6 @@ def handle_travel_requests_of_timetable_with_waiting_time_above_threshold(timeta
 def handle_undercrowded_timetable(timetable, timetables):
     """
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetable: timetable_document
     :param timetables: [timetable_document]
     :return: None (Updates timetables)
@@ -2214,23 +1507,6 @@ def handle_undercrowded_timetable(timetable, timetables):
 def handle_undercrowded_timetables(timetables):
     """
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetables: [timetable_document]
     :return: None (Updates timetables)
     """
@@ -2251,23 +1527,6 @@ def get_undercrowded_timetables(timetables):
     Retrieve a list containing the timetables where the number of travel_requests
     is less than the minimum_number_of_passengers_in_timetable.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetables: [timetable_document]
     :return: undercrowded_timetables: [timetable_document]
     """
@@ -2285,23 +1544,6 @@ def get_undercrowded_timetables(timetables):
 def handle_travel_requests_of_timetables_with_waiting_time_above_threshold(timetables):
     """
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetables: [timetable_document]
     :return: None (Updates timetables)
     """
@@ -2319,23 +1561,6 @@ def print_timetable(timetable, timetable_entries_control=False, travel_requests_
     """
     Print a timetable_document.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetable: timetable_document
     :param timetable_entries_control: bool
     :param travel_requests_control: bool
@@ -2373,9 +1598,13 @@ def print_timetable(timetable, timetable_entries_control=False, travel_requests_
         for travel_request in travel_requests:
             print 'starting_bus_stop:', travel_request.get('starting_bus_stop').get('name'), \
                 '- ending_bus_stop:', travel_request.get('ending_bus_stop').get('name'), \
-                '- departure_datetime:', travel_request.get('departure_datetime'), \
-                '- starting_timetable_entry_index:', travel_request.get('starting_timetable_entry_index'), \
-                '- ending_timetable_entry_index:', travel_request.get('ending_timetable_entry_index')
+                '- departure_datetime:', travel_request.get('departure_datetime')
+
+            # print 'starting_bus_stop:', travel_request.get('starting_bus_stop').get('name'), \
+            #     '- ending_bus_stop:', travel_request.get('ending_bus_stop').get('name'), \
+            #     '- departure_datetime:', travel_request.get('departure_datetime'), \
+            #     '- starting_timetable_entry_index:', travel_request.get('starting_timetable_entry_index'), \
+            #     '- ending_timetable_entry_index:', travel_request.get('ending_timetable_entry_index')
 
 
 def print_timetables(timetables, timetables_control=False, timetable_entries_control=False,
@@ -2383,23 +1612,6 @@ def print_timetables(timetables, timetables_control=False, timetable_entries_con
     """
     Print multiple timetable_documents.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetables: [timetable_document]
     :param timetables_control: bool
     :param timetable_entries_control: bool
@@ -2447,30 +1659,6 @@ def remove_travel_request_from_timetable_with_adjustments(travel_request, timeta
     """
     Remove a travel_request from the list of travel_requests of a timetable, adjusting the timetable_entries.
 
-    travel_request_document: {
-        '_id', 'client_id', 'line_id',
-        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'departure_datetime', 'arrival_datetime',
-        'starting_timetable_entry_index', 'ending_timetable_entry_index'
-    }
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param travel_request: travel_request_document
     :param timetable: timetable_document
     :return: None (Updates timetable)
@@ -2484,30 +1672,6 @@ def remove_travel_request_from_timetable_without_adjustments(travel_request, tim
     """
     Remove a travel_request from the list of travel_requests of a timetable, without adjusting the timetable_entries.
 
-    travel_request_document: {
-        '_id', 'client_id', 'line_id',
-        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'departure_datetime', 'arrival_datetime',
-        'starting_timetable_entry_index', 'ending_timetable_entry_index'
-    }
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param travel_request: travel_request_document
     :param timetable: timetable_document
     :return: None (Updates timetable)
@@ -2523,30 +1687,6 @@ def remove_travel_requests_from_timetable_without_adjustments(travel_requests, t
     Remove a list of travel_requests from the list of travel_requests of a timetable,
     without adjusting the timetable_entries.
 
-    travel_request_document: {
-        '_id', 'client_id', 'line_id',
-        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'departure_datetime', 'arrival_datetime',
-        'starting_timetable_entry_index', 'ending_timetable_entry_index'
-    }
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param travel_requests: [travel_request_document]
     :param timetable: timetable_document
     :return: None (Updates timetable)
@@ -2562,23 +1702,6 @@ def sort_timetables_by_starting_datetime(timetables):
     """
     Sort timetables by their starting_datetime.
 
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
     :param timetables: [timetable_document]
     :return: None (Updates timetables)
     """

@@ -1,6 +1,8 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 """
+- LICENCE
+
 The MIT License (MIT)
 
 Copyright (c) 2016 Eleftherios Anagnostopoulos for Ericsson AB (EU FP7 CityPulse Project)
@@ -22,6 +24,119 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+
+- DESCRIPTION OF DOCUMENTS
+
+-- MongoDB Database Documents:
+
+address_document: {
+    '_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}
+}
+bus_line_document: {
+    '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+}
+bus_stop_document: {
+    '_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}
+}
+bus_stop_waypoints_document: {
+    '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'waypoints': [[edge_object_id]]
+}
+bus_vehicle_document: {
+    '_id', 'bus_vehicle_id', 'maximum_capacity',
+    'routes': [{'starting_datetime', 'ending_datetime', 'timetable_id'}]
+}
+detailed_bus_stop_waypoints_document: {
+    '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'waypoints': [[edge_document]]
+}
+edge_document: {
+    '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+    'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+    'max_speed', 'road_type', 'way_id', 'traffic_density'
+}
+node_document: {
+    '_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}
+}
+point_document: {
+    '_id', 'osm_id', 'point': {'longitude', 'latitude'}
+}
+timetable_document: {
+    '_id', 'timetable_id', 'line_id', 'bus_vehicle_id',
+    'timetable_entries': [{
+        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
+        'number_of_deboarding_passengers', 'number_of_current_passengers',
+        'route': {
+            'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+            'distances_from_starting_node', 'times_from_starting_node',
+            'distances_from_previous_node', 'times_from_previous_node'
+        }
+    }],
+    'travel_requests': [{
+        '_id', 'client_id', 'line_id',
+        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+        'departure_datetime', 'arrival_datetime',
+        'starting_timetable_entry_index', 'ending_timetable_entry_index'
+    }]
+}
+traffic_event_document: {
+    '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
+}
+travel_request_document: {
+    '_id', 'client_id', 'line_id',
+    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'departure_datetime', 'arrival_datetime',
+    'starting_timetable_entry_index', 'ending_timetable_entry_index'
+}
+way_document: {
+    '_id', 'osm_id', 'tags', 'references'
+}
+
+-- Route Generator Responses:
+
+get_route_between_two_bus_stops: {
+    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'route': {
+        'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+        'distances_from_starting_node', 'times_from_starting_node',
+        'distances_from_previous_node', 'times_from_previous_node'
+    }
+}
+get_route_between_multiple_bus_stops: [{
+    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'route': {
+        'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
+        'distances_from_starting_node', 'times_from_starting_node',
+        'distances_from_previous_node', 'times_from_previous_node'
+    }
+}]
+get_waypoints_between_two_bus_stops: {
+    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'waypoints': [[{
+        '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'max_speed', 'road_type', 'way_id', 'traffic_density'
+    }]]
+}
+get_waypoints_between_multiple_bus_stops: [{
+    'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
+    'waypoints': [[{
+        '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
+        'max_speed', 'road_type', 'way_id', 'traffic_density'
+    }]]
+}]
 """
 from bson import ObjectId
 from pymongo import MongoClient
@@ -44,6 +159,7 @@ class MongodbDatabaseConnection(object):
         - BusLineDocuments
         - BusStopDocuments
         - BusStopWaypointsDocuments
+        - BusVehicleDocuments
         - EdgeDocuments
         - NodeDocuments
         - PointDocuments
@@ -51,69 +167,6 @@ class MongodbDatabaseConnection(object):
         - TrafficEventDocuments
         - TravelRequestDocuments
         - WayDocuments
-
-    Description of collection documents:
-
-    address_document: {
-        '_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}
-    }
-    bus_line_document: {
-        '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
-    }
-    bus_stop_document: {
-        '_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}
-    }
-    bus_stop_waypoints_document: {
-        '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'waypoints': [[edge_object_id]]
-    }
-    detailed_bus_stop_waypoints_document: {
-        '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'waypoints': [[edge_document]]
-    }
-    edge_document: {
-        '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-        'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-        'max_speed', 'road_type', 'way_id', 'traffic_density'
-    }
-    node_document: {
-        '_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}
-    }
-    point_document: {
-        '_id', 'osm_id', 'point': {'longitude', 'latitude'}
-    }
-    timetable_document: {
-        '_id', 'line_id',
-        'timetable_entries': [{
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-            'number_of_deboarding_passengers', 'number_of_current_passengers',
-            'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                      'distances_from_starting_node', 'times_from_starting_node',
-                      'distances_from_previous_node', 'times_from_previous_node'}}],
-        'travel_requests': [{
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-    }
-    traffic_event_document: {
-        '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
-    }
-    travel_request_document: {
-        '_id', 'client_id', 'line_id',
-        'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-        'departure_datetime', 'arrival_datetime',
-        'starting_timetable_entry_index', 'ending_timetable_entry_index'
-    }
-    way_document: {
-        '_id', 'osm_id', 'tags', 'references'
-    }
     """
     def __init__(self, host, port):
         self.mongo_client = MongoClient(host, port)
@@ -122,6 +175,7 @@ class MongodbDatabaseConnection(object):
         self.bus_line_documents_collection = self.db.BusLineDocuments
         self.bus_stop_documents_collection = self.db.BusStopDocuments
         self.bus_stop_waypoints_documents_collection = self.db.BusStopWaypointsDocuments
+        self.bus_vehicle_documents_collection = self.db.BusVehicleDocuments
         self.edge_documents_collection = self.db.EdgeDocuments
         self.node_documents_collection = self.db.NodeDocuments
         self.point_documents_collection = self.db.PointDocuments
@@ -135,6 +189,7 @@ class MongodbDatabaseConnection(object):
         self.clear_bus_line_documents_collection()
         self.clear_bus_stop_documents_collection()
         self.clear_bus_stop_waypoints_documents_collection()
+        self.clear_bus_vehicle_documents_collection()
         self.clear_edge_documents_collection()
         self.clear_node_documents_collection()
         self.clear_point_documents_collection()
@@ -145,7 +200,7 @@ class MongodbDatabaseConnection(object):
 
     def clear_address_documents_collection(self):
         """
-        Delete all the documents of the AddressBook collection.
+        Delete all the documents of the AddressDocuments collection.
 
         :return: The number of deleted documents.
         """
@@ -154,7 +209,7 @@ class MongodbDatabaseConnection(object):
 
     def clear_bus_line_documents_collection(self):
         """
-        Delete all the documents of the BusLines collection.
+        Delete all the documents of the BusLineDocuments collection.
 
         :return: The number of deleted documents.
         """
@@ -163,7 +218,7 @@ class MongodbDatabaseConnection(object):
 
     def clear_bus_stop_documents_collection(self):
         """
-        Delete all the documents of the BusStops collection.
+        Delete all the documents of the BusStopDocuments collection.
 
         :return: The number of deleted documents.
         """
@@ -172,16 +227,25 @@ class MongodbDatabaseConnection(object):
 
     def clear_bus_stop_waypoints_documents_collection(self):
         """
-        Delete all the documents of the BusStopWaypoints collection.
+        Delete all the documents of the BusStopWaypointsDocuments collection.
 
         :return: The number of deleted documents.
         """
         result = self.bus_stop_waypoints_documents_collection.delete_many({})
         return result.deleted_count
 
+    def clear_bus_vehicle_documents_collection(self):
+        """
+        Delete all the documents of the BusVehicleDocuments collection.
+
+        :return: The number of deleted documents.
+        """
+        result = self.bus_vehicle_documents_collection.delete_many({})
+        return result.deleted_count
+
     def clear_edge_documents_collection(self):
         """
-        Delete all the documents of the Edges collection.
+        Delete all the documents of the EdgeDocuments collection.
 
         :return: The number of deleted documents.
         """
@@ -190,7 +254,7 @@ class MongodbDatabaseConnection(object):
 
     def clear_node_documents_collection(self):
         """
-        Delete all the documents of the Nodes collection.
+        Delete all the documents of the NodeDocuments collection.
 
         :return: The number of deleted documents.
         """
@@ -199,7 +263,7 @@ class MongodbDatabaseConnection(object):
 
     def clear_point_documents_collection(self):
         """
-        Delete all the documents of the Points collection.
+        Delete all the documents of the PointDocuments collection.
 
         :return: The number of deleted documents.
         """
@@ -208,7 +272,7 @@ class MongodbDatabaseConnection(object):
 
     def clear_timetable_documents_collection(self):
         """
-        Delete all the documents of the Timetables collection.
+        Delete all the documents of the TimetableDocuments collection.
 
         :return: The number of deleted documents.
         """
@@ -225,7 +289,7 @@ class MongodbDatabaseConnection(object):
 
     def clear_traffic_event_documents_collection(self):
         """
-        Delete all the documents of the TrafficEvents collection.
+        Delete all the documents of the TrafficEventDocuments collection.
 
         :return: The number of deleted documents.
         """
@@ -234,7 +298,7 @@ class MongodbDatabaseConnection(object):
 
     def clear_travel_request_documents_collection(self):
         """
-        Delete all the documents of the TravelRequests collection.
+        Delete all the documents of the TravelRequestDocuments collection.
 
         :return: The number of deleted documents.
         """
@@ -243,7 +307,7 @@ class MongodbDatabaseConnection(object):
 
     def clear_way_documents_collection(self):
         """
-        Delete all the documents of the Ways collection.
+        Delete all the documents of the WayDocuments collection.
 
         :return The number of deleted documents.
         """
@@ -254,16 +318,6 @@ class MongodbDatabaseConnection(object):
         """
         Convert a bus_stop_waypoints_document to a detailed_bus_stop_waypoints document.
 
-        bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_object_id]]
-        }
-        detailed_bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_document]]
-        }
         :param bus_stop_waypoints_document
         :return: detailed_bus_stop_waypoints_document
         """
@@ -274,7 +328,7 @@ class MongodbDatabaseConnection(object):
             list_of_detailed_edge_object_ids = [ObjectId(i) for i in list_of_edge_object_ids]
             list_of_detailed_edges = [
                 self.edge_documents_collection.find_one({'_id': i}) for i in list_of_detailed_edge_object_ids
-                ]
+            ]
             lists_of_detailed_edges.append(list_of_detailed_edges)
 
         detailed_bus_stop_waypoints_document = bus_stop_waypoints_document
@@ -284,8 +338,6 @@ class MongodbDatabaseConnection(object):
     def delete_address_document(self, object_id=None, name=None):
         """
         Delete an address_document.
-
-        address_document: {'_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}}
 
         :param object_id: ObjectId
         :param name: string
@@ -303,8 +355,6 @@ class MongodbDatabaseConnection(object):
     def delete_address_documents(self, object_ids=None, names=None):
         """
         Delete multiple address_documents.
-
-        address_document: {'_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}}
 
         :param object_ids: [ObjectId]
         :param names: [string]
@@ -324,9 +374,6 @@ class MongodbDatabaseConnection(object):
         """
         Delete a bus_line_document.
 
-        bus_line_document: {
-            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
-        }
         :param object_id: ObjectId
         :param line_id: int
         :return: True if the bus_line_document was successfully deleted, otherwise False.
@@ -344,9 +391,6 @@ class MongodbDatabaseConnection(object):
         """
         Delete multiple bus_line_document.
 
-        bus_line_document: {
-            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
-        }
         :param object_ids: [ObjectId]
         :param line_ids: [int]
         :return: The number of deleted documents.
@@ -365,8 +409,6 @@ class MongodbDatabaseConnection(object):
         """
         Delete a bus_stop_document.
 
-        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
-
         :param object_id: ObjectId
         :param osm_id: int
         :return: True if the bus_stop_document was successfully deleted, otherwise False.
@@ -383,8 +425,6 @@ class MongodbDatabaseConnection(object):
     def delete_bus_stop_documents(self, object_ids=None, osm_ids=None):
         """
         Delete multiple bus_stop_documents.
-
-        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
 
         :param object_ids: [ObjectId]
         :param osm_ids: [int]
@@ -405,11 +445,6 @@ class MongodbDatabaseConnection(object):
         """
         Delete a bus_stop_waypoints_document.
 
-        bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_object_id]]
-        }
         :param object_id: ObjectId
         :param starting_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
         :param ending_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
@@ -438,11 +473,6 @@ class MongodbDatabaseConnection(object):
         """
         Delete multiple bus_stop_waypoints_documents.
 
-        bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_object_id]]
-        }
         :param object_ids: [ObjectId]
         :return: The number of deleted documents
         """
@@ -454,11 +484,6 @@ class MongodbDatabaseConnection(object):
         """
         Delete an edge_document.
 
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
         :param object_id: ObjectId
         :param starting_node_osm_id: int
         :param ending_node_osm_id: int
@@ -480,11 +505,6 @@ class MongodbDatabaseConnection(object):
         """
         Delete multiple edge_documents.
 
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
         :param object_ids: [ObjectId]
         :param starting_node_osm_id: int
         :param ending_node_osm_id: int
@@ -506,8 +526,6 @@ class MongodbDatabaseConnection(object):
         """
         Delete a node_document.
 
-        node_document: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
-
         :param object_id: ObjectId
         :param osm_id: int
         :return: True if node_document was successfully deleted, otherwise False.
@@ -524,8 +542,6 @@ class MongodbDatabaseConnection(object):
     def delete_node_documents(self, object_ids=None, osm_ids=None):
         """
         Delete multiple node_documents.
-
-        node_document: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
 
         :param object_ids: [ObjectId]
         :param osm_ids: [int]
@@ -545,8 +561,6 @@ class MongodbDatabaseConnection(object):
         """
         Delete a point_document.
 
-        point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
-
         :param object_id: ObjectId
         :param osm_id: int
         :return: True if the point_document was successfully deleted, otherwise False.
@@ -564,8 +578,6 @@ class MongodbDatabaseConnection(object):
         """
         Delete multiple point_document.
 
-        point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
-
         :param object_ids: [ObjectId]
         :param osm_ids: [int]
         :return: The number of deleted documents.
@@ -580,61 +592,37 @@ class MongodbDatabaseConnection(object):
 
         return result.deleted_count
 
-    def delete_timetable_document(self, object_id):
+    def delete_timetable_document(self, object_id=None, timetable_id=None):
         """
         Delete a timetable_document.
 
-        timetable_document: {
-            '_id', 'line_id',
-            'timetable_entries': [{
-                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-                'number_of_deboarding_passengers', 'number_of_current_passengers',
-                'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                          'distances_from_starting_node', 'times_from_starting_node',
-                          'distances_from_previous_node', 'times_from_previous_node'}}],
-            'travel_requests': [{
-                '_id', 'client_id', 'line_id',
-                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime',
-                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-        }
         :param object_id: ObjectId
+        :param timetable_id: int
         :return: True if the document was successfully deleted, otherwise False.
         """
-        result = self.timetable_documents_collection.delete_one({'_id': ObjectId(object_id)})
+        if object_id is not None:
+            result = self.timetable_documents_collection.delete_one({'_id': ObjectId(object_id)})
+        elif timetable_id is not None:
+            result = self.timetable_documents_collection.delete_one({'timetable_id': timetable_id})
+        else:
+            return False
+
         return result.deleted_count == 1
 
-    def delete_timetable_documents(self, object_ids=None, line_id=None):
+    def delete_timetable_documents(self, object_ids=None, timetable_ids=None, line_id=None):
         """
         Delete multiple timetable_documents.
 
-        timetable_document: {
-            '_id', 'line_id',
-            'timetable_entries': [{
-                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-                'number_of_deboarding_passengers', 'number_of_current_passengers',
-                'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                          'distances_from_starting_node', 'times_from_starting_node',
-                          'distances_from_previous_node', 'times_from_previous_node'}}],
-            'travel_requests': [{
-                '_id', 'client_id', 'line_id',
-                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime',
-                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-        }
         :param object_ids: [ObjectId]
+        :param timetable_ids: [int]
         :param line_id: int
         :return: The number of deleted documents.
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
             result = self.timetable_documents_collection.delete_many({'_id': {'$in': processed_object_ids}})
+        elif timetable_ids is not None:
+            result = self.timetable_documents_collection.delete_many({'timetable_id': {'$in': timetable_ids}})
         elif line_id is not None:
             result = self.timetable_documents_collection.delete_many({'line_id': line_id})
         else:
@@ -646,9 +634,6 @@ class MongodbDatabaseConnection(object):
         """
         Delete a traffic_event_document.
 
-        traffic_event_document: {
-            '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
-        }
         :param object_id: ObjectId
         :param event_id: string
         :return: True if the traffic_event_document was successfully deleted, otherwise False.
@@ -666,9 +651,6 @@ class MongodbDatabaseConnection(object):
         """
         Delete multiple traffic_event_documents.
 
-        traffic_event_document: {
-            '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
-        }
         :param object_ids: [ObjectId]
         :param event_ids: [string]
         :return: The number of deleted documents.
@@ -687,13 +669,6 @@ class MongodbDatabaseConnection(object):
         """
         Delete a travel_request_document.
 
-        travel_request_document: {
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'
-        }
         :param object_id: ObjectId
         :return: True if the travel_request_document was successfully deleted, otherwise False.
         """
@@ -705,13 +680,6 @@ class MongodbDatabaseConnection(object):
         """
         Delete multiple travel_request_documents.
 
-        travel_request_document: {
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'
-        }
         :param object_ids: [ObjectId]
         :param client_ids: [int]
         :param line_ids: [int]
@@ -752,8 +720,6 @@ class MongodbDatabaseConnection(object):
         """
         Delete a way_document.
 
-        way_document: {'_id', 'osm_id', 'tags', 'references'}
-
         :param object_id: ObjectId
         :param osm_id: int
         :return: True if the way_document was successfully deleted, otherwise False.
@@ -770,8 +736,6 @@ class MongodbDatabaseConnection(object):
     def delete_way_documents(self, object_ids=None, osm_ids=None):
         """
         Delete multiple way_documents.
-
-        way_document: {'_id', 'osm_id', 'tags', 'references'}
 
         :param object_ids: [ObjectId]
         :param osm_ids: [int]
@@ -790,8 +754,6 @@ class MongodbDatabaseConnection(object):
     def find_address_document(self, object_id=None, name=None, node_id=None, longitude=None, latitude=None):
         """
         Retrieve an address_document.
-
-        address_document: {'_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}}
 
         :param object_id: ObjectId
         :param name: string
@@ -819,8 +781,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve multiple address_documents.
 
-        address_document: {'_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}}
-
         :param object_ids: [ObjectId]
         :param names: [string]
         :param node_ids: [int]
@@ -843,9 +803,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a bus_line_document.
 
-        bus_line_document: {
-            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
-        }
         :param object_id: ObjectId
         :param line_id: int
         :return: bus_line_document
@@ -863,9 +820,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve multiple bus_line_documents.
 
-        bus_line_document: {
-            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
-        }
         :param object_ids: [ObjectId]
         :param line_ids: [int]
         :return: bus_line_documents: [bus_line_document]
@@ -884,8 +838,6 @@ class MongodbDatabaseConnection(object):
     def find_bus_stop_document(self, object_id=None, osm_id=None, name=None, longitude=None, latitude=None):
         """
         Retrieve a bus_stop_document.
-
-        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
 
         :param object_id: ObjectId
         :param osm_id: int
@@ -913,8 +865,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve multiple bus_stop_documents.
 
-        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
-
         :param object_ids: [ObjectId]
         :param osm_ids: [int]
         :param names: [string]
@@ -938,11 +888,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a bus_stop_waypoints_document.
 
-        bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_object_id]]
-        }
         :param object_id: ObjectId
         :param starting_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
         :param ending_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
@@ -973,11 +918,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve multiple bus_stop_waypoints_documents.
 
-        bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_object_id]]
-        }
         :param object_ids: [ObjectId]
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         :param bus_stop_names: [string]
@@ -1044,21 +984,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a detailed_bus_stop_waypoints_document.
 
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
-        bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_object_id]]
-        }
-        detailed_bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_document]]
-        }
         :param object_id: ObjectId
         :param starting_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
         :param ending_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
@@ -1084,21 +1009,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve multiple detailed_bus_stop_waypoints_documents.
 
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
-        bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_object_id]]
-        }
-        detailed_bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_document]]
-        }
         :param object_ids: [ObjectId]
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         :param bus_stop_names: [string]
@@ -1125,11 +1035,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve an edge_document.
 
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
         :param object_id: ObjectId
         :param starting_node_osm_id: int
         :param ending_node_osm_id: int
@@ -1151,11 +1056,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve multiple edge_documents.
 
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
         :param object_ids: [ObjectId]
         :param starting_node_osm_id: int
         :param ending_node_osm_id: int
@@ -1177,8 +1077,6 @@ class MongodbDatabaseConnection(object):
     def find_node_document(self, object_id=None, osm_id=None, longitude=None, latitude=None):
         """
         Retrieve a node_document.
-
-        node_document: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
 
         :param object_id: ObjectId
         :param osm_id: int
@@ -1203,8 +1101,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve multiple node_documents.
 
-        node_document: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
-
         :param object_ids: [ObjectId]
         :param osm_ids: [int]
         :return: node_documents: [node_document]
@@ -1223,8 +1119,6 @@ class MongodbDatabaseConnection(object):
     def find_point_document(self, object_id=None, osm_id=None, longitude=None, latitude=None):
         """
         Retrieve a point_document.
-
-        point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
 
         :param object_id: ObjectId
         :param osm_id: int
@@ -1249,8 +1143,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve multiple point_documents.
 
-        point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
-
         :param object_ids: [ObjectId]
         :param osm_ids: [int]
         :return: point_documents: [point_document]
@@ -1270,23 +1162,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a timetable_document.
 
-        timetable_document: {
-            '_id', 'line_id',
-            'timetable_entries': [{
-                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-                'number_of_deboarding_passengers', 'number_of_current_passengers',
-                'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                          'distances_from_starting_node', 'times_from_starting_node',
-                          'distances_from_previous_node', 'times_from_previous_node'}}],
-            'travel_requests': [{
-                '_id', 'client_id', 'line_id',
-                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime',
-                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-        }
         :param object_id: ObjectId
         :return: timetable_document
         """
@@ -1297,23 +1172,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve multiple timetable_documents.
 
-        timetable_document: {
-            '_id', 'line_id',
-            'timetable_entries': [{
-                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-                'number_of_deboarding_passengers', 'number_of_current_passengers',
-                'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                          'distances_from_starting_node', 'times_from_starting_node',
-                          'distances_from_previous_node', 'times_from_previous_node'}}],
-            'travel_requests': [{
-                '_id', 'client_id', 'line_id',
-                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime',
-                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-        }
         :param object_ids: [ObjectId]
         :param line_ids: [int]
         :return: timetable_documents: [timetable_document]
@@ -1335,9 +1193,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a traffic_event_document.
 
-        traffic_event_document: {
-            '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
-        }
         :param object_id: ObjectId
         :param event_id: string
         :return: traffic_event_document
@@ -1353,11 +1208,8 @@ class MongodbDatabaseConnection(object):
 
     def find_traffic_event_documents(self, object_ids=None, event_ids=None):
         """
-        Retrieve a traffic_event_document.
+        Retrieve multiple traffic_event_documents.
 
-        traffic_event_document: {
-            '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
-        }
         :param object_ids: [ObjectId]
         :param event_ids: [string]
         :return: traffic_event_documents: [traffic_event_document]
@@ -1381,13 +1233,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a travel_request_document.
 
-        travel_request_document: {
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'
-        }
         :param object_id: ObjectId
         :return: travel_request_document
         """
@@ -1399,13 +1244,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve multiple travel_request_documents.
 
-        travel_request_document: {
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'
-        }
         :param object_ids: [ObjectId]
         :param client_ids: [int]
         :param line_ids: [int]
@@ -1449,8 +1287,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a way_document.
 
-        way_document: {'_id', 'osm_id', 'tags', 'references'}
-
         :param object_id: ObjectId
         :param osm_id: int
         :return: way_document
@@ -1467,8 +1303,6 @@ class MongodbDatabaseConnection(object):
     def find_way_documents(self, object_ids=None, osm_ids=None):
         """
         Retrieve multiple way_documents.
-
-        way_document: {'_id', 'osm_id', 'tags', 'references'}
 
         :param object_ids: [ObjectId]
         :param osm_ids: [int]
@@ -1489,9 +1323,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a cursor of all bus_line_documents.
 
-        bus_line_document: {
-            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
-        }
         :return: bus_line_documents_cursor
         """
         bus_line_documents_cursor = self.bus_line_documents_collection.find({})
@@ -1501,9 +1332,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a dictionary containing all the bus_line_documents.
 
-        bus_line_document: {
-            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
-        }
         :return: bus_lines: {line_id -> bus_line_document}
         """
         bus_lines = {}
@@ -1519,9 +1347,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a list containing all the bus_line_documents.
 
-        bus_line_document: {
-            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
-        }
         :return: bus_line_documents_list: [bus_line_document]
         """
         bus_line_documents_cursor = self.get_bus_line_documents_cursor()
@@ -1532,8 +1357,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a cursor of all bus_stop_documents.
 
-        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
-
         :return: bus_stop_documents_cursor
         """
         bus_stop_documents_cursor = self.bus_stop_documents_collection.find({})
@@ -1542,8 +1365,6 @@ class MongodbDatabaseConnection(object):
     def get_bus_stops(self):
         """
         Retrieve a dictionary containing all the bus_stop_documents.
-
-        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
 
         :return: bus_stops: {name -> bus_stop_document}
         """
@@ -1562,8 +1383,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a list containing all the bus_stop_documents.
 
-        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
-
         :return: bus_stop_documents_list: [bus_stop_document]
         """
         bus_stop_documents_cursor = self.get_bus_stop_documents_cursor()
@@ -1574,11 +1393,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a cursor of all the edge_documents.
 
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
         :return: edge_documents_cursor
         """
         edge_documents_cursor = self.edge_documents_collection.find({})
@@ -1588,11 +1402,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a dictionary containing all the edge_documents.
 
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
         :return: edges: {starting_node_osm_id -> [edge_document]}
         """
         edges = {}
@@ -1612,11 +1421,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a list containing all the edge_documents.
 
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
         :return: edge_documents_list: [edge_document]
         """
         edge_documents_cursor = self.get_edge_documents_cursor()
@@ -1627,19 +1431,6 @@ class MongodbDatabaseConnection(object):
         """
         Get a list containing all the edge_documents which are contained in the waypoints of a bus_line.
 
-        bus_line_document: {
-            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
-        }
-        bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_object_id]]
-        }
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
         :param bus_line: bus_line_document
         :param line_id: int
         :return: edge_documents: [edge_document]
@@ -1655,16 +1446,6 @@ class MongodbDatabaseConnection(object):
         """
         Get a list containing all the edge_documents which are included in a bus_stop_waypoints document.
 
-        bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_object_id]]
-        }
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
         :param bus_stop_waypoints: bus_stop_waypoints_document
         :return: edge_documents: [edge_document]
         """
@@ -1680,19 +1461,6 @@ class MongodbDatabaseConnection(object):
         Get a list containing the object_ids of the edge_documents,
         which are included in the waypoints of a bus_line.
 
-        bus_line_document: {
-            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
-        }
-        bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_object_id]]
-        }
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
         :param bus_line: bus_line_document
         :param line_id: int
         :return: edge_object_ids: [edge_object_id]
@@ -1732,11 +1500,6 @@ class MongodbDatabaseConnection(object):
         Get a list containing all the object_ids of the edge_documents,
         which are included in a bus_stop_waypoints document.
 
-        bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_object_id]]
-        }
         :param bus_stop_waypoints: bus_stop_waypoints_document
         :return: edge_object_ids: [edge_object_id]
         """
@@ -1754,11 +1517,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a dictionary containing all the ending_nodes which are included in the Edges collection.
 
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
         :return: ending_nodes_dictionary: {ending_node_osm_id -> [edge_document]}
         """
         ending_nodes_dictionary = {}
@@ -1778,8 +1536,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a cursor of all node_documents.
 
-        node_document: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
-
         :return: node_documents_cursor
         """
         node_documents_cursor = self.node_documents_collection.find({})
@@ -1788,8 +1544,6 @@ class MongodbDatabaseConnection(object):
     def get_node_documents_list(self):
         """
         Retrieve a list containing all the node_documents.
-
-        node_document: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
 
         :return: node_documents_list: [node_document]
         """
@@ -1801,8 +1555,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a cursor of all point_documents.
 
-        point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
-
         :return: point_documents_cursor
         """
         point_documents_cursor = self.point_documents_collection.find({})
@@ -1812,24 +1564,20 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a dictionary containing all the point_documents.
 
-        point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
-
-        :return pointss: {osm_id -> point_document}
+        :return points: {osm_id -> point_document}
         """
-        pointss = {}
+        points = {}
         point_documents_cursor = self.get_point_documents_cursor()
 
         for point_document in point_documents_cursor:
             osm_id = point_document.get('osm_id')
-            pointss[osm_id] = point_document
+            points[osm_id] = point_document
 
-        return pointss
+        return points
 
     def get_point_documents_list(self):
         """
         Retrieve a list containing all the point_documents.
-
-        point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
 
         :return: point_documents_list: [point_document]
         """
@@ -1841,23 +1589,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a cursor of all timetable_documents.
 
-        timetable_document: {
-            '_id', 'line_id',
-            'timetable_entries': [{
-                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-                'number_of_deboarding_passengers', 'number_of_current_passengers',
-                'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                          'distances_from_starting_node', 'times_from_starting_node',
-                          'distances_from_previous_node', 'times_from_previous_node'}}],
-            'travel_requests': [{
-                '_id', 'client_id', 'line_id',
-                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime',
-                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-        }
         :return: timetable_documents_cursor
         """
         timetable_documents_cursor = self.timetable_documents_collection.find({})
@@ -1867,23 +1598,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a list containing all the timetable_documents.
 
-        timetable_document: {
-            '_id', 'line_id',
-            'timetable_entries': [{
-                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-                'number_of_deboarding_passengers', 'number_of_current_passengers',
-                'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                          'distances_from_starting_node', 'times_from_starting_node',
-                          'distances_from_previous_node', 'times_from_previous_node'}}],
-            'travel_requests': [{
-                '_id', 'client_id', 'line_id',
-                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime',
-                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-        }
         :return: timetable_documents_list: [timetable_document]
         """
         timetable_documents_cursor = self.timetable_documents_collection.find({})
@@ -1894,21 +1608,6 @@ class MongodbDatabaseConnection(object):
         """
         Get multiple traffic_density_documents.
 
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
-        detailed_bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_document]]
-        }
-        traffic_density_document: {
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'traffic_density_values': [[{'edge_object_id', 'traffic_density'}]]
-        }
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         :param bus_stop_names: [string]
         :return: traffic_density_documents: [traffic_density_document]
@@ -1946,13 +1645,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a cursor of all travel_request_documents.
 
-        travel_request_document: {
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'
-        }
         :return: travel_request_documents_cursor
         """
         travel_request_documents_cursor = self.travel_request_documents_collection.find({})
@@ -1962,13 +1654,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a list containing all the travel_request_documents.
 
-        travel_request_document: {
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'
-        }
         :return: travel_request_documents_list: [travel_request_document]
         """
         travel_request_documents_cursor = self.get_travel_request_documents_cursor()
@@ -1998,8 +1683,6 @@ class MongodbDatabaseConnection(object):
         """
         Insert an address_document.
 
-        address_document: {'_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}}
-
         :param address_document
         :param name: string
         :param node_id: int
@@ -2021,8 +1704,6 @@ class MongodbDatabaseConnection(object):
         """
         Insert multiple address_documents.
 
-        address_document: {'_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}}
-
         :param address_documents: [address_document]
         :return: new_object_ids: [ObjectId]
         """
@@ -2038,9 +1719,6 @@ class MongodbDatabaseConnection(object):
         """
         Insert a new bus_line_document or update, if it already exists in the database.
 
-        bus_line_document: {
-            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
-        }
         :param bus_line_document
         :param line_id: int
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
@@ -2089,9 +1767,6 @@ class MongodbDatabaseConnection(object):
         """
         Insert a list of bus_line_documents or update, if it already exists in the database.
 
-        bus_line_document: {
-            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
-        }
         :param bus_line_documents: [bus_line_document]
         :return: new_object_ids: [ObjectId]
         """
@@ -2106,8 +1781,6 @@ class MongodbDatabaseConnection(object):
     def insert_bus_stop_document(self, bus_stop_document=None, osm_id=None, name=None, point=None):
         """
         Insert a bus_stop_document.
-
-        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
 
         :param bus_stop_document
         :param osm_id: int
@@ -2130,8 +1803,6 @@ class MongodbDatabaseConnection(object):
         """
         Insert multiple bus_stop documents.
 
-        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
-
         :param bus_stop_documents: [bus_stop_document]
         :return: new_object_ids: [ObjectId]
         """
@@ -2149,11 +1820,6 @@ class MongodbDatabaseConnection(object):
         Insert a new document to the BusStopWaypoints collection, or update the waypoints
         if the document already exists in the database.
 
-        bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_object_id]]
-        }
         :param bus_stop_waypoints_document
         :param starting_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
         :param ending_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
@@ -2187,11 +1853,6 @@ class MongodbDatabaseConnection(object):
         """
         Insert an edge_document.
 
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
         :param edge_document
         :param starting_node: {'osm_id', 'point': {'longitude', 'latitude'}}
         :param ending_node: {'osm_id', 'point': {'longitude', 'latitude'}}
@@ -2215,11 +1876,6 @@ class MongodbDatabaseConnection(object):
         """
         Insert multiple edge_documents.
 
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
         :param edge_documents: [edge_document]
         :return: new_object_ids: [ObjectId]
         """
@@ -2234,8 +1890,6 @@ class MongodbDatabaseConnection(object):
     def insert_node_document(self, node_document=None, osm_id=None, tags=None, point=None):
         """
         Insert a node_document.
-
-        node_document: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
 
         :param node_document
         :param osm_id: int
@@ -2257,8 +1911,6 @@ class MongodbDatabaseConnection(object):
         """
         Insert multiple node_documents.
 
-        node_document: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
-
         :param node_documents: [node_document]
         :return: new_object_ids: [ObjectId]
         """
@@ -2273,8 +1925,6 @@ class MongodbDatabaseConnection(object):
     def insert_point_document(self, point_document=None, osm_id=None, point=None):
         """
         Insert a point_document.
-
-        point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
 
         :param point_document
         :param osm_id: int
@@ -2295,8 +1945,6 @@ class MongodbDatabaseConnection(object):
         """
         Insert multiple point_documents.
 
-        point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
-
         :param point_documents: [point_document]
         :return: new_object_ids: [ObjectId]
         """
@@ -2312,23 +1960,6 @@ class MongodbDatabaseConnection(object):
         """
         Insert a new timetable_document or update, if it already exists in the database.
 
-        timetable_document: {
-            '_id', 'line_id',
-            'timetable_entries': [{
-                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-                'number_of_deboarding_passengers', 'number_of_current_passengers',
-                'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                          'distances_from_starting_node', 'times_from_starting_node',
-                          'distances_from_previous_node', 'times_from_previous_node'}}],
-            'travel_requests': [{
-                '_id', 'client_id', 'line_id',
-                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime',
-                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-        }
         :param timetable: timetable_document
         :return: new_object_id: ObjectId
         """
@@ -2346,23 +1977,6 @@ class MongodbDatabaseConnection(object):
         """
         Insert multiple new timetable_documents or update, if they already exist in the database.
 
-        timetable_document: {
-            '_id', 'line_id',
-            'timetable_entries': [{
-                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-                'number_of_deboarding_passengers', 'number_of_current_passengers',
-                'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                          'distances_from_starting_node', 'times_from_starting_node',
-                          'distances_from_previous_node', 'times_from_previous_node'}}],
-            'travel_requests': [{
-                '_id', 'client_id', 'line_id',
-                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime',
-                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-        }
         :param timetable_documents: [timetable_document]
         :return: new_object_ids: [ObjectId]
         """
@@ -2378,9 +1992,6 @@ class MongodbDatabaseConnection(object):
         """
         Insert a new traffic_event_document or update, if it already exists in the database.
 
-        traffic_event_document: {
-            '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
-        }
         :param traffic_event_document
         :return: new_object_id: ObjectId
         """
@@ -2401,9 +2012,6 @@ class MongodbDatabaseConnection(object):
         """
         Insert multiple new traffic_event_documents or update, if they already exist in the database.
 
-        traffic_event_document: {
-            '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
-        }
         :param traffic_event_documents: [traffic_event_document]
         :return: new_object_ids: [ObjectId]
         """
@@ -2424,13 +2032,6 @@ class MongodbDatabaseConnection(object):
         """
         Insert a travel_request_document.
 
-        travel_request_document: {
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'
-        }
         :param travel_request_document
         :param client_id: int
         :param line_id: int
@@ -2462,13 +2063,6 @@ class MongodbDatabaseConnection(object):
         """
         Insert multiple travel_request_documents.
 
-        travel_request_document: {
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'
-        }
         :param travel_request_documents: [travel_request_document]
         :return: new_object_ids: [ObjectId]
         """
@@ -2483,8 +2077,6 @@ class MongodbDatabaseConnection(object):
     def insert_way_document(self, way_document=None, osm_id=None, tags=None, references=None):
         """
         Insert a way_document.
-
-        way_document: {'_id', 'osm_id', 'tags', 'references'}
 
         :param way_document
         :param osm_id: int
@@ -2503,9 +2095,7 @@ class MongodbDatabaseConnection(object):
         """
         Insert multiple way_documents.
 
-        way_document: {'_id', 'osm_id', 'tags', 'references'}
-
-        :param way_documents: [way_documents]
+        :param way_documents: [way_document]
         :return: new_object_ids: [ObjectId]
         """
         new_object_ids = []
@@ -2519,8 +2109,6 @@ class MongodbDatabaseConnection(object):
     def print_address_document(self, object_id=None, name=None, node_id=None, longitude=None, latitude=None):
         """
         Print an address_document.
-
-        address_document: {'_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}}
 
         :param object_id: ObjectId
         :param name: string
@@ -2537,8 +2125,6 @@ class MongodbDatabaseConnection(object):
     def print_address_documents(self, object_ids=None, names=None, node_ids=None, counter=None):
         """
         Print multiple address_documents.
-
-        address_document: {'_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}}
 
         :param object_ids: [ObjectId]
         :param names: [string]
@@ -2571,9 +2157,6 @@ class MongodbDatabaseConnection(object):
         """
         Print a bus_line_document.
 
-        bus_line_document: {
-            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
-        }
         :param object_id: ObjectId
         :param line_id: int
         :return: bus_line_document
@@ -2585,9 +2168,6 @@ class MongodbDatabaseConnection(object):
         """
         Print multiple bus_line_documents.
 
-        bus_line_document: {
-            '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
-        }
         :param object_ids: [ObjectId]
         :param line_ids: [int]
         :param counter: int
@@ -2617,8 +2197,6 @@ class MongodbDatabaseConnection(object):
         """
         Retrieve a bus_stop_document.
 
-        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
-
         :param object_id: ObjectId
         :param osm_id: int
         :param name: string
@@ -2634,8 +2212,6 @@ class MongodbDatabaseConnection(object):
     def print_bus_stop_documents(self, object_ids=None, osm_ids=None, names=None, counter=None):
         """
         Print multiple bus_stop_documents.
-
-        bus_stop_document: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
 
         :param object_ids: [ObjectId]
         :param osm_ids: [int]
@@ -2668,11 +2244,6 @@ class MongodbDatabaseConnection(object):
         """
         Print an edge_document.
 
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
         :param object_id: ObjectId
         :param starting_node_osm_id: int
         :param ending_node_osm_id: int
@@ -2687,11 +2258,6 @@ class MongodbDatabaseConnection(object):
         """
         Print multiple edge_documents.
 
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
         :param object_ids: [ObjectId]
         :param starting_node_osm_id: int
         :param ending_node_osm_id: int
@@ -2723,8 +2289,6 @@ class MongodbDatabaseConnection(object):
         """
         Print a node_document.
 
-        node_document: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
-
         :param object_id: ObjectId
         :param osm_id: int
         :param longitude: float
@@ -2739,8 +2303,6 @@ class MongodbDatabaseConnection(object):
     def print_node_documents(self, object_ids=None, osm_ids=None, counter=None):
         """
         Print multiple node_documents.
-
-        node_document: {'_id', 'osm_id', 'tags', 'point': {'longitude', 'latitude'}}
 
         :param object_ids: [ObjectId]
         :param osm_ids: [int]
@@ -2771,8 +2333,6 @@ class MongodbDatabaseConnection(object):
         """
         Print a point_document.
 
-        point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
-
         :param object_id: ObjectId
         :param osm_id: int
         :param longitude: float
@@ -2787,8 +2347,6 @@ class MongodbDatabaseConnection(object):
     def print_point_documents(self, object_ids=None, osm_ids=None, counter=None):
         """
         Print multiple point_documents.
-
-        point_document: {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}
 
         :param object_ids: [ObjectId]
         :param osm_ids: [int]
@@ -2819,13 +2377,6 @@ class MongodbDatabaseConnection(object):
         """
         Print a travel_request_document.
 
-        travel_request_document: {
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'
-        }
         :param object_id: ObjectId
         :return: None
         """
@@ -2838,13 +2389,6 @@ class MongodbDatabaseConnection(object):
         """
         Print multiple travel_request_documents.
 
-        travel_request_document: {
-            '_id', 'client_id', 'line_id',
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'departure_datetime', 'arrival_datetime',
-            'starting_timetable_entry_index', 'ending_timetable_entry_index'
-        }
         :param object_ids: [ObjectId]
         :param client_ids: [int]
         :param line_ids: [int]
@@ -2880,8 +2424,6 @@ class MongodbDatabaseConnection(object):
         """
         Print a way_document.
 
-        way_document: {'_id', 'osm_id', 'tags', 'references'}
-
         :param object_id: ObjectId
         :param osm_id: int
         :return: None
@@ -2892,8 +2434,6 @@ class MongodbDatabaseConnection(object):
     def print_way_documents(self, object_ids=None, osm_ids=None, counter=None):
         """
         Print multiple way_documents.
-
-        way_document: {'_id', 'osm_id', 'tags', 'references'}
 
         :param object_ids: [ObjectId]
         :param osm_ids: [int]
@@ -2926,11 +2466,6 @@ class MongodbDatabaseConnection(object):
         """
         Print a bus_stop_waypoints_document.
 
-        bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_object_id]]
-        }
         :param bus_stop_waypoints_document
         :param object_id: ObjectId
         :param starting_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
@@ -2964,11 +2499,6 @@ class MongodbDatabaseConnection(object):
         """
         Print multiple bus_stop_waypoints_documents.
 
-        bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_object_id]]
-        }
         :param object_ids: [ObjectId]
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         :param bus_stop_names: [string]
@@ -2993,21 +2523,6 @@ class MongodbDatabaseConnection(object):
         """
         Print a detailed_bus_stop_waypoints_document.
 
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
-        bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_object_id]]
-        }
-        detailed_bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_document]]
-        }
         :param detailed_bus_stop_waypoints_document
         :param object_id: ObjectId
         :param starting_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
@@ -3040,21 +2555,6 @@ class MongodbDatabaseConnection(object):
         """
         Print multiple detailed_bus_stop_waypoints_documents.
 
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
-        bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_object_id]]
-        }
-        detailed_bus_stop_waypoints_document: {
-            '_id', 'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'waypoints': [[edge_document]]
-        }
         :param object_ids: [ObjectId]
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         :param bus_stop_names: [string]
@@ -3079,23 +2579,6 @@ class MongodbDatabaseConnection(object):
         """
         Print multiple timetable_documents.
 
-        timetable_document: {
-            '_id', 'line_id',
-            'timetable_entries': [{
-                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime', 'number_of_onboarding_passengers',
-                'number_of_deboarding_passengers', 'number_of_current_passengers',
-                'route': {'total_distance', 'total_time', 'node_osm_ids', 'points', 'edges',
-                          'distances_from_starting_node', 'times_from_starting_node',
-                          'distances_from_previous_node', 'times_from_previous_node'}}],
-            'travel_requests': [{
-                '_id', 'client_id', 'line_id',
-                'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-                'departure_datetime', 'arrival_datetime',
-                'starting_timetable_entry_index', 'ending_timetable_entry_index'}]
-        }
         :param object_ids: [ObjectId]
         :param line_ids: [int]
         :param timetables_control: bool
@@ -3121,11 +2604,6 @@ class MongodbDatabaseConnection(object):
         """
         Print a traffic_density_document.
 
-        traffic_density_document: {
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'traffic_density_values': [[{'edge_object_id', 'traffic_density'}]]
-        }
         :param traffic_density_document
         :return: None
         """
@@ -3140,11 +2618,6 @@ class MongodbDatabaseConnection(object):
         """
         Print multiple traffic_density_documents.
 
-        traffic_density_document: {
-            'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
-            'traffic_density_values': [[{'edge_object_id', 'traffic_density'}]]
-        }
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         :param bus_stop_names: [string]
         :return: None
@@ -3160,9 +2633,6 @@ class MongodbDatabaseConnection(object):
         """
         Print a traffic_event_document.
 
-        traffic_event_document: {
-            '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
-        }
         :param traffic_event_document: traffic_event_document
         :param object_id: ObjectId
         :param event_id: string
@@ -3176,14 +2646,11 @@ class MongodbDatabaseConnection(object):
 
         print traffic_event_document
 
-    def print_traffic_event_documents(self, traffic_event_documents=None, object_ids=None, event_ids=None,
-                                      counter=None):
+    def print_traffic_event_documents(self, traffic_event_documents=None, object_ids=None,
+                                      event_ids=None, counter=None):
         """
         Print multiple traffic_event_documents.
 
-        traffic_event_document: {
-            '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
-        }
         :param traffic_event_documents: [traffic_event_documents]
         :param object_ids: [ObjectId]
         :param event_ids: [string]
@@ -3216,11 +2683,6 @@ class MongodbDatabaseConnection(object):
         """
         Update the traffic_density value of an edge_document.
 
-        edge_document: {
-            '_id', 'starting_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
-            'max_speed', 'road_type', 'way_id', 'traffic_density'
-        }
         :param edge_object_id: ObjectId of edge document
         :param new_traffic_density_value: float [0, 1]
         :return: True if an edge_document was updated, otherwise False.
