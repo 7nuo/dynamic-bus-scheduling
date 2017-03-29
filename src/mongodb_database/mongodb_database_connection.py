@@ -474,10 +474,45 @@ class MongodbDatabaseConnection(object):
         Delete multiple bus_stop_waypoints_documents.
 
         :param object_ids: [ObjectId]
-        :return: The number of deleted documents
+        :return: The number of deleted documents.
         """
         processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
         result = self.bus_stop_waypoints_documents_collection.delete_many({'_id': {'$in': processed_object_ids}})
+        return result.deleted_count
+
+    def delete_bus_vehicle_document(self, object_id=None, bus_vehicle_id=None):
+        """
+        Delete a bus_vehicle_document.
+
+        :param object_id: ObjectId
+        :param bus_vehicle_id: int
+        :return: True if the document was successfully deleted, otherwise False.
+        """
+        if object_id is not None:
+            result = self.bus_vehicle_documents_collection.delete_one({'_id': ObjectId(object_id)})
+        elif bus_vehicle_id is not None:
+            result = self.bus_vehicle_documents_collection.delete_one({'bus_vehicle_id': bus_vehicle_id})
+        else:
+            return False
+
+        return result.deleted_count == 1
+
+    def delete_bus_vehicle_documents(self, object_ids=None, bus_vehicle_ids=None):
+        """
+        Delete multiple bus_vehicle_documents.
+
+        :param object_ids: [ObjectId]
+        :param bus_vehicle_ids: [int]
+        :return: The number of deleted documents.
+        """
+        if object_ids is not None:
+            processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
+            result = self.bus_vehicle_documents_collection.delete_many({'_id': {'$in': processed_object_ids}})
+        elif bus_vehicle_ids is not None:
+            result = self.bus_vehicle_documents_collection.delete_many({'bus_vehicle_id': {'$in': bus_vehicle_ids}})
+        else:
+            return 0
+
         return result.deleted_count
 
     def delete_edge_document(self, object_id=None, starting_node_osm_id=None, ending_node_osm_id=None):
@@ -1030,6 +1065,59 @@ class MongodbDatabaseConnection(object):
             detailed_bus_stop_waypoints_documents.append(detailed_bus_stop_waypoints_document)
 
         return detailed_bus_stop_waypoints_documents
+
+    def find_bus_vehicle_document(self, object_id=None, bus_vehicle_id=None):
+        """
+        Retrieve a bus_vehicle_document.
+
+        :param object_id: ObjectId
+        :param bus_vehicle_id: int
+        :return: bus_vehicle_document
+        """
+        if object_id is not None:
+            bus_vehicle_document = self.bus_vehicle_documents_collection.find_one({
+                '_id': ObjectId(object_id)
+            })
+        elif bus_vehicle_id is not None:
+            bus_vehicle_document = self.bus_vehicle_documents_collection.find_one({
+                'bus_vehicle_id': bus_vehicle_id
+            })
+        else:
+            return None
+
+        return bus_vehicle_document
+
+    def find_bus_vehicle_documents(self, object_ids=None, bus_vehicle_ids=None, in_dictionary=False):
+        """
+        Retrieve multiple bus_vehicle_documents.
+
+        :param object_ids: [ObjectId]
+        :param bus_vehicle_ids: [int]
+        :param in_dictionary: bool
+        :return: bus_vehicle_documents: [bus_vehicle_document] or {bus_vehicle_id -> bus_vehicle_document}
+        """
+        if object_ids is not None:
+            processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
+            bus_vehicle_documents_cursor = self.bus_vehicle_documents_collection.find(
+                {'_id': {'$in': processed_object_ids}}
+            )
+        elif bus_vehicle_ids is not None:
+            bus_vehicle_documents_cursor = self.bus_vehicle_documents_collection.find(
+                {'bus_vehicle_id': {'$in': bus_vehicle_ids}}
+            )
+        else:
+            bus_vehicle_documents_cursor = self.bus_vehicle_documents_collection.find({})
+
+        if in_dictionary:
+            bus_vehicle_documents = {}
+
+            for bus_vehicle_document in bus_vehicle_documents_cursor:
+                bus_vehicle_id = bus_vehicle_document.get('bus_vehicle_id')
+                bus_vehicle_documents[bus_vehicle_id] = bus_vehicle_document
+        else:
+            bus_vehicle_documents = list(bus_vehicle_documents_cursor)
+
+        return bus_vehicle_documents
 
     def find_edge_document(self, object_id=None, starting_node_osm_id=None, ending_node_osm_id=None):
         """
@@ -1830,9 +1918,9 @@ class MongodbDatabaseConnection(object):
             key = {'_id': ObjectId(bus_stop_waypoints_document.get('_id'))}
             data = {
                 '$set': {
-                    'starting_bus_stop': starting_bus_stop,
-                    'ending_bus_stop': ending_bus_stop,
-                    'waypoints': waypoints
+                    'starting_bus_stop': bus_stop_waypoints_document.get('starting_bus_stop'),
+                    'ending_bus_stop': bus_stop_waypoints_document.get('ending_bus_stop'),
+                    'waypoints': bus_stop_waypoints_document.get('waypoints')
                 }
             }
             result = self.bus_stop_waypoints_documents_collection.update_one(key, data, upsert=True)
@@ -1848,8 +1936,64 @@ class MongodbDatabaseConnection(object):
 
         return new_object_id
 
-    def insert_edge_document(self, edge_document=None, starting_node=None, ending_node=None, max_speed=None,
-                             road_type=None, way_id=None, traffic_density=None):
+    def insert_bus_vehicle_document(self, bus_vehicle_document=None, bus_vehicle_id=None,
+                                    maximum_capacity=None, routes=None):
+        """
+        Insert a new bus_vehicle_document or update, if it already exists in the database.
+
+        :param bus_vehicle_document
+        :param bus_vehicle_id: int
+        :param maximum_capacity: int
+        :param routes: [{'starting_datetime', 'ending_datetime', 'timetable_id'}]
+        :return: new_object_id: ObjectId
+        """
+        if bus_vehicle_document is not None:
+            key = {
+                '_id': ObjectId(bus_vehicle_document.get('_id'))
+            }
+            data = {
+                '$set': {
+                    'bus_vehicle_id': bus_vehicle_document.get('bus_vehicle_id'),
+                    'maximum_capacity': bus_vehicle_document.get('maximum_capacity'),
+                    'routes': bus_vehicle_document.get('routes')
+                }
+            }
+            result = self.bus_vehicle_documents_collection.update_one(key, data, upsert=True)
+            new_object_id = result.upserted_id
+        else:
+            bus_vehicle_document = {
+                'bus_vehicle_id': bus_vehicle_id,
+                'maximum_capacity': maximum_capacity,
+                'routes': routes
+            }
+            result = self.bus_vehicle_documents_collection.insert_one(bus_vehicle_document)
+            new_object_id = result.inserted_id
+
+        return new_object_id
+
+    def insert_bus_vehicle_documents(self, bus_vehicle_documents, insert_many=False):
+        """
+        Insert multiple bus_vehicle_documents or update existing ones.
+
+        :param bus_vehicle_documents:
+        :param insert_many: bool
+        :return: new_object_ids: [ObjectId]
+        """
+        new_object_ids = []
+
+        if bus_vehicle_documents:
+            if insert_many:
+                result = self.bus_vehicle_documents_collection.insert_many(bus_vehicle_documents)
+                new_object_ids = result.inserted_ids
+            else:
+                for bus_vehicle_document in bus_vehicle_documents:
+                    new_object_id = self.insert_bus_vehicle_document(bus_vehicle_document=bus_vehicle_document)
+                    new_object_ids.append(new_object_id)
+
+        return new_object_ids
+
+    def insert_edge_document(self, edge_document=None, starting_node=None, ending_node=None,
+                             max_speed=None, road_type=None, way_id=None, traffic_density=None):
         """
         Insert an edge_document.
 
@@ -2239,6 +2383,45 @@ class MongodbDatabaseConnection(object):
                 print bus_stop_document
 
         print 'number_of_bus_stop_documents:', number_of_bus_stop_documents
+
+    def print_bus_vehicle_document(self, object_id=None, bus_vehicle_id=None):
+        """
+        Print a bus_vehicle_document.
+
+        :param object_id: ObjectId
+        :param bus_vehicle_id: int
+        :return: None
+        """
+        bus_vehicle_document = self.find_bus_vehicle_document(
+            object_id=object_id,
+            bus_vehicle_id=bus_vehicle_id
+        )
+        print bus_vehicle_document
+
+    def print_bus_vehicle_documents(self, object_ids=None, bus_vehicle_ids=None, counter=None):
+        """
+        Print multiple bus_vehicle_documents.
+
+        :param object_ids: [ObjectId]
+        :param bus_vehicle_ids: [int]
+        :param counter: int
+        :return: None
+        """
+        bus_vehicle_documents = self.find_bus_vehicle_documents(
+            object_ids=object_ids,
+            bus_vehicle_ids=bus_vehicle_ids
+        )
+        number_of_bus_vehicle_documents = len(bus_vehicle_documents)
+
+        if counter is None or number_of_bus_vehicle_documents <= counter:
+            for bus_vehicle_document in bus_vehicle_documents:
+                print bus_vehicle_document
+        else:
+            for i in range(0, counter):
+                bus_vehicle_document = bus_vehicle_documents[i]
+                print bus_vehicle_document
+
+        print 'number_of_bus_vehicle_documents:', number_of_bus_vehicle_documents
 
     def print_edge_document(self, object_id=None, starting_node_osm_id=None, ending_node_osm_id=None):
         """
