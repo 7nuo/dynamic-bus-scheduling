@@ -212,14 +212,14 @@ class LookAheadHandlerTester(object):
 
         log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
-    def test_generate_bus_line(self, line_id, bus_stop_names):
+    def test_generate_bus_line(self, bus_stop_names, line_id=None):
         self.log_message = 'test_generate_bus_line: starting'
         log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
         self.start_time = time.time()
         self.look_ahead_handler.generate_bus_line(
-            line_id=line_id,
-            bus_stop_names=bus_stop_names
+            bus_stop_names=bus_stop_names,
+            line_id=line_id
         )
         elapsed_time = time.time() - self.start_time
 

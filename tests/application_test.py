@@ -435,8 +435,8 @@ if __name__ == '__main__':
         # 9. (look_ahead_handler) - test_generate_bus_line
         elif selection == '9':
             application_tester.look_ahead_handler_tester.test_generate_bus_line(
-                line_id=testing_bus_line_id,
-                bus_stop_names=testing_bus_stop_names
+                bus_stop_names=testing_bus_stop_names,
+                line_id=testing_bus_line_id
             )
 
         # 10. (mongodb_database) - print_bus_line_documents

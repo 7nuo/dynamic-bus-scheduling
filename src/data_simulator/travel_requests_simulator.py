@@ -278,12 +278,14 @@ class TravelRequestsSimulator(object):
         distribution_weighted_datetimes = [
             (initial_datetime + timedelta(hours=i),
              travel_requests_simulator_datetime_distribution_weights[i]) for i in range(0, 24)
-            ]
+        ]
         datetime_population = [val for val, cnt in distribution_weighted_datetimes for i in range(cnt)]
         travel_request_documents = []
+        maximum_client_id = self.mongodb_database_connection.get_maximum_or_minimum(collection='travel_request')
 
         for i in range(0, number_of_travel_request_documents):
-            client_id = i
+            client_id = maximum_client_id + 1
+            maximum_client_id = client_id
             starting_bus_stop_index = random.randint(0, number_of_bus_stops - 2)
             starting_bus_stop = bus_stops[starting_bus_stop_index]
             ending_bus_stop_index = random.randint(starting_bus_stop_index + 1, number_of_bus_stops - 1)

@@ -1620,6 +1620,48 @@ class MongodbDatabaseConnection(object):
 
         return ending_nodes_dictionary
 
+    def get_maximum_or_minimum(self, collection, maximum=True):
+        """
+        Get maximum or minimum.
+
+        :param collection: ('bus_line' or 'bus_vehicle' or 'timetable' or 'travel_request')
+        :param maximum: bool
+        :return: maximum or minimum ('line_id' or 'bus_vehicle_id' or 'timetable_id' or 'client_id')
+                 (0 if there is no element)
+        """
+        # order: (-1: Descending Order, 1: Ascending Order)
+        if maximum:
+            order = -1
+        else:
+            order = 1
+
+        # The corresponding collection is sorted and a cursor containing the first element is retrieved.
+        if collection == 'bus_line':
+            comparison_entry = 'line_id'
+            comparison_cursor = self.bus_line_documents_collection.find({}).sort(comparison_entry, order).limit(1)
+
+        elif collection == 'bus_vehicle':
+            comparison_entry = 'bus_vehicle_id'
+            comparison_cursor = self.bus_vehicle_documents_collection.find({}).sort(comparison_entry, order).limit(1)
+
+        elif collection == 'timetable':
+            comparison_entry = 'timetable_id'
+            comparison_cursor = self.timetable_documents_collection.find({}).sort(comparison_entry, order).limit(1)
+
+        elif collection == 'travel_request':
+            comparison_entry = 'client_id'
+            comparison_cursor = self.travel_request_documents_collection.find({}).sort(comparison_entry, order).limit(1)
+
+        else:
+            return 0
+
+        # The first element is retrieved.
+        result = [cursor_element.get(comparison_entry) for cursor_element in comparison_cursor]
+        if result:
+            return result[0]
+        else:
+            return 0
+
     def get_node_documents_cursor(self):
         """
         Retrieve a cursor of all node_documents.

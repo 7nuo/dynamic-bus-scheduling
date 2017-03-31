@@ -159,14 +159,14 @@ class LookAheadHandler(object):
         log(module_name='look_ahead_handler', log_type='DEBUG',
             log_message='mongodb_database_connection: established')
 
-    def generate_bus_line(self, line_id, bus_stop_names):
+    def generate_bus_line(self, bus_stop_names, line_id=None):
         """
         Generate a bus_line, consisted of a line_id and a list of bus_stops, and store it to the corresponding
         collection of the System Database. Moreover, identify all the possible waypoints between the bus_stops
         of the bus_line, and populate the BusStopWaypoints collection.
 
-        :param line_id: int
         :param bus_stop_names: [string]
+        :param line_id: int
         :return: None
         """
         # 1: The inputs: line_id and bus_stop_names are provided to the function, so as as a bus_line
@@ -176,6 +176,10 @@ class LookAheadHandler(object):
         #    the provided bus_stop_names. The function returns None and the bus_line is not generated,
         #    in case there is a bus_stop_name which does not correspond to a stored bus_stop.
         #
+        if line_id is None:
+            maximum_line_id = self.mongodb_database_connection.get_maximum_or_minimum(collection='bus_line')
+            line_id = maximum_line_id + 1
+
         bus_stops = []
 
         for bus_stop_name in bus_stop_names:
