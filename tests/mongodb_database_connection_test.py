@@ -34,7 +34,7 @@ address_document: {
     '_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}
 }
 bus_line_document: {
-    '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+    '_id', 'bus_line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
 }
 bus_stop_document: {
     '_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}
@@ -65,7 +65,7 @@ point_document: {
     '_id', 'osm_id', 'point': {'longitude', 'latitude'}
 }
 timetable_document: {
-    '_id', 'timetable_id', 'line_id', 'bus_vehicle_id',
+    '_id', 'timetable_id', 'bus_line_id', 'bus_vehicle_id',
     'timetable_entries': [{
         'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -78,7 +78,7 @@ timetable_document: {
         }
     }],
     'travel_requests': [{
-        '_id', 'client_id', 'line_id',
+        '_id', 'client_id', 'bus_line_id',
         'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'departure_datetime', 'arrival_datetime',
@@ -89,7 +89,7 @@ traffic_event_document: {
     '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
 }
 travel_request_document: {
-    '_id', 'client_id', 'line_id',
+    '_id', 'client_id', 'bus_line_id',
     'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
     'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
     'departure_datetime', 'arrival_datetime',
@@ -314,12 +314,12 @@ class MongodbDatabaseConnectionTester(object):
             counter=counter
         )
 
-    def print_bus_line_documents(self, object_ids=None, line_ids=None, counter=None):
+    def print_bus_line_documents(self, object_ids=None, bus_line_ids=None, counter=None):
         """
         Print multiple bus_line_documents.
 
         :param object_ids: [ObjectId]
-        :param line_ids: [int]
+        :param bus_line_ids: [int]
         :param counter: int
         :return: None
         """
@@ -327,7 +327,7 @@ class MongodbDatabaseConnectionTester(object):
             log_message='print_bus_line_documents')
         self.mongodb_database_connection.print_bus_line_documents(
             object_ids=object_ids,
-            line_ids=line_ids,
+            bus_line_ids=bus_line_ids,
             counter=counter
         )
 
@@ -350,14 +350,14 @@ class MongodbDatabaseConnectionTester(object):
             counter=counter
         )
 
-    def print_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None, bus_stop_names=None, line_id=None):
+    def print_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None, bus_stop_names=None, bus_line_id=None):
         """
         Print multiple bus_stop_waypoints_documents.
 
         :param object_ids: [ObjectId]
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         :param bus_stop_names: [string]
-        :param line_id: int
+        :param bus_line_id: int
         :return: None
         """
         log(module_name='mongodb_database_connection_test', log_type='INFO',
@@ -366,18 +366,18 @@ class MongodbDatabaseConnectionTester(object):
             object_ids=object_ids,
             bus_stops=bus_stops,
             bus_stop_names=bus_stop_names,
-            line_id=line_id
+            bus_line_id=bus_line_id
         )
 
     def print_detailed_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None,
-                                                    bus_stop_names=None, line_id=None):
+                                                    bus_stop_names=None, bus_line_id=None):
         """
         Print multiple detailed_bus_stop_waypoints_documents.
 
         :param object_ids: [ObjectId]
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         :param bus_stop_names: [string]
-        :param line_id: int
+        :param bus_line_id: int
         :return: None
         """
         log(module_name='mongodb_database_connection_test', log_type='INFO',
@@ -386,7 +386,7 @@ class MongodbDatabaseConnectionTester(object):
             object_ids=object_ids,
             bus_stops=bus_stops,
             bus_stop_names=bus_stop_names,
-            line_id=line_id
+            bus_line_id=bus_line_id
         )
 
     def print_edge_documents(self, object_ids=None, starting_node_osm_id=None, ending_node_osm_id=None, counter=None):
@@ -442,13 +442,13 @@ class MongodbDatabaseConnectionTester(object):
             counter=counter
         )
 
-    def print_timetable_documents(self, object_ids=None, line_ids=None, counter=None, timetables_control=True,
+    def print_timetable_documents(self, object_ids=None, bus_line_ids=None, counter=None, timetables_control=True,
                                   timetable_entries_control=False, travel_requests_control=False):
         """
         Print multiple timetable_documents.
 
         :param object_ids: [ObjectId]
-        :param line_ids: [int]
+        :param bus_line_ids: [int]
         :param counter: int
         :param timetables_control: bool
         :param timetable_entries_control: bool
@@ -459,7 +459,7 @@ class MongodbDatabaseConnectionTester(object):
             log_message='print_timetable_documents')
         self.mongodb_database_connection.print_timetable_documents(
             object_ids=object_ids,
-            line_ids=line_ids,
+            bus_line_ids=bus_line_ids,
             counter=counter,
             timetables_control=timetables_control,
             timetable_entries_control=timetable_entries_control,
@@ -481,7 +481,7 @@ class MongodbDatabaseConnectionTester(object):
             bus_stop_names=bus_stop_names
         )
 
-    def print_travel_request_documents(self, object_ids=None, client_ids=None, line_ids=None,
+    def print_travel_request_documents(self, object_ids=None, client_ids=None, bus_line_ids=None,
                                        min_departure_datetime=None, max_departure_datetime=None,
                                        counter=None):
         """
@@ -489,7 +489,7 @@ class MongodbDatabaseConnectionTester(object):
 
         :param object_ids: [ObjectId]
         :param client_ids: [int]
-        :param line_ids: [int]
+        :param bus_line_ids: [int]
         :param min_departure_datetime: datetime
         :param max_departure_datetime: datetime
         :param counter: int
@@ -500,7 +500,7 @@ class MongodbDatabaseConnectionTester(object):
         self.mongodb_database_connection.print_travel_request_documents(
             object_ids=object_ids,
             client_ids=client_ids,
-            line_ids=line_ids,
+            bus_line_ids=bus_line_ids,
             min_departure_datetime=min_departure_datetime,
             max_departure_datetime=max_departure_datetime,
             counter=counter

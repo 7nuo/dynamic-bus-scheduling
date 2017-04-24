@@ -34,7 +34,7 @@ address_document: {
     '_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}
 }
 bus_line_document: {
-    '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+    '_id', 'bus_line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
 }
 bus_stop_document: {
     '_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}
@@ -65,7 +65,7 @@ point_document: {
     '_id', 'osm_id', 'point': {'longitude', 'latitude'}
 }
 timetable_document: {
-    '_id', 'timetable_id', 'line_id', 'bus_vehicle_id',
+    '_id', 'timetable_id', 'bus_line_id', 'bus_vehicle_id',
     'timetable_entries': [{
         'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -78,7 +78,7 @@ timetable_document: {
         }
     }],
     'travel_requests': [{
-        '_id', 'client_id', 'line_id',
+        '_id', 'client_id', 'bus_line_id',
         'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'departure_datetime', 'arrival_datetime',
@@ -89,7 +89,7 @@ traffic_event_document: {
     '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
 }
 travel_request_document: {
-    '_id', 'client_id', 'line_id',
+    '_id', 'client_id', 'bus_line_id',
     'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
     'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
     'departure_datetime', 'arrival_datetime',
@@ -153,18 +153,20 @@ __credits__ = [
 
 
 class TimetableGenerator(object):
-    def __init__(self, line_id, bus_stops, travel_requests):
+    def __init__(self, bus_line_id, bus_stops, travel_requests, maximum_timetable_id_in_database):
         """
         Initialize the TimetableGenerator, send a request to the RouteGenerator and receive the less time-consuming
         route which connects the provided bus stops.
 
-        :param line_id: int
+        :param bus_line_id: int
         :param bus_stops: [bus_stop_document]
         :param travel_requests: [travel_request_document]
+        :param maximum_timetable_id_in_database: int
         :return: None
         """
+        self.maximum_timetable_id_in_database = maximum_timetable_id_in_database
         self.timetables = []
-        self.line_id = line_id
+        self.bus_line_id = bus_line_id
         self.bus_stops = bus_stops
         self.travel_requests = travel_requests
         self.route_generator_response = get_route_between_multiple_bus_stops(bus_stops=bus_stops)
@@ -335,6 +337,21 @@ def adjust_timetable_entries(timetable, ideal_departure_datetimes):
         arrival_datetime = departure_datetime + timedelta(seconds=total_time)
         timetable_entry['departure_datetime'] = departure_datetime
         timetable_entry['arrival_datetime'] = arrival_datetime
+
+
+def adjust_timetable_ids(timetables, maximum_timetable_id_in_database):
+    """
+    Adjust timetable_ids based on the maximum timetable_id, which is already stored in the database.
+
+    :param timetables: [timetable]
+    :param maximum_timetable_id_in_database: int
+    :return: None (Updates timetables)
+    """
+    previous_timetable_id = maximum_timetable_id_in_database
+
+    for timetable in timetables:
+        timetable['timetable_id'] = previous_timetable_id + 1
+        previous_timetable_id += 1
 
 
 def calculate_average_number_of_travel_requests_in_timetables(timetables):
@@ -663,7 +680,7 @@ def correspond_bus_vehicle_to_timetable(bus_vehicles, timetable):
         'starting_datetime', 'ending_datetime'
     }
     timetable_document: {
-        '_id', 'line_id',
+        '_id', 'bus_line_id',
         'timetable_entries': [{
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -673,7 +690,7 @@ def correspond_bus_vehicle_to_timetable(bus_vehicles, timetable):
                       'distances_from_starting_node', 'times_from_starting_node',
                       'distances_from_previous_node', 'times_from_previous_node'}}],
         'travel_requests': [{
-            '_id', 'client_id', 'line_id',
+            '_id', 'client_id', 'bus_line_id',
             'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
             'departure_datetime', 'arrival_datetime',
@@ -935,9 +952,9 @@ def generate_additional_timetable(timetable):
     :param timetable: timetable_document
     :return: additional_timetable
     """
-    line_id = timetable.get('line_id')
+    bus_line_id = timetable.get('bus_line_id')
     timetable_entries = timetable.get('timetable_entries')
-    additional_timetable = {'line_id': line_id, 'timetable_entries': [], 'travel_requests': []}
+    additional_timetable = {'bus_line_id': bus_line_id, 'timetable_entries': [], 'travel_requests': []}
 
     for timetable_entry in timetable_entries:
         additional_timetable_entry = {
@@ -970,11 +987,11 @@ def generate_additional_timetables(timetables):
     return additional_timetables
 
 
-def generate_initial_timetables(line_id, timetables_starting_datetime, timetables_ending_datetime,
+def generate_initial_timetables(bus_line_id, timetables_starting_datetime, timetables_ending_datetime,
                                 route_generator_response):
     """
 
-    :param line_id: int
+    :param bus_line_id: int
     :param timetables_starting_datetime: datetime
     :param timetables_ending_datetime: datetime
 
@@ -992,7 +1009,7 @@ def generate_initial_timetables(line_id, timetables_starting_datetime, timetable
 
     while current_datetime < timetables_ending_datetime:
         timetable = generate_new_timetable(
-            line_id=line_id,
+            bus_line_id=bus_line_id,
             timetable_starting_datetime=current_datetime,
             route_generator_response=route_generator_response
         )
@@ -1002,11 +1019,11 @@ def generate_initial_timetables(line_id, timetables_starting_datetime, timetable
     return timetables
 
 
-def generate_new_timetable(line_id, timetable_starting_datetime, route_generator_response):
+def generate_new_timetable(bus_line_id, timetable_starting_datetime, route_generator_response):
     """
     Generate a timetable starting from a provided datetime.
 
-    :param line_id: int
+    :param bus_line_id: int
     :param timetable_starting_datetime: datetime
 
     :param route_generator_response: [{
@@ -1019,7 +1036,7 @@ def generate_new_timetable(line_id, timetable_starting_datetime, route_generator
     :return: timetable: timetable_document
     """
     current_datetime = timetable_starting_datetime
-    timetable = {'line_id': line_id, 'timetable_entries': [], 'travel_requests': []}
+    timetable = {'bus_line_id': bus_line_id, 'timetable_entries': [], 'travel_requests': []}
 
     for intermediate_response in route_generator_response:
         starting_bus_stop = intermediate_response.get('starting_bus_stop')

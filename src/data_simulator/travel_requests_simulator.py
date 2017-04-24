@@ -34,7 +34,7 @@ address_document: {
     '_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}
 }
 bus_line_document: {
-    '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+    '_id', 'bus_line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
 }
 bus_stop_document: {
     '_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}
@@ -65,7 +65,7 @@ point_document: {
     '_id', 'osm_id', 'point': {'longitude', 'latitude'}
 }
 timetable_document: {
-    '_id', 'timetable_id', 'line_id', 'bus_vehicle_id',
+    '_id', 'timetable_id', 'bus_line_id', 'bus_vehicle_id',
     'timetable_entries': [{
         'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -78,7 +78,7 @@ timetable_document: {
         }
     }],
     'travel_requests': [{
-        '_id', 'client_id', 'line_id',
+        '_id', 'client_id', 'bus_line_id',
         'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'departure_datetime', 'arrival_datetime',
@@ -89,7 +89,7 @@ traffic_event_document: {
     '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
 }
 travel_request_document: {
-    '_id', 'client_id', 'line_id',
+    '_id', 'client_id', 'bus_line_id',
     'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
     'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
     'departure_datetime', 'arrival_datetime',
@@ -168,14 +168,14 @@ class TravelRequestsSimulator(object):
         log(module_name='travel_requests_simulator', log_type='DEBUG',
             log_message='clear_travel_request_documents_collection: ok')
 
-    def delete_travel_request_documents(self, object_ids=None, client_ids=None, line_ids=None,
+    def delete_travel_request_documents(self, object_ids=None, client_ids=None, bus_line_ids=None,
                                         min_departure_datetime=None, max_departure_datetime=None):
         """
         Delete multiple travel_request_documents.
 
         :param object_ids: [ObjectId]
         :param client_ids: [int]
-        :param line_ids: [int]
+        :param bus_line_ids: [int]
         :param min_departure_datetime: datetime
         :param max_departure_datetime
         :return: None
@@ -183,7 +183,7 @@ class TravelRequestsSimulator(object):
         self.mongodb_database_connection.delete_travel_request_documents(
             object_ids=object_ids,
             client_ids=client_ids,
-            line_ids=line_ids,
+            bus_line_ids=bus_line_ids,
             min_departure_datetime=min_departure_datetime,
             max_departure_datetime=max_departure_datetime
         )
@@ -216,7 +216,7 @@ class TravelRequestsSimulator(object):
             )
 
     def generate_travel_request_documents(self, initial_datetime, number_of_travel_request_documents,
-                                          bus_line=None, line_id=None):
+                                          bus_line=None, bus_line_id=None):
         """
         Generate a specific number of travel_request_documents, for the selected bus_line,
         for a 24hour period starting from a selected datetime, and store them at the
@@ -225,21 +225,21 @@ class TravelRequestsSimulator(object):
         :param initial_datetime: datetime
         :param number_of_travel_request_documents: int
         :param bus_line: bus_line_document
-        :param line_id: int
+        :param bus_line_id: int
         :return: None
         """
-        # 1: The inputs: initial_datetime, number_of_travel_request_documents, and (bus_line or line_id)
+        # 1: The inputs: initial_datetime, number_of_travel_request_documents, and (bus_line or bus_line_id)
         #    are provided to the Travel Requests Simulator, so as a specific number of travel_request_documents
         #    to be generated, for the selected bus_line, for a 24hour period starting from
         #    the selected datetime.
         #
         # 2: If the provided bus_line is None, then the Travel Requests Simulator retrieves from the System Database
-        #    the bus_line which corresponds to the provided line_id.
+        #    the bus_line which corresponds to the provided bus_line_id.
         #
-        if bus_line is None and line_id is None:
+        if bus_line is None and bus_line_id is None:
             return None
         elif bus_line is None:
-            bus_line = self.mongodb_database_connection.find_bus_line_document(line_id=line_id)
+            bus_line = self.mongodb_database_connection.find_bus_line_document(bus_line_id=bus_line_id)
         else:
             pass
 
@@ -296,7 +296,7 @@ class TravelRequestsSimulator(object):
 
             travel_request_document = {
                 'client_id': client_id,
-                'line_id': line_id,
+                'bus_line_id': bus_line_id,
                 'starting_bus_stop': starting_bus_stop,
                 'ending_bus_stop': ending_bus_stop,
                 'departure_datetime': departure_datetime,

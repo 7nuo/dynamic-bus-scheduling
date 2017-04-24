@@ -34,7 +34,7 @@ address_document: {
     '_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}
 }
 bus_line_document: {
-    '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+    '_id', 'bus_line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
 }
 bus_stop_document: {
     '_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}
@@ -65,7 +65,7 @@ point_document: {
     '_id', 'osm_id', 'point': {'longitude', 'latitude'}
 }
 timetable_document: {
-    '_id', 'timetable_id', 'line_id', 'bus_vehicle_id',
+    '_id', 'timetable_id', 'bus_line_id', 'bus_vehicle_id',
     'timetable_entries': [{
         'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -78,7 +78,7 @@ timetable_document: {
         }
     }],
     'travel_requests': [{
-        '_id', 'client_id', 'line_id',
+        '_id', 'client_id', 'bus_line_id',
         'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'departure_datetime', 'arrival_datetime',
@@ -89,7 +89,7 @@ traffic_event_document: {
     '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
 }
 travel_request_document: {
-    '_id', 'client_id', 'line_id',
+    '_id', 'client_id', 'bus_line_id',
     'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
     'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
     'departure_datetime', 'arrival_datetime',
@@ -253,7 +253,7 @@ class Router(object):
 
         :return: bus_stops_dictionary: {name -> {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}}
         """
-        bus_stops_dictionary = self.mongodb_database_connection.get_bus_stops()
+        bus_stops_dictionary = self.mongodb_database_connection.find_bus_stop_documents(in_dictionary=True)
         return bus_stops_dictionary
 
     def get_bus_stops_list(self):
@@ -262,7 +262,7 @@ class Router(object):
 
         :return: bus_stops_list: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         """
-        bus_stops_list = self.mongodb_database_connection.get_bus_stop_documents_list()
+        bus_stops_list = self.mongodb_database_connection.find_bus_stop_documents()
         return bus_stops_list
 
     def get_edges_dictionary(self):
@@ -273,7 +273,7 @@ class Router(object):
                                             'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
                                             'max_speed', 'road_type', 'way_id', 'traffic_density'}]}
         """
-        edges_dictionary = self.mongodb_database_connection.get_edges_dictionary()
+        edges_dictionary = self.mongodb_database_connection.find_edge_documents(in_dictionary=True)
         return edges_dictionary
 
     def get_edges_list(self):
@@ -284,7 +284,7 @@ class Router(object):
                                'ending_node': {'osm_id', 'point': {'longitude', 'latitude'}},
                                'max_speed', 'road_type', 'way_id', 'traffic_density'}]
         """
-        edges_list = self.mongodb_database_connection.get_edge_documents_list()
+        edges_list = self.mongodb_database_connection.find_edge_documents()
         return edges_list
 
     def get_points_dictionary(self):
@@ -293,7 +293,7 @@ class Router(object):
 
         :return points_dictionary: {osm_id -> {'_id', 'osm_id', 'point': {'longitude', 'latitude'}}}
         """
-        points_dictionary = self.mongodb_database_connection.get_points()
+        points_dictionary = self.mongodb_database_connection.find_point_documents(in_dictionary=True)
         return points_dictionary
 
     def get_route_between_two_bus_stops(self, starting_bus_stop=None, ending_bus_stop=None,

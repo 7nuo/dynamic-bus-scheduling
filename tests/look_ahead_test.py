@@ -34,7 +34,7 @@ address_document: {
     '_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}
 }
 bus_line_document: {
-    '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+    '_id', 'bus_line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
 }
 bus_stop_document: {
     '_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}
@@ -65,7 +65,7 @@ point_document: {
     '_id', 'osm_id', 'point': {'longitude', 'latitude'}
 }
 timetable_document: {
-    '_id', 'timetable_id', 'line_id', 'bus_vehicle_id',
+    '_id', 'timetable_id', 'bus_line_id', 'bus_vehicle_id',
     'timetable_entries': [{
         'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -78,7 +78,7 @@ timetable_document: {
         }
     }],
     'travel_requests': [{
-        '_id', 'client_id', 'line_id',
+        '_id', 'client_id', 'bus_line_id',
         'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'departure_datetime', 'arrival_datetime',
@@ -89,7 +89,7 @@ traffic_event_document: {
     '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
 }
 travel_request_document: {
-    '_id', 'client_id', 'line_id',
+    '_id', 'client_id', 'bus_line_id',
     'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
     'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
     'departure_datetime', 'arrival_datetime',
@@ -212,21 +212,21 @@ class LookAheadHandlerTester(object):
 
         log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
-    def test_generate_bus_line(self, bus_stop_names, line_id=None):
+    def test_generate_bus_line(self, bus_stop_names, bus_line_id=None):
         self.log_message = 'test_generate_bus_line: starting'
         log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
         self.start_time = time.time()
         self.look_ahead_handler.generate_bus_line(
             bus_stop_names=bus_stop_names,
-            line_id=line_id
+            bus_line_id=bus_line_id
         )
         elapsed_time = time.time() - self.start_time
 
         self.log_message = 'test_generate_bus_line: finished - elapsed_time = ' + str(elapsed_time) + ' sec'
         log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
-    def test_generate_timetables_for_bus_line(self, bus_line=None, line_id=None):
+    def test_generate_timetables_for_bus_line(self, bus_line=None, bus_line_id=None):
         self.log_message = 'generate_timetables_for_bus_line: starting'
         log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
@@ -237,7 +237,7 @@ class LookAheadHandlerTester(object):
             requests_min_departure_datetime=testing_travel_requests_min_departure_datetime,
             requests_max_departure_datetime=testing_travel_requests_max_departure_datetime,
             bus_line=bus_line,
-            line_id=line_id
+            bus_line_id=bus_line_id
         )
         self.elapsed_time = time.time() - self.start_time
 
@@ -280,12 +280,12 @@ class LookAheadHandlerTester(object):
             time.sleep(look_ahead_timetables_updater_timeout)
             time_difference = time.time() - initial_time
 
-    def test_update_timetables_of_bus_line(self, bus_line=None, line_id=None):
+    def test_update_timetables_of_bus_line(self, bus_line=None, bus_line_id=None):
         self.log_message = 'test_update_timetables_of_bus_line: starting'
         log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
         self.start_time = time.time()
-        self.look_ahead_handler.update_timetables_of_bus_line(bus_line=bus_line, line_id=line_id)
+        self.look_ahead_handler.update_timetables_of_bus_line(bus_line=bus_line, bus_line_id=bus_line_id)
         self.elapsed_time = time.time() - self.start_time
 
         self.log_message = 'test_update_timetables_of_bus_line: finished - elapsed_time = ' \
@@ -328,20 +328,20 @@ if __name__ == '__main__':
         # 1. test_generate_bus_line
         elif selection == '1':
             look_ahead_handler_tester.test_generate_bus_line(
-                line_id=testing_bus_line_id,
+                bus_line_id=testing_bus_line_id,
                 bus_stop_names=testing_bus_stop_names
             )
 
         # 2. test_generate_timetables_for_bus_line
         elif selection == '2':
             look_ahead_handler_tester.test_generate_timetables_for_bus_line(
-                line_id=testing_bus_line_id
+                bus_line_id=testing_bus_line_id
             )
 
         # 3. test update_timetables_of_bus_line
         elif selection == '3':
             look_ahead_handler_tester.test_update_timetables_of_bus_line(
-                line_id=testing_bus_line_id
+                bus_line_id=testing_bus_line_id
             )
 
         # 4. start_timetables_generator_process

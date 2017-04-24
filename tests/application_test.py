@@ -34,7 +34,7 @@ address_document: {
     '_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}
 }
 bus_line_document: {
-    '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+    '_id', 'bus_bus_line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
 }
 bus_stop_document: {
     '_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}
@@ -65,7 +65,7 @@ point_document: {
     '_id', 'osm_id', 'point': {'longitude', 'latitude'}
 }
 timetable_document: {
-    '_id', 'timetable_id', 'line_id', 'bus_vehicle_id',
+    '_id', 'timetable_id', 'bus_bus_line_id', 'bus_vehicle_id',
     'timetable_entries': [{
         'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -78,7 +78,7 @@ timetable_document: {
         }
     }],
     'travel_requests': [{
-        '_id', 'client_id', 'line_id',
+        '_id', 'client_id', 'bus_bus_line_id',
         'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'departure_datetime', 'arrival_datetime',
@@ -89,7 +89,7 @@ traffic_event_document: {
     '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
 }
 travel_request_document: {
-    '_id', 'client_id', 'line_id',
+    '_id', 'client_id', 'bus_bus_line_id',
     'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
     'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
     'departure_datetime', 'arrival_datetime',
@@ -208,10 +208,10 @@ class ApplicationTester(object):
         travel_requests_simulator_tester = TravelRequestsSimulatorTester()
         return travel_requests_simulator_tester
 
-    def start_traffic_data_simulator_tester(self, bus_line=None, line_id=None):
+    def start_traffic_data_simulator_tester(self, bus_line=None, bus_line_id=None):
         self.traffic_data_simulator_tester.test_generate_traffic_data_for_bus_line(
             bus_line=bus_line,
-            line_id=line_id
+            bus_line_id=bus_line_id
         )
 
 
@@ -436,7 +436,7 @@ if __name__ == '__main__':
         elif selection == '9':
             application_tester.look_ahead_handler_tester.test_generate_bus_line(
                 bus_stop_names=testing_bus_stop_names,
-                line_id=testing_bus_line_id
+                bus_line_id=testing_bus_line_id
             )
 
         # 10. (mongodb_database) - print_bus_line_documents
@@ -456,7 +456,7 @@ if __name__ == '__main__':
                 '\nnumber_of_travel_request_documents: ')
             )
             application_tester.travel_requests_simulator_tester.test_generate_travel_request_documents(
-                line_id=testing_bus_line_id,
+                bus_line_id=testing_bus_line_id,
                 initial_datetime=testing_travel_requests_min_departure_datetime,
                 number_of_travel_request_documents=number_of_travel_request_documents
             )
@@ -464,7 +464,7 @@ if __name__ == '__main__':
         # 13. (mongodb_database) - print_travel_request_documents
         elif selection == '13':
             application_tester.mongodb_database_connection_tester.print_travel_request_documents(
-                line_ids=[testing_bus_line_id],
+                bus_line_ids=[testing_bus_line_id],
                 min_departure_datetime=testing_travel_requests_min_departure_datetime,
                 max_departure_datetime=testing_travel_requests_max_departure_datetime,
                 counter=10
@@ -473,7 +473,7 @@ if __name__ == '__main__':
         # 14. (look_ahead_handler) - test_generate_timetables_for_bus_line
         elif selection == '14':
             application_tester.look_ahead_handler_tester.test_generate_timetables_for_bus_line(
-                line_id=testing_bus_line_id
+                bus_line_id=testing_bus_line_id
             )
 
         # 15. (mongodb_database) - print_timetable_documents
@@ -483,7 +483,7 @@ if __name__ == '__main__':
                 '\nnumber_of_timetable_documents: ')
             )
             application_tester.mongodb_database_connection_tester.print_timetable_documents(
-                line_ids=[testing_bus_line_id],
+                bus_line_ids=[testing_bus_line_id],
                 timetables_control=True,
                 timetable_entries_control=True,
                 travel_requests_control=True,
@@ -520,7 +520,7 @@ if __name__ == '__main__':
         # 18. (look_ahead_handler) - test_update_timetables_of_bus_line
         elif selection == '18':
             application_tester.look_ahead_handler_tester.test_update_timetables_of_bus_line(
-                line_id=testing_bus_line_id
+                bus_line_id=testing_bus_line_id
             )
 
         # 19. (look_ahead_handler) - start_timetables_generator_process

@@ -34,7 +34,7 @@ address_document: {
     '_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}
 }
 bus_line_document: {
-    '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+    '_id', 'bus_line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
 }
 bus_stop_document: {
     '_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}
@@ -65,7 +65,7 @@ point_document: {
     '_id', 'osm_id', 'point': {'longitude', 'latitude'}
 }
 timetable_document: {
-    '_id', 'timetable_id', 'line_id', 'bus_vehicle_id',
+    '_id', 'timetable_id', 'bus_line_id', 'bus_vehicle_id',
     'timetable_entries': [{
         'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -78,7 +78,7 @@ timetable_document: {
         }
     }],
     'travel_requests': [{
-        '_id', 'client_id', 'line_id',
+        '_id', 'client_id', 'bus_line_id',
         'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'departure_datetime', 'arrival_datetime',
@@ -89,7 +89,7 @@ traffic_event_document: {
     '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
 }
 travel_request_document: {
-    '_id', 'client_id', 'line_id',
+    '_id', 'client_id', 'bus_line_id',
     'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
     'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
     'departure_datetime', 'arrival_datetime',
@@ -168,6 +168,7 @@ class MongodbDatabaseConnection(object):
         - TravelRequestDocuments
         - WayDocuments
     """
+
     def __init__(self, host, port):
         self.mongo_client = MongoClient(host, port)
         self.db = self.mongo_client.dynamic_bus_scheduling
@@ -281,10 +282,14 @@ class MongodbDatabaseConnection(object):
 
     def clear_traffic_density(self):
         """
-        Set the traffic_density values of all edge documents to 0.
+        Set the traffic_density values of all edge_documents to 0.
         """
         key = {}
-        data = {'$set': {'traffic_density': 0.0}}
+        data = {
+            '$set': {
+                'traffic_density': 0.0
+            }
+        }
         self.edge_documents_collection.update_many(key, data, upsert=False)
 
     def clear_traffic_event_documents_collection(self):
@@ -314,26 +319,48 @@ class MongodbDatabaseConnection(object):
         result = self.way_documents_collection.delete_many({})
         return result.deleted_count
 
-    def convert_bus_stop_waypoints_document_to_detailed_bus_stop_waypoints_document(self, bus_stop_waypoints_document):
+    def convert_bus_stop_waypoints(self, bus_stop_waypoints_document=None,
+                                   detailed_bus_stop_waypoints_document=None):
         """
         Convert a bus_stop_waypoints_document to a detailed_bus_stop_waypoints document.
 
         :param bus_stop_waypoints_document
-        :return: detailed_bus_stop_waypoints_document
+        :param detailed_bus_stop_waypoints_document
+        :return: converted_bus_stop_waypoints: {
+                     'bus_stop_waypoints_document': bus_stop_waypoints_document,
+                     'detailed_bus_stop_waypoints_document': detailed_bus_stop_waypoints_document
+                 }
         """
-        lists_of_edge_object_ids = bus_stop_waypoints_document.get('waypoints')
-        lists_of_detailed_edges = []
+        if bus_stop_waypoints_document is not None:
+            lists_of_edge_documents = []
+            lists_of_edge_object_ids = bus_stop_waypoints_document.get('waypoints')
 
-        for list_of_edge_object_ids in lists_of_edge_object_ids:
-            list_of_detailed_edge_object_ids = [ObjectId(i) for i in list_of_edge_object_ids]
-            list_of_detailed_edges = [
-                self.edge_documents_collection.find_one({'_id': i}) for i in list_of_detailed_edge_object_ids
-            ]
-            lists_of_detailed_edges.append(list_of_detailed_edges)
+            for list_of_edge_object_ids in lists_of_edge_object_ids:
+                list_of_processed_edge_object_ids = [ObjectId(i) for i in list_of_edge_object_ids]
+                list_of_edge_documents = [
+                    self.edge_documents_collection.find_one({'_id': i}) for i in list_of_processed_edge_object_ids
+                ]
+                lists_of_edge_documents.append(list_of_edge_documents)
 
-        detailed_bus_stop_waypoints_document = bus_stop_waypoints_document
-        detailed_bus_stop_waypoints_document['waypoints'] = lists_of_detailed_edges
-        return detailed_bus_stop_waypoints_document
+            detailed_bus_stop_waypoints_document = bus_stop_waypoints_document
+            detailed_bus_stop_waypoints_document['waypoints'] = lists_of_edge_documents
+
+        elif detailed_bus_stop_waypoints_document is not None:
+            lists_of_edge_object_ids = []
+            lists_of_edge_documents = detailed_bus_stop_waypoints_document.get('waypoints')
+
+            for list_of_edge_documents in lists_of_edge_documents:
+                list_of_edge_object_ids = [edge_document.get('_id') for edge_document in list_of_edge_documents]
+                lists_of_edge_object_ids.append(list_of_edge_object_ids)
+
+            bus_stop_waypoints_document = detailed_bus_stop_waypoints_document
+            bus_stop_waypoints_document['waypoints'] = lists_of_edge_object_ids
+
+        converted_bus_stop_waypoints = {
+            'bus_stop_waypoints_document': bus_stop_waypoints_document,
+            'detailed_bus_stop_waypoints_document': detailed_bus_stop_waypoints_document
+        }
+        return converted_bus_stop_waypoints
 
     def delete_address_document(self, object_id=None, name=None):
         """
@@ -344,9 +371,13 @@ class MongodbDatabaseConnection(object):
         :return: True if the address_document was successfully deleted, otherwise False.
         """
         if object_id is not None:
-            result = self.address_documents_collection.delete_one({'_id': ObjectId(object_id)})
+            result = self.address_documents_collection.delete_one({
+                '_id': ObjectId(object_id)
+            })
         elif name is not None:
-            result = self.address_documents_collection.delete_one({'name': name})
+            result = self.address_documents_collection.delete_one({
+                'name': name
+            })
         else:
             return False
 
@@ -362,44 +393,56 @@ class MongodbDatabaseConnection(object):
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            result = self.address_documents_collection.delete_many({'_id': {'$in': processed_object_ids}})
+            result = self.address_documents_collection.delete_many({
+                '_id': {'$in': processed_object_ids}
+            })
         elif names is not None:
-            result = self.address_documents_collection.delete_many({'name': {'$in': names}})
+            result = self.address_documents_collection.delete_many({
+                'name': {'$in': names}
+            })
         else:
             return 0
 
         return result.deleted_count
 
-    def delete_bus_line_document(self, object_id=None, line_id=None):
+    def delete_bus_line_document(self, object_id=None, bus_line_id=None):
         """
         Delete a bus_line_document.
 
         :param object_id: ObjectId
-        :param line_id: int
+        :param bus_line_id: int
         :return: True if the bus_line_document was successfully deleted, otherwise False.
         """
         if object_id is not None:
-            result = self.bus_line_documents_collection.delete_one({'_id': ObjectId(object_id)})
-        elif line_id is not None:
-            result = self.bus_line_documents_collection.delete_one({'line_id': line_id})
+            result = self.bus_line_documents_collection.delete_one({
+                '_id': ObjectId(object_id)
+            })
+        elif bus_line_id is not None:
+            result = self.bus_line_documents_collection.delete_one({
+                'bus_line_id': bus_line_id
+            })
         else:
             return False
 
         return result.deleted_count == 1
 
-    def delete_bus_line_documents(self, object_ids=None, line_ids=None):
+    def delete_bus_line_documents(self, object_ids=None, bus_line_ids=None):
         """
         Delete multiple bus_line_document.
 
         :param object_ids: [ObjectId]
-        :param line_ids: [int]
+        :param bus_line_ids: [int]
         :return: The number of deleted documents.
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            result = self.bus_line_documents_collection.delete_many({'_id': {'$in': processed_object_ids}})
-        elif line_ids is not None:
-            result = self.bus_line_documents_collection.delete_many({'line_id': {'$in': line_ids}})
+            result = self.bus_line_documents_collection.delete_many({
+                '_id': {'$in': processed_object_ids}
+            })
+        elif bus_line_ids is not None:
+            result = self.bus_line_documents_collection.delete_many({
+                'bus_line_id': {'$in': bus_line_ids}
+            })
         else:
             return 0
 
@@ -414,9 +457,13 @@ class MongodbDatabaseConnection(object):
         :return: True if the bus_stop_document was successfully deleted, otherwise False.
         """
         if object_id is not None:
-            result = self.bus_stop_documents_collection.delete_one({'_id': ObjectId(object_id)})
+            result = self.bus_stop_documents_collection.delete_one({
+                '_id': ObjectId(object_id)
+            })
         elif osm_id is not None:
-            result = self.bus_stop_documents_collection.delete_one({'osm_id': osm_id})
+            result = self.bus_stop_documents_collection.delete_one({
+                'osm_id': osm_id
+            })
         else:
             return False
 
@@ -432,9 +479,13 @@ class MongodbDatabaseConnection(object):
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            result = self.bus_stop_documents_collection.delete_many({'_id': {'$in': processed_object_ids}})
+            result = self.bus_stop_documents_collection.delete_many({
+                '_id': {'$in': processed_object_ids}
+            })
         elif osm_ids is not None:
-            result = self.bus_stop_documents_collection.delete_many({'osm_id': {'$in': osm_ids}})
+            result = self.bus_stop_documents_collection.delete_many({
+                'osm_id': {'$in': osm_ids}
+            })
         else:
             return 0
 
@@ -477,7 +528,9 @@ class MongodbDatabaseConnection(object):
         :return: The number of deleted documents.
         """
         processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-        result = self.bus_stop_waypoints_documents_collection.delete_many({'_id': {'$in': processed_object_ids}})
+        result = self.bus_stop_waypoints_documents_collection.delete_many({
+            '_id': {'$in': processed_object_ids}
+        })
         return result.deleted_count
 
     def delete_bus_vehicle_document(self, object_id=None, bus_vehicle_id=None):
@@ -489,9 +542,13 @@ class MongodbDatabaseConnection(object):
         :return: True if the document was successfully deleted, otherwise False.
         """
         if object_id is not None:
-            result = self.bus_vehicle_documents_collection.delete_one({'_id': ObjectId(object_id)})
+            result = self.bus_vehicle_documents_collection.delete_one({
+                '_id': ObjectId(object_id)
+            })
         elif bus_vehicle_id is not None:
-            result = self.bus_vehicle_documents_collection.delete_one({'bus_vehicle_id': bus_vehicle_id})
+            result = self.bus_vehicle_documents_collection.delete_one({
+                'bus_vehicle_id': bus_vehicle_id
+            })
         else:
             return False
 
@@ -507,9 +564,13 @@ class MongodbDatabaseConnection(object):
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            result = self.bus_vehicle_documents_collection.delete_many({'_id': {'$in': processed_object_ids}})
+            result = self.bus_vehicle_documents_collection.delete_many({
+                '_id': {'$in': processed_object_ids}
+            })
         elif bus_vehicle_ids is not None:
-            result = self.bus_vehicle_documents_collection.delete_many({'bus_vehicle_id': {'$in': bus_vehicle_ids}})
+            result = self.bus_vehicle_documents_collection.delete_many({
+                'bus_vehicle_id': {'$in': bus_vehicle_ids}
+            })
         else:
             return 0
 
@@ -525,7 +586,9 @@ class MongodbDatabaseConnection(object):
         :return: True if the document was successfully deleted, otherwise False.
         """
         if object_id is not None:
-            result = self.edge_documents_collection.delete_one({'_id': ObjectId(object_id)})
+            result = self.edge_documents_collection.delete_one({
+                '_id': ObjectId(object_id)
+            })
         elif starting_node_osm_id is not None and ending_node_osm_id is not None:
             result = self.edge_documents_collection.delete_one({
                 'starting_node.osm_id': starting_node_osm_id,
@@ -547,11 +610,17 @@ class MongodbDatabaseConnection(object):
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            result = self.edge_documents_collection.delete_many({'_id': {'$in': processed_object_ids}})
+            result = self.edge_documents_collection.delete_many({
+                '_id': {'$in': processed_object_ids}
+            })
         elif starting_node_osm_id is not None:
-            result = self.edge_documents_collection.delete_many({'starting_node.osm_id': starting_node_osm_id})
+            result = self.edge_documents_collection.delete_many({
+                'starting_node.osm_id': starting_node_osm_id
+            })
         elif ending_node_osm_id is not None:
-            result = self.edge_documents_collection.delete_many({'ending_node.osm_id': ending_node_osm_id})
+            result = self.edge_documents_collection.delete_many({
+                'ending_node.osm_id': ending_node_osm_id
+            })
         else:
             return 0
 
@@ -566,9 +635,13 @@ class MongodbDatabaseConnection(object):
         :return: True if node_document was successfully deleted, otherwise False.
         """
         if object_id is not None:
-            result = self.node_documents_collection.delete_one({'_id': ObjectId(object_id)})
+            result = self.node_documents_collection.delete_one({
+                '_id': ObjectId(object_id)
+            })
         elif osm_id is not None:
-            result = self.node_documents_collection.delete_one({'osm_id': osm_id})
+            result = self.node_documents_collection.delete_one({
+                'osm_id': osm_id
+            })
         else:
             return False
 
@@ -584,9 +657,13 @@ class MongodbDatabaseConnection(object):
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            result = self.node_documents_collection.delete_many({'_id': {'$in': processed_object_ids}})
+            result = self.node_documents_collection.delete_many({
+                '_id': {'$in': processed_object_ids}
+            })
         elif osm_ids is not None:
-            result = self.node_documents_collection.delete_many({'osm_id': {'$in': osm_ids}})
+            result = self.node_documents_collection.delete_many({
+                'osm_id': {'$in': osm_ids}
+            })
         else:
             return 0
 
@@ -601,9 +678,13 @@ class MongodbDatabaseConnection(object):
         :return: True if the point_document was successfully deleted, otherwise False.
         """
         if object_id is not None:
-            result = self.point_documents_collection.delete_one({'_id': ObjectId(object_id)})
+            result = self.point_documents_collection.delete_one({
+                '_id': ObjectId(object_id)
+            })
         elif osm_id is not None:
-            result = self.point_documents_collection.delete_one({'osm_id': osm_id})
+            result = self.point_documents_collection.delete_one({
+                'osm_id': osm_id
+            })
         else:
             return False
 
@@ -619,9 +700,13 @@ class MongodbDatabaseConnection(object):
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            result = self.point_documents_collection.delete_many({'_id': {'$in': processed_object_ids}})
+            result = self.point_documents_collection.delete_many({
+                '_id': {'$in': processed_object_ids}
+            })
         elif osm_ids is not None:
-            result = self.point_documents_collection.delete_many({'osm_id': {'$in': osm_ids}})
+            result = self.point_documents_collection.delete_many({
+                'osm_id': {'$in': osm_ids}
+            })
         else:
             return 0
 
@@ -636,30 +721,40 @@ class MongodbDatabaseConnection(object):
         :return: True if the document was successfully deleted, otherwise False.
         """
         if object_id is not None:
-            result = self.timetable_documents_collection.delete_one({'_id': ObjectId(object_id)})
+            result = self.timetable_documents_collection.delete_one({
+                '_id': ObjectId(object_id)
+            })
         elif timetable_id is not None:
-            result = self.timetable_documents_collection.delete_one({'timetable_id': timetable_id})
+            result = self.timetable_documents_collection.delete_one({
+                'timetable_id': timetable_id
+            })
         else:
             return False
 
         return result.deleted_count == 1
 
-    def delete_timetable_documents(self, object_ids=None, timetable_ids=None, line_id=None):
+    def delete_timetable_documents(self, object_ids=None, timetable_ids=None, bus_line_id=None):
         """
         Delete multiple timetable_documents.
 
         :param object_ids: [ObjectId]
         :param timetable_ids: [int]
-        :param line_id: int
+        :param bus_line_id: int
         :return: The number of deleted documents.
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            result = self.timetable_documents_collection.delete_many({'_id': {'$in': processed_object_ids}})
+            result = self.timetable_documents_collection.delete_many({
+                '_id': {'$in': processed_object_ids}
+            })
         elif timetable_ids is not None:
-            result = self.timetable_documents_collection.delete_many({'timetable_id': {'$in': timetable_ids}})
-        elif line_id is not None:
-            result = self.timetable_documents_collection.delete_many({'line_id': line_id})
+            result = self.timetable_documents_collection.delete_many({
+                'timetable_id': {'$in': timetable_ids}
+            })
+        elif bus_line_id is not None:
+            result = self.timetable_documents_collection.delete_many({
+                'bus_line_id': bus_line_id
+            })
         else:
             return 0
 
@@ -674,9 +769,13 @@ class MongodbDatabaseConnection(object):
         :return: True if the traffic_event_document was successfully deleted, otherwise False.
         """
         if object_id is not None:
-            result = self.traffic_event_documents_collection.delete_one({'_id': ObjectId(object_id)})
+            result = self.traffic_event_documents_collection.delete_one({
+                '_id': ObjectId(object_id)
+            })
         elif event_id is not None:
-            result = self.traffic_event_documents_collection.delete_one({'event_id': event_id})
+            result = self.traffic_event_documents_collection.delete_one({
+                'event_id': event_id
+            })
         else:
             return False
 
@@ -692,9 +791,13 @@ class MongodbDatabaseConnection(object):
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            result = self.traffic_event_documents_collection.delete_many({'_id': {'$in': processed_object_ids}})
+            result = self.traffic_event_documents_collection.delete_many({
+                '_id': {'$in': processed_object_ids}
+            })
         elif event_ids is not None:
-            result = self.traffic_event_documents_collection.delete_many({'event_id': {'$in': event_ids}})
+            result = self.traffic_event_documents_collection.delete_many({
+                'event_id': {'$in': event_ids}
+            })
         else:
             return 0
 
@@ -707,40 +810,48 @@ class MongodbDatabaseConnection(object):
         :param object_id: ObjectId
         :return: True if the travel_request_document was successfully deleted, otherwise False.
         """
-        result = self.travel_request_documents_collection.delete_one({'_id': ObjectId(object_id)})
+        result = self.travel_request_documents_collection.delete_one({
+            '_id': ObjectId(object_id)
+        })
         return result.deleted_count == 1
 
-    def delete_travel_request_documents(self, object_ids=None, client_ids=None, line_ids=None,
+    def delete_travel_request_documents(self, object_ids=None, client_ids=None, bus_line_ids=None,
                                         min_departure_datetime=None, max_departure_datetime=None):
         """
         Delete multiple travel_request_documents.
 
         :param object_ids: [ObjectId]
         :param client_ids: [int]
-        :param line_ids: [int]
+        :param bus_line_ids: [int]
         :param min_departure_datetime: datetime
         :param max_departure_datetime
         :return: The number of deleted documents.
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            result = self.travel_request_documents_collection.delete_many({'_id': {'$in': processed_object_ids}})
+            result = self.travel_request_documents_collection.delete_many({
+                '_id': {'$in': processed_object_ids}
+            })
         elif client_ids is not None and min_departure_datetime is not None and max_departure_datetime is not None:
             result = self.travel_request_documents_collection.delete_many({
                 'client_id': {'$in': client_ids},
                 'departure_datetime': {'$gt': min_departure_datetime},
                 'departure_datetime': {'$lt': max_departure_datetime}
             })
-        elif line_ids is not None and min_departure_datetime is not None and max_departure_datetime is not None:
+        elif bus_line_ids is not None and min_departure_datetime is not None and max_departure_datetime is not None:
             result = self.travel_request_documents_collection.delete_many({
-                'line_id': {'$in': line_ids},
+                'bus_line_id': {'$in': bus_line_ids},
                 'departure_datetime': {'$gt': min_departure_datetime},
                 'departure_datetime': {'$lt': max_departure_datetime}
             })
         elif client_ids is not None:
-            result = self.travel_request_documents_collection.delete_many({'client_id': {'$in': client_ids}})
-        elif line_ids is not None:
-            result = self.travel_request_documents_collection.delete_many({'line_id': {'$in': line_ids}})
+            result = self.travel_request_documents_collection.delete_many({
+                'client_id': {'$in': client_ids}
+            })
+        elif bus_line_ids is not None:
+            result = self.travel_request_documents_collection.delete_many({
+                'bus_line_id': {'$in': bus_line_ids}
+            })
         elif min_departure_datetime is not None and max_departure_datetime is not None:
             result = self.travel_request_documents_collection.delete_many({
                 'departure_datetime': {'$gt': min_departure_datetime},
@@ -760,9 +871,13 @@ class MongodbDatabaseConnection(object):
         :return: True if the way_document was successfully deleted, otherwise False.
         """
         if object_id is not None:
-            result = self.way_documents_collection.delete_one({'_id': ObjectId(object_id)})
+            result = self.way_documents_collection.delete_one({
+                '_id': ObjectId(object_id)
+            })
         elif osm_id is not None:
-            result = self.way_documents_collection.delete_one({'osm_id': osm_id})
+            result = self.way_documents_collection.delete_one({
+                'osm_id': osm_id
+            })
         else:
             return False
 
@@ -778,9 +893,13 @@ class MongodbDatabaseConnection(object):
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            result = self.way_documents_collection.delete_many({'_id': {'$in': processed_object_ids}})
+            result = self.way_documents_collection.delete_many({
+                '_id': {'$in': processed_object_ids}
+            })
         elif osm_ids is not None:
-            result = self.way_documents_collection.delete_many({'osm_id': {'$in': osm_ids}})
+            result = self.way_documents_collection.delete_many({
+                'osm_id': {'$in': osm_ids}
+            })
         else:
             return 0
 
@@ -798,76 +917,117 @@ class MongodbDatabaseConnection(object):
         :return: address_document
         """
         if object_id is not None:
-            address_document = self.address_documents_collection.find_one({'_id': ObjectId(object_id)})
+            address_document = self.address_documents_collection.find_one({
+                '_id': ObjectId(object_id)
+            })
         elif name is not None:
-            address_document = self.address_documents_collection.find_one({'name': name})
+            address_document = self.address_documents_collection.find_one({
+                'name': name
+            })
         elif node_id is not None:
-            address_document = self.address_documents_collection.find_one({'node_id': node_id})
+            address_document = self.address_documents_collection.find_one({
+                'node_id': node_id
+            })
         elif longitude is not None and latitude is not None:
             address_document = self.address_documents_collection.find_one({
-                'point': {'longitude': longitude, 'latitude': latitude}
+                'point': {
+                    'longitude': longitude,
+                    'latitude': latitude
+                }
             })
         else:
             return None
 
         return address_document
 
-    def find_address_documents(self, object_ids=None, names=None, node_ids=None):
+    def find_address_documents(self, object_ids=None, names=None, node_ids=None, in_dictionary=False):
         """
         Retrieve multiple address_documents.
 
         :param object_ids: [ObjectId]
         :param names: [string]
         :param node_ids: [int]
-        :return: address_documents: [address_document]
+        :param in_dictionary: bool
+        :return: address_documents: [address_document] or {name -> address_document}
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            address_documents_cursor = self.address_documents_collection.find({'_id': {'$in': processed_object_ids}})
+            address_documents_cursor = self.address_documents_collection.find({
+                '_id': {'$in': processed_object_ids}
+            })
         elif names is not None:
-            address_documents_cursor = self.address_documents_collection.find({'name': {'$in': names}})
+            address_documents_cursor = self.address_documents_collection.find({
+                'name': {'$in': names}
+            })
         elif node_ids is not None:
-            address_documents_cursor = self.address_documents_collection.find({'node_id': {'$in': node_ids}})
+            address_documents_cursor = self.address_documents_collection.find({
+                'node_id': {'$in': node_ids}
+            })
         else:
             address_documents_cursor = self.address_documents_collection.find({})
 
-        address_documents = list(address_documents_cursor)
+        if in_dictionary:
+            address_documents = {}
+
+            for address_document in address_documents_cursor:
+                name = address_document.get('name')
+                address_documents[name] = address_document
+        else:
+            address_documents = list(address_documents_cursor)
+
         return address_documents
 
-    def find_bus_line_document(self, object_id=None, line_id=None):
+    def find_bus_line_document(self, object_id=None, bus_line_id=None):
         """
         Retrieve a bus_line_document.
 
         :param object_id: ObjectId
-        :param line_id: int
+        :param bus_line_id: int
         :return: bus_line_document
         """
         if object_id is not None:
-            bus_line_document = self.bus_line_documents_collection.find_one({'_id': ObjectId(object_id)})
-        elif line_id is not None:
-            bus_line_document = self.bus_line_documents_collection.find_one({'line_id': line_id})
+            bus_line_document = self.bus_line_documents_collection.find_one({
+                '_id': ObjectId(object_id)
+            })
+        elif bus_line_id is not None:
+            bus_line_document = self.bus_line_documents_collection.find_one({
+                'bus_line_id': bus_line_id
+            })
         else:
             return None
 
         return bus_line_document
 
-    def find_bus_line_documents(self, object_ids=None, line_ids=None):
+    def find_bus_line_documents(self, object_ids=None, bus_line_ids=None, in_dictionary=False):
         """
         Retrieve multiple bus_line_documents.
 
         :param object_ids: [ObjectId]
-        :param line_ids: [int]
-        :return: bus_line_documents: [bus_line_document]
+        :param bus_line_ids: [int]
+        :param in_dictionary: bool
+        :return: bus_line_documents: [bus_line_document] or {bus_line_id -> bus_line_document}
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            bus_line_documents_cursor = self.bus_line_documents_collection.find({'_id': {'$in': processed_object_ids}})
-        elif line_ids is not None:
-            bus_line_documents_cursor = self.bus_line_documents_collection.find({'line_id': {'$in': line_ids}})
+            bus_line_documents_cursor = self.bus_line_documents_collection.find({
+                '_id': {'$in': processed_object_ids}
+            })
+        elif bus_line_ids is not None:
+            bus_line_documents_cursor = self.bus_line_documents_collection.find({
+                'bus_line_id': {'$in': bus_line_ids}
+            })
         else:
             bus_line_documents_cursor = self.bus_line_documents_collection.find({})
 
-        bus_line_documents = list(bus_line_documents_cursor)
+        if in_dictionary:
+            bus_line_documents = {}
+
+            for bus_line_document in bus_line_documents_cursor:
+                bus_line_id = bus_line_document.get('bus_line_id')
+                bus_line_documents[bus_line_id] = bus_line_document
+        else:
+            bus_line_documents = list(bus_line_documents_cursor)
+
         return bus_line_documents
 
     def find_bus_stop_document(self, object_id=None, osm_id=None, name=None, longitude=None, latitude=None):
@@ -882,40 +1042,64 @@ class MongodbDatabaseConnection(object):
         :return: bus_stop_document
         """
         if object_id is not None:
-            bus_stop_document = self.bus_stop_documents_collection.find_one({'_id': ObjectId(object_id)})
+            bus_stop_document = self.bus_stop_documents_collection.find_one({
+                '_id': ObjectId(object_id)
+            })
         elif osm_id is not None:
-            bus_stop_document = self.bus_stop_documents_collection.find_one({'osm_id': osm_id})
+            bus_stop_document = self.bus_stop_documents_collection.find_one({
+                'osm_id': osm_id
+            })
         elif name is not None:
-            bus_stop_document = self.bus_stop_documents_collection.find_one({'name': name})
+            bus_stop_document = self.bus_stop_documents_collection.find_one({
+                'name': name
+            })
         elif longitude is not None and latitude is not None:
             bus_stop_document = self.bus_stop_documents_collection.find_one({
-                'point': {'longitude': longitude, 'latitude': latitude}
+                'point': {
+                    'longitude': longitude,
+                    'latitude': latitude
+                }
             })
         else:
             return None
 
         return bus_stop_document
 
-    def find_bus_stop_documents(self, object_ids=None, osm_ids=None, names=None):
+    def find_bus_stop_documents(self, object_ids=None, osm_ids=None, names=None, in_dictionary=False):
         """
         Retrieve multiple bus_stop_documents.
 
         :param object_ids: [ObjectId]
         :param osm_ids: [int]
         :param names: [string]
-        :return: bus_stop_documents: [bus_stop_document]
+        :param in_dictionary: bool
+        :return: bus_stop_documents: [bus_stop_document] or {name -> bus_stop_document}
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            bus_stop_documents_cursor = self.bus_stop_documents_collection.find({'_id': {'$in': processed_object_ids}})
+            bus_stop_documents_cursor = self.bus_stop_documents_collection.find({
+                '_id': {'$in': processed_object_ids}
+            })
         elif osm_ids is not None:
-            bus_stop_documents_cursor = self.bus_stop_documents_collection.find({'osm_id': {'$in': osm_ids}})
+            bus_stop_documents_cursor = self.bus_stop_documents_collection.find({
+                'osm_id': {'$in': osm_ids}
+            })
         elif names is not None:
-            bus_stop_documents_cursor = self.bus_stop_documents_collection.find({'name': {'$in': names}})
+            bus_stop_documents_cursor = self.bus_stop_documents_collection.find({
+                'name': {'$in': names}
+            })
         else:
             bus_stop_documents_cursor = self.bus_stop_documents_collection.find({})
 
-        bus_stop_documents = list(bus_stop_documents_cursor)
+        if in_dictionary:
+            bus_stop_documents = {}
+
+            for bus_stop_document in bus_stop_documents_cursor:
+                name = bus_stop_document.get('name')
+                bus_stop_documents[name] = bus_stop_document
+        else:
+            bus_stop_documents = list(bus_stop_documents_cursor)
+
         return bus_stop_documents
 
     def find_bus_stop_waypoints_document(self, object_id=None, starting_bus_stop=None, ending_bus_stop=None,
@@ -949,23 +1133,23 @@ class MongodbDatabaseConnection(object):
 
         return bus_stop_waypoints_document
 
-    def find_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None, bus_stop_names=None, line_id=None):
+    def find_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None, bus_stop_names=None, bus_line_id=None):
         """
         Retrieve multiple bus_stop_waypoints_documents.
 
         :param object_ids: [ObjectId]
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         :param bus_stop_names: [string]
-        :param line_id: int
+        :param bus_line_id: int
         :return: bus_stop_waypoints_documents: [bus_stop_waypoints_document]
         """
         bus_stop_waypoints_documents = []
 
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            bus_stop_waypoints_documents_cursor = self.bus_stop_waypoints_documents_collection.find(
-                {'_id': {'$in': processed_object_ids}}
-            )
+            bus_stop_waypoints_documents_cursor = self.bus_stop_waypoints_documents_collection.find({
+                '_id': {'$in': processed_object_ids}
+            })
             bus_stop_waypoints_documents.extend(list(bus_stop_waypoints_documents_cursor))
 
         elif bus_stops is not None:
@@ -992,8 +1176,8 @@ class MongodbDatabaseConnection(object):
                 )
                 bus_stop_waypoints_documents.append(bus_stop_waypoints_document)
 
-        elif line_id is not None:
-            bus_line_document = self.find_bus_line_document(line_id=line_id)
+        elif bus_line_id is not None:
+            bus_line_document = self.find_bus_line_document(bus_line_id=bus_line_id)
 
             if bus_line_document is not None:
                 retrieved_bus_stops = bus_line_document.get('bus_stops')
@@ -1033,21 +1217,23 @@ class MongodbDatabaseConnection(object):
             starting_bus_stop_name=starting_bus_stop_name,
             ending_bus_stop_name=ending_bus_stop_name
         )
-        detailed_bus_stop_waypoints_document = \
-            self.convert_bus_stop_waypoints_document_to_detailed_bus_stop_waypoints_document(
-                bus_stop_waypoints_document=bus_stop_waypoints_document
-            )
+        converted_bus_stop_waypoints = self.convert_bus_stop_waypoints(
+            bus_stop_waypoints_document=bus_stop_waypoints_document
+        )
+        detailed_bus_stop_waypoints_document = converted_bus_stop_waypoints.get(
+            'detailed_bus_stop_waypoints_document'
+        )
         return detailed_bus_stop_waypoints_document
 
     def find_detailed_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None,
-                                                   bus_stop_names=None, line_id=None):
+                                                   bus_stop_names=None, bus_line_id=None):
         """
         Retrieve multiple detailed_bus_stop_waypoints_documents.
 
         :param object_ids: [ObjectId]
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         :param bus_stop_names: [string]
-        :param line_id: int
+        :param bus_line_id: int
         :return: detailed_bus_stop_waypoints_documents: [detailed_bus_stop_waypoints_document]
         """
         detailed_bus_stop_waypoints_documents = []
@@ -1055,13 +1241,15 @@ class MongodbDatabaseConnection(object):
             object_ids=object_ids,
             bus_stops=bus_stops,
             bus_stop_names=bus_stop_names,
-            line_id=line_id
+            bus_line_id=bus_line_id
         )
         for bus_stop_waypoints_document in bus_stop_waypoints_documents:
-            detailed_bus_stop_waypoints_document = \
-                self.convert_bus_stop_waypoints_document_to_detailed_bus_stop_waypoints_document(
-                    bus_stop_waypoints_document=bus_stop_waypoints_document
-                )
+            converted_bus_stop_waypoints = self.convert_bus_stop_waypoints(
+                bus_stop_waypoints_document=bus_stop_waypoints_document
+            )
+            detailed_bus_stop_waypoints_document = converted_bus_stop_waypoints.get(
+                'detailed_bus_stop_waypoints_document'
+            )
             detailed_bus_stop_waypoints_documents.append(detailed_bus_stop_waypoints_document)
 
         return detailed_bus_stop_waypoints_documents
@@ -1098,13 +1286,13 @@ class MongodbDatabaseConnection(object):
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            bus_vehicle_documents_cursor = self.bus_vehicle_documents_collection.find(
-                {'_id': {'$in': processed_object_ids}}
-            )
+            bus_vehicle_documents_cursor = self.bus_vehicle_documents_collection.find({
+                '_id': {'$in': processed_object_ids}
+            })
         elif bus_vehicle_ids is not None:
-            bus_vehicle_documents_cursor = self.bus_vehicle_documents_collection.find(
-                {'bus_vehicle_id': {'$in': bus_vehicle_ids}}
-            )
+            bus_vehicle_documents_cursor = self.bus_vehicle_documents_collection.find({
+                'bus_vehicle_id': {'$in': bus_vehicle_ids}
+            })
         else:
             bus_vehicle_documents_cursor = self.bus_vehicle_documents_collection.find({})
 
@@ -1129,7 +1317,9 @@ class MongodbDatabaseConnection(object):
         :return: edge_document
         """
         if object_id is not None:
-            edge_document = self.edge_documents_collection.find_one({'_id': ObjectId(object_id)})
+            edge_document = self.edge_documents_collection.find_one({
+                '_id': ObjectId(object_id)
+            })
         elif starting_node_osm_id is not None and ending_node_osm_id is not None:
             edge_document = self.edge_documents_collection.find_one({
                 'starting_node.osm_id': starting_node_osm_id,
@@ -1140,26 +1330,46 @@ class MongodbDatabaseConnection(object):
 
         return edge_document
 
-    def find_edge_documents(self, object_ids=None, starting_node_osm_id=None, ending_node_osm_id=None):
+    def find_edge_documents(self, object_ids=None, starting_node_osm_id=None,
+                            ending_node_osm_id=None, in_dictionary=False):
         """
         Retrieve multiple edge_documents.
 
         :param object_ids: [ObjectId]
         :param starting_node_osm_id: int
         :param ending_node_osm_id: int
-        :return: edge_documents: [edge_document]
+        :param in_dictionary: bool
+        :return: edge_documents: [edge_document] or {starting_node_osm_id -> [edge_document]}
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            edge_documents_cursor = self.edge_documents_collection.find({'_id': {'$in': processed_object_ids}})
+            edge_documents_cursor = self.edge_documents_collection.find({
+                '_id': {'$in': processed_object_ids}
+            })
         elif starting_node_osm_id is not None:
-            edge_documents_cursor = self.edge_documents_collection.find({'starting_node.osm_id': starting_node_osm_id})
+            edge_documents_cursor = self.edge_documents_collection.find({
+                'starting_node.osm_id': starting_node_osm_id
+            })
         elif ending_node_osm_id is not None:
-            edge_documents_cursor = self.edge_documents_collection.find({'ending_node.oms_id': ending_node_osm_id})
+            edge_documents_cursor = self.edge_documents_collection.find({
+                'ending_node.oms_id': ending_node_osm_id
+            })
         else:
             edge_documents_cursor = self.edge_documents_collection.find({})
 
-        edge_documents = list(edge_documents_cursor)
+        if in_dictionary:
+            edge_documents = {}
+
+            for edge_document in edge_documents_cursor:
+                starting_node_osm_id = edge_document.get('starting_node').get('osm_id')
+
+                if starting_node_osm_id in edge_documents:
+                    edge_documents[starting_node_osm_id].append(edge_document)
+                else:
+                    edge_documents[starting_node_osm_id] = list(edge_document)
+        else:
+            edge_documents = list(edge_documents_cursor)
+
         return edge_documents
 
     def find_node_document(self, object_id=None, osm_id=None, longitude=None, latitude=None):
@@ -1173,35 +1383,55 @@ class MongodbDatabaseConnection(object):
         :return: node_document
         """
         if object_id is not None:
-            node_document = self.node_documents_collection.find_one({'_id': ObjectId(object_id)})
+            node_document = self.node_documents_collection.find_one({
+                '_id': ObjectId(object_id)
+            })
         elif osm_id is not None:
-            node_document = self.node_documents_collection.find_one({'osm_id': osm_id})
+            node_document = self.node_documents_collection.find_one({
+                'osm_id': osm_id
+            })
         elif longitude is not None and latitude is not None:
             node_document = self.node_documents_collection.find_one({
-                'point': {'longitude': longitude, 'latitude': latitude}
+                'point': {
+                    'longitude': longitude,
+                    'latitude': latitude
+                }
             })
         else:
             return None
 
         return node_document
 
-    def find_node_documents(self, object_ids=None, osm_ids=None):
+    def find_node_documents(self, object_ids=None, osm_ids=None, in_dictionary=False):
         """
         Retrieve multiple node_documents.
 
         :param object_ids: [ObjectId]
         :param osm_ids: [int]
-        :return: node_documents: [node_document]
+        :param in_dictionary: bool
+        :return: node_documents: [node_document] or {osm_id -> node_document}
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            node_documents_cursor = self.node_documents_collection.find({'_id': {'$in': processed_object_ids}})
+            node_documents_cursor = self.node_documents_collection.find({
+                '_id': {'$in': processed_object_ids}
+            })
         elif osm_ids is not None:
-            node_documents_cursor = self.node_documents_collection.find({'osm_id': {'$in': osm_ids}})
+            node_documents_cursor = self.node_documents_collection.find({
+                'osm_id': {'$in': osm_ids}
+            })
         else:
             node_documents_cursor = self.node_documents_collection.find({})
 
-        node_documents = list(node_documents_cursor)
+        if in_dictionary:
+            node_documents = {}
+
+            for node_document in node_documents_cursor:
+                osm_id = node_document.get('osm_id')
+                node_documents[osm_id] = node_document
+        else:
+            node_documents = list(node_documents_cursor)
+
         return node_documents
 
     def find_point_document(self, object_id=None, osm_id=None, longitude=None, latitude=None):
@@ -1215,66 +1445,113 @@ class MongodbDatabaseConnection(object):
         :return: point_document
         """
         if object_id is not None:
-            point_document = self.point_documents_collection.find_one({'_id': ObjectId(object_id)})
+            point_document = self.point_documents_collection.find_one({
+                '_id': ObjectId(object_id)
+            })
         elif osm_id is not None:
-            point_document = self.point_documents_collection.find_one({'osm_id': osm_id})
+            point_document = self.point_documents_collection.find_one({
+                'osm_id': osm_id
+            })
         elif longitude is not None and latitude is not None:
             point_document = self.point_documents_collection.find_one({
-                'point': {'longitude': longitude, 'latitude': latitude}
+                'point': {
+                    'longitude': longitude,
+                    'latitude': latitude
+                }
             })
         else:
             return None
 
         return point_document
 
-    def find_point_documents(self, object_ids=None, osm_ids=None):
+    def find_point_documents(self, object_ids=None, osm_ids=None, in_dictionary=False):
         """
         Retrieve multiple point_documents.
 
         :param object_ids: [ObjectId]
         :param osm_ids: [int]
-        :return: point_documents: [point_document]
+        :param in_dictionary: bool
+        :return: point_documents: [point_document] or {osm_id -> point_document}
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            point_documents_cursor = self.point_documents_collection.find({'_id': {'$in': processed_object_ids}})
+            point_documents_cursor = self.point_documents_collection.find({
+                '_id': {'$in': processed_object_ids}
+            })
         elif osm_ids is not None:
-            point_documents_cursor = self.point_documents_collection.find({'osm_id': {'$in': osm_ids}})
+            point_documents_cursor = self.point_documents_collection.find({
+                'osm_id': {'$in': osm_ids}
+            })
         else:
             point_documents_cursor = self.point_documents_collection.find({})
 
-        point_documents = list(point_documents_cursor)
+        if in_dictionary:
+            point_documents = {}
+
+            for point_document in point_documents_cursor:
+                osm_id = point_document.get('osm_id')
+                point_documents[osm_id] = point_document
+        else:
+            point_documents = list(point_documents_cursor)
+
         return point_documents
 
-    def find_timetable_document(self, object_id):
+    def find_timetable_document(self, object_id=None, timetable_id=None):
         """
         Retrieve a timetable_document.
 
         :param object_id: ObjectId
+        :param timetable_id: int
         :return: timetable_document
         """
-        timetable_document = self.timetable_documents_collection.find_one({'_id': ObjectId(object_id)})
+        if object_id is not None:
+            timetable_document = self.timetable_documents_collection.find_one({
+                '_id': ObjectId(object_id)
+            })
+        elif timetable_id is not None:
+            timetable_document = self.timetable_documents_collection.find_one({
+                '_id': ObjectId(object_id)
+            })
+        else:
+            return None
+
         return timetable_document
 
-    def find_timetable_documents(self, object_ids=None, line_ids=None):
+    def find_timetable_documents(self, object_ids=None, timetable_ids=None, bus_line_ids=None, in_dictionary=False):
         """
         Retrieve multiple timetable_documents.
 
         :param object_ids: [ObjectId]
-        :param line_ids: [int]
-        :return: timetable_documents: [timetable_document]
+        :param timetable_ids: [int]
+        :param bus_line_ids: [int]
+        :param in_dictionary: bool
+        :return: timetable_documents: [timetable_document] or {timetable_id -> timetable_document}
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
             timetable_documents_cursor = self.timetable_documents_collection.find({
                 '_id': {'$in': processed_object_ids}
             })
-        elif line_ids is not None:
-            timetable_documents_cursor = self.timetable_documents_collection.find({'line_id': {'$in': line_ids}})
+        elif timetable_ids is not None:
+            timetable_documents_cursor = self.timetable_documents_collection.find({
+                'timetable_id': {'$in': timetable_ids}
+            })
+        elif bus_line_ids is not None:
+            timetable_documents_cursor = self.timetable_documents_collection.find({
+                'bus_line_id': {'$in': bus_line_ids}
+            })
         else:
             timetable_documents_cursor = self.timetable_documents_collection.find({})
 
-        timetable_documents = list(timetable_documents_cursor)
+        if in_dictionary:
+            timetable_documents = {}
+
+            for timetable_document in timetable_documents_cursor:
+                timetable_id = timetable_document.get('timetable_id')
+                timetable_documents[timetable_id] = timetable_document
+        else:
+            timetable_documents = list(timetable_documents_cursor)
+
         return timetable_documents
 
     def find_traffic_event_document(self, object_id=None, event_id=None):
@@ -1286,21 +1563,26 @@ class MongodbDatabaseConnection(object):
         :return: traffic_event_document
         """
         if object_id is not None:
-            traffic_event_document = self.traffic_event_documents_collection.find_one({'_id': ObjectId(object_id)})
+            traffic_event_document = self.traffic_event_documents_collection.find_one({
+                '_id': ObjectId(object_id)
+            })
         elif event_id is not None:
-            traffic_event_document = self.traffic_event_documents_collection.find_one({'event_id': event_id})
+            traffic_event_document = self.traffic_event_documents_collection.find_one({
+                'event_id': event_id
+            })
         else:
             return None
 
         return traffic_event_document
 
-    def find_traffic_event_documents(self, object_ids=None, event_ids=None):
+    def find_traffic_event_documents(self, object_ids=None, event_ids=None, in_dictionary=False):
         """
         Retrieve multiple traffic_event_documents.
 
         :param object_ids: [ObjectId]
         :param event_ids: [string]
-        :return: traffic_event_documents: [traffic_event_document]
+        :param in_dictionary: bool
+        :return: traffic_event_documents: [traffic_event_document] or {event_id -> traffic_event_document}
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
@@ -1314,7 +1596,15 @@ class MongodbDatabaseConnection(object):
         else:
             traffic_event_documents_cursor = self.traffic_event_documents_collection.find({})
 
-        traffic_event_documents = list(traffic_event_documents_cursor)
+        if in_dictionary:
+            traffic_event_documents = {}
+
+            for traffic_event_document in traffic_event_documents_cursor:
+                event_id = traffic_event_document.get('event_id')
+                traffic_event_documents[event_id] = traffic_event_document
+        else:
+            traffic_event_documents = list(traffic_event_documents_cursor)
+
         return traffic_event_documents
 
     def find_travel_request_document(self, object_id):
@@ -1327,17 +1617,18 @@ class MongodbDatabaseConnection(object):
         travel_request_document = self.travel_request_documents_collection.find_one({'_id': ObjectId(object_id)})
         return travel_request_document
 
-    def find_travel_request_documents(self, object_ids=None, client_ids=None, line_ids=None,
-                                      min_departure_datetime=None, max_departure_datetime=None):
+    def find_travel_request_documents(self, object_ids=None, client_ids=None, bus_line_ids=None,
+                                      min_departure_datetime=None, max_departure_datetime=None, in_dictionary=False):
         """
         Retrieve multiple travel_request_documents.
 
         :param object_ids: [ObjectId]
         :param client_ids: [int]
-        :param line_ids: [int]
+        :param bus_line_ids: [int]
         :param min_departure_datetime: datetime
         :param max_departure_datetime
-        :return: travel_request_documents: [travel_request_document]
+        :param in_dictionary: bool
+        :return: travel_request_documents: [travel_request_document] or {client_id: [travel_request_document]}
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
@@ -1350,16 +1641,20 @@ class MongodbDatabaseConnection(object):
                 'departure_datetime': {'$gt': min_departure_datetime},
                 'departure_datetime': {'$lt': max_departure_datetime}
             })
-        elif line_ids is not None and min_departure_datetime is not None and max_departure_datetime is not None:
+        elif bus_line_ids is not None and min_departure_datetime is not None and max_departure_datetime is not None:
             travel_requests_cursor = self.travel_request_documents_collection.find({
-                'line_id': {'$in': line_ids},
+                'bus_line_id': {'$in': bus_line_ids},
                 'departure_datetime': {'$gt': min_departure_datetime},
                 'departure_datetime': {'$lt': max_departure_datetime}
             })
         elif client_ids is not None:
-            travel_requests_cursor = self.travel_request_documents_collection.find({'client_id': {'$in': client_ids}})
-        elif line_ids is not None:
-            travel_requests_cursor = self.travel_request_documents_collection.find({'line_id': {'$in': line_ids}})
+            travel_requests_cursor = self.travel_request_documents_collection.find({
+                'client_id': {'$in': client_ids}
+            })
+        elif bus_line_ids is not None:
+            travel_requests_cursor = self.travel_request_documents_collection.find({
+                'bus_line_id': {'$in': bus_line_ids}
+            })
         elif min_departure_datetime is not None and max_departure_datetime is not None:
             travel_requests_cursor = self.travel_request_documents_collection.find({
                 'departure_datetime': {'$gt': min_departure_datetime},
@@ -1368,7 +1663,19 @@ class MongodbDatabaseConnection(object):
         else:
             travel_requests_cursor = self.travel_request_documents_collection.find({})
 
-        travel_requests = list(travel_requests_cursor)
+        if in_dictionary:
+            travel_requests = {}
+
+            for travel_request in travel_requests_cursor:
+                client_id = travel_request.get('client_id')
+
+                if client_id in travel_requests:
+                    travel_requests[client_id].append(travel_request)
+                else:
+                    travel_requests[client_id] = list(travel_request)
+        else:
+            travel_requests = list(travel_requests_cursor)
+
         return travel_requests
 
     def find_way_document(self, object_id=None, osm_id=None):
@@ -1380,152 +1687,169 @@ class MongodbDatabaseConnection(object):
         :return: way_document
         """
         if object_id is not None:
-            way_document = self.way_documents_collection.find_one({'_id': ObjectId(object_id)})
+            way_document = self.way_documents_collection.find_one({
+                '_id': ObjectId(object_id)
+            })
         elif osm_id is not None:
-            way_document = self.way_documents_collection.find_one({'osm_id': osm_id})
+            way_document = self.way_documents_collection.find_one({
+                'osm_id': osm_id
+            })
         else:
             return None
 
         return way_document
 
-    def find_way_documents(self, object_ids=None, osm_ids=None):
+    def find_way_documents(self, object_ids=None, osm_ids=None, in_dictionary=False):
         """
         Retrieve multiple way_documents.
 
         :param object_ids: [ObjectId]
         :param osm_ids: [int]
+        :param in_dictionary: bool
         :return: way_documents: [way_document]
         """
         if object_ids is not None:
             processed_object_ids = [ObjectId(object_id) for object_id in object_ids]
-            way_documents_cursor = self.way_documents_collection.find({'_id': {'$in': processed_object_ids}})
+            way_documents_cursor = self.way_documents_collection.find({
+                '_id': {'$in': processed_object_ids}
+            })
         elif osm_ids is not None:
-            way_documents_cursor = self.way_documents_collection.find({'osm_id': {'$in': osm_ids}})
+            way_documents_cursor = self.way_documents_collection.find({
+                'osm_id': {'$in': osm_ids}
+            })
         else:
             way_documents_cursor = self.way_documents_collection.find({})
 
-        way_documents = list(way_documents_cursor)
+        if in_dictionary:
+            way_documents = {}
+
+            for way_document in way_documents_cursor:
+                osm_id = way_document.get('osm_id')
+                way_documents[osm_id] = way_document
+        else:
+            way_documents = list(way_documents_cursor)
+
         return way_documents
 
-    def get_bus_line_documents_cursor(self):
-        """
-        Retrieve a cursor of all bus_line_documents.
+    # def get_bus_line_documents_cursor(self):
+    #     """
+    #     Retrieve a cursor of all bus_line_documents.
+    #
+    #     :return: bus_line_documents_cursor
+    #     """
+    #     bus_line_documents_cursor = self.bus_line_documents_collection.find({})
+    #     return bus_line_documents_cursor
+    #
+    # def get_bus_lines(self):
+    #     """
+    #     Retrieve a dictionary containing all the bus_line_documents.
+    #
+    #     :return: bus_lines: {bus_line_id -> bus_line_document}
+    #     """
+    #     bus_lines = {}
+    #     bus_line_documents_cursor = self.get_bus_line_documents_cursor()
+    #
+    #     for bus_line_document in bus_line_documents_cursor:
+    #         bus_line_id = bus_line_document.get('bus_line_id')
+    #         bus_lines[bus_line_id] = bus_line_document
+    #
+    #     return bus_lines
+    #
+    # def get_bus_line_documents_list(self):
+    #     """
+    #     Retrieve a list containing all the bus_line_documents.
+    #
+    #     :return: bus_line_documents_list: [bus_line_document]
+    #     """
+    #     bus_line_documents_cursor = self.get_bus_line_documents_cursor()
+    #     bus_line_documents_list = list(bus_line_documents_cursor)
+    #     return bus_line_documents_list
 
-        :return: bus_line_documents_cursor
-        """
-        bus_line_documents_cursor = self.bus_line_documents_collection.find({})
-        return bus_line_documents_cursor
+    # def get_bus_stop_documents_cursor(self):
+    #     """
+    #     Retrieve a cursor of all bus_stop_documents.
+    #
+    #     :return: bus_stop_documents_cursor
+    #     """
+    #     bus_stop_documents_cursor = self.bus_stop_documents_collection.find({})
+    #     return bus_stop_documents_cursor
+    #
+    # def get_bus_stops(self):
+    #     """
+    #     Retrieve a dictionary containing all the bus_stop_documents.
+    #
+    #     :return: bus_stops: {name -> bus_stop_document}
+    #     """
+    #     bus_stops = {}
+    #     bus_stop_documents_cursor = self.get_bus_stop_documents_cursor()
+    #
+    #     for bus_stop_document in bus_stop_documents_cursor:
+    #         name = bus_stop_document.get('name')
+    #
+    #         if name not in bus_stops:
+    #             bus_stops[name] = bus_stop_document
+    #
+    #     return bus_stops
+    #
+    # def get_bus_stop_documents_list(self):
+    #     """
+    #     Retrieve a list containing all the bus_stop_documents.
+    #
+    #     :return: bus_stop_documents_list: [bus_stop_document]
+    #     """
+    #     bus_stop_documents_cursor = self.get_bus_stop_documents_cursor()
+    #     bus_stop_documents_list = list(bus_stop_documents_cursor)
+    #     return bus_stop_documents_list
 
-    def get_bus_lines(self):
-        """
-        Retrieve a dictionary containing all the bus_line_documents.
+    # def get_edge_documents_cursor(self):
+    #     """
+    #     Retrieve a cursor of all the edge_documents.
+    #
+    #     :return: edge_documents_cursor
+    #     """
+    #     edge_documents_cursor = self.edge_documents_collection.find({})
+    #     return edge_documents_cursor
+    #
+    # def get_edges_dictionary(self):
+    #     """
+    #     Retrieve a dictionary containing all the edge_documents.
+    #
+    #     :return: edges: {starting_node_osm_id -> [edge_document]}
+    #     """
+    #     edges = {}
+    #     edge_documents_cursor = self.get_edge_documents_cursor()
+    #
+    #     for edge_document in edge_documents_cursor:
+    #         starting_node_osm_id = edge_document.get('starting_node').get('osm_id')
+    #
+    #         if starting_node_osm_id in edges:
+    #             edges[starting_node_osm_id].append(edge_document)
+    #         else:
+    #             edges[starting_node_osm_id] = [edge_document]
+    #
+    #     return edges
+    #
+    # def get_edge_documents_list(self):
+    #     """
+    #     Retrieve a list containing all the edge_documents.
+    #
+    #     :return: edge_documents_list: [edge_document]
+    #     """
+    #     edge_documents_cursor = self.get_edge_documents_cursor()
+    #     edge_documents_list = list(edge_documents_cursor)
+    #     return edge_documents_list
 
-        :return: bus_lines: {line_id -> bus_line_document}
-        """
-        bus_lines = {}
-        bus_line_documents_cursor = self.get_bus_line_documents_cursor()
-
-        for bus_line_document in bus_line_documents_cursor:
-            line_id = bus_line_document.get('line_id')
-            bus_lines[line_id] = bus_line_document
-
-        return bus_lines
-
-    def get_bus_line_documents_list(self):
-        """
-        Retrieve a list containing all the bus_line_documents.
-
-        :return: bus_line_documents_list: [bus_line_document]
-        """
-        bus_line_documents_cursor = self.get_bus_line_documents_cursor()
-        bus_line_documents_list = list(bus_line_documents_cursor)
-        return bus_line_documents_list
-
-    def get_bus_stop_documents_cursor(self):
-        """
-        Retrieve a cursor of all bus_stop_documents.
-
-        :return: bus_stop_documents_cursor
-        """
-        bus_stop_documents_cursor = self.bus_stop_documents_collection.find({})
-        return bus_stop_documents_cursor
-
-    def get_bus_stops(self):
-        """
-        Retrieve a dictionary containing all the bus_stop_documents.
-
-        :return: bus_stops: {name -> bus_stop_document}
-        """
-        bus_stops = {}
-        bus_stop_documents_cursor = self.get_bus_stop_documents_cursor()
-
-        for bus_stop_document in bus_stop_documents_cursor:
-            name = bus_stop_document.get('name')
-
-            if name not in bus_stops:
-                bus_stops[name] = bus_stop_document
-
-        return bus_stops
-
-    def get_bus_stop_documents_list(self):
-        """
-        Retrieve a list containing all the bus_stop_documents.
-
-        :return: bus_stop_documents_list: [bus_stop_document]
-        """
-        bus_stop_documents_cursor = self.get_bus_stop_documents_cursor()
-        bus_stop_documents_list = list(bus_stop_documents_cursor)
-        return bus_stop_documents_list
-
-    def get_edge_documents_cursor(self):
-        """
-        Retrieve a cursor of all the edge_documents.
-
-        :return: edge_documents_cursor
-        """
-        edge_documents_cursor = self.edge_documents_collection.find({})
-        return edge_documents_cursor
-
-    def get_edges_dictionary(self):
-        """
-        Retrieve a dictionary containing all the edge_documents.
-
-        :return: edges: {starting_node_osm_id -> [edge_document]}
-        """
-        edges = {}
-        edge_documents_cursor = self.get_edge_documents_cursor()
-
-        for edge_document in edge_documents_cursor:
-            starting_node_osm_id = edge_document.get('starting_node').get('osm_id')
-
-            if starting_node_osm_id in edges:
-                edges[starting_node_osm_id].append(edge_document)
-            else:
-                edges[starting_node_osm_id] = [edge_document]
-
-        return edges
-
-    def get_edge_documents_list(self):
-        """
-        Retrieve a list containing all the edge_documents.
-
-        :return: edge_documents_list: [edge_document]
-        """
-        edge_documents_cursor = self.get_edge_documents_cursor()
-        edge_documents_list = list(edge_documents_cursor)
-        return edge_documents_list
-
-    def get_edge_documents_included_in_bus_line(self, bus_line=None, line_id=None):
+    def get_edge_documents_included_in_bus_line(self, bus_line=None, bus_line_id=None):
         """
         Get a list containing all the edge_documents which are contained in the waypoints of a bus_line.
 
         :param bus_line: bus_line_document
-        :param line_id: int
+        :param bus_line_id: int
         :return: edge_documents: [edge_document]
         """
         edge_object_ids = self.get_edge_object_ids_included_in_bus_line(
             bus_line=bus_line,
-            line_id=line_id
+            bus_line_id=bus_line_id
         )
         edge_documents = self.find_edge_documents(object_ids=edge_object_ids)
         return edge_documents
@@ -1544,21 +1868,21 @@ class MongodbDatabaseConnection(object):
         edge_documents = self.find_edge_documents(object_ids=edge_object_ids)
         return edge_documents
 
-    def get_edge_object_ids_included_in_bus_line(self, bus_line=None, line_id=None):
+    def get_edge_object_ids_included_in_bus_line(self, bus_line=None, bus_line_id=None):
         """
         Get a list containing the object_ids of the edge_documents,
         which are included in the waypoints of a bus_line.
 
         :param bus_line: bus_line_document
-        :param line_id: int
+        :param bus_line_id: int
         :return: edge_object_ids: [edge_object_id]
         """
         edge_object_ids = []
 
-        if bus_line is None and line_id is None:
+        if bus_line is None and bus_line_id is None:
             return edge_object_ids
         elif bus_line is None:
-            bus_line = self.find_bus_line_document(line_id=line_id)
+            bus_line = self.find_bus_line_document(bus_line_id=bus_line_id)
         else:
             pass
 
@@ -1608,15 +1932,15 @@ class MongodbDatabaseConnection(object):
         :return: ending_nodes_dictionary: {ending_node_osm_id -> [edge_document]}
         """
         ending_nodes_dictionary = {}
-        edges_cursor = self.get_edge_documents_cursor()
+        edge_documents = self.find_edge_documents()
 
-        for edges_document in edges_cursor:
-            ending_node_osm_id = edges_document.get('ending_node').get('osm_id')
+        for edge_document in edge_documents:
+            ending_node_osm_id = edge_document.get('ending_node').get('osm_id')
 
             if ending_node_osm_id in ending_nodes_dictionary:
-                ending_nodes_dictionary[ending_node_osm_id].append(edges_document)
+                ending_nodes_dictionary[ending_node_osm_id].append(edge_document)
             else:
-                ending_nodes_dictionary[ending_node_osm_id] = [edges_document]
+                ending_nodes_dictionary[ending_node_osm_id] = list(edge_document)
 
         return ending_nodes_dictionary
 
@@ -1626,7 +1950,7 @@ class MongodbDatabaseConnection(object):
 
         :param collection: ('bus_line' or 'bus_vehicle' or 'timetable' or 'travel_request')
         :param maximum: bool
-        :return: maximum or minimum ('line_id' or 'bus_vehicle_id' or 'timetable_id' or 'client_id')
+        :return: maximum or minimum ('bus_line_id' or 'bus_vehicle_id' or 'timetable_id' or 'client_id')
                  (0 if there is no element)
         """
         # order: (-1: Descending Order, 1: Ascending Order)
@@ -1637,7 +1961,7 @@ class MongodbDatabaseConnection(object):
 
         # The corresponding collection is sorted and a cursor containing the first element is retrieved.
         if collection == 'bus_line':
-            comparison_entry = 'line_id'
+            comparison_entry = 'bus_line_id'
             comparison_cursor = self.bus_line_documents_collection.find({}).sort(comparison_entry, order).limit(1)
 
         elif collection == 'bus_vehicle':
@@ -1662,77 +1986,77 @@ class MongodbDatabaseConnection(object):
         else:
             return 0
 
-    def get_node_documents_cursor(self):
-        """
-        Retrieve a cursor of all node_documents.
+    # def get_node_documents_cursor(self):
+    #     """
+    #     Retrieve a cursor of all node_documents.
+    #
+    #     :return: node_documents_cursor
+    #     """
+    #     node_documents_cursor = self.node_documents_collection.find({})
+    #     return node_documents_cursor
+    #
+    # def get_node_documents_list(self):
+    #     """
+    #     Retrieve a list containing all the node_documents.
+    #
+    #     :return: node_documents_list: [node_document]
+    #     """
+    #     node_documents_cursor = self.node_documents_collection.find({})
+    #     node_documents_list = list(node_documents_cursor)
+    #     return node_documents_list
+    #
+    # def get_point_documents_cursor(self):
+    #     """
+    #     Retrieve a cursor of all point_documents.
+    #
+    #     :return: point_documents_cursor
+    #     """
+    #     point_documents_cursor = self.point_documents_collection.find({})
+    #     return point_documents_cursor
+    #
+    # def get_points(self):
+    #     """
+    #     Retrieve a dictionary containing all the point_documents.
+    #
+    #     :return points: {osm_id -> point_document}
+    #     """
+    #     points = {}
+    #     point_documents_cursor = self.get_point_documents_cursor()
+    #
+    #     for point_document in point_documents_cursor:
+    #         osm_id = point_document.get('osm_id')
+    #         points[osm_id] = point_document
+    #
+    #     return points
+    #
+    # def get_point_documents_list(self):
+    #     """
+    #     Retrieve a list containing all the point_documents.
+    #
+    #     :return: point_documents_list: [point_document]
+    #     """
+    #     point_documents_cursor = self.point_documents_collection.find({})
+    #     point_documents_list = list(point_documents_cursor)
+    #     return point_documents_list
 
-        :return: node_documents_cursor
-        """
-        node_documents_cursor = self.node_documents_collection.find({})
-        return node_documents_cursor
-
-    def get_node_documents_list(self):
-        """
-        Retrieve a list containing all the node_documents.
-
-        :return: node_documents_list: [node_document]
-        """
-        node_documents_cursor = self.node_documents_collection.find({})
-        node_documents_list = list(node_documents_cursor)
-        return node_documents_list
-
-    def get_point_documents_cursor(self):
-        """
-        Retrieve a cursor of all point_documents.
-
-        :return: point_documents_cursor
-        """
-        point_documents_cursor = self.point_documents_collection.find({})
-        return point_documents_cursor
-
-    def get_points(self):
-        """
-        Retrieve a dictionary containing all the point_documents.
-
-        :return points: {osm_id -> point_document}
-        """
-        points = {}
-        point_documents_cursor = self.get_point_documents_cursor()
-
-        for point_document in point_documents_cursor:
-            osm_id = point_document.get('osm_id')
-            points[osm_id] = point_document
-
-        return points
-
-    def get_point_documents_list(self):
-        """
-        Retrieve a list containing all the point_documents.
-
-        :return: point_documents_list: [point_document]
-        """
-        point_documents_cursor = self.point_documents_collection.find({})
-        point_documents_list = list(point_documents_cursor)
-        return point_documents_list
-
-    def get_timetable_documents_cursor(self):
-        """
-        Retrieve a cursor of all timetable_documents.
-
-        :return: timetable_documents_cursor
-        """
-        timetable_documents_cursor = self.timetable_documents_collection.find({})
-        return timetable_documents_cursor
-
-    def get_timetable_documents_list(self):
-        """
-        Retrieve a list containing all the timetable_documents.
-
-        :return: timetable_documents_list: [timetable_document]
-        """
-        timetable_documents_cursor = self.timetable_documents_collection.find({})
-        timetable_documents_list = list(timetable_documents_cursor)
-        return timetable_documents_list
+    # def get_timetable_documents_cursor(self):
+    #     """
+    #     Retrieve a cursor of all timetable_documents.
+    #
+    #     :return: timetable_documents_cursor
+    #     """
+    #     timetable_documents_cursor = self.timetable_documents_collection.find({})
+    #     return timetable_documents_cursor
+    #
+    # def get_timetable_documents_list(self):
+    #     """
+    #     Retrieve a list containing all the timetable_documents.
+    #
+    #     :return: timetable_documents_list: [timetable_document]
+    #     """
+    #     timetable_documents_cursor = self.timetable_documents_collection.find({})
+    #     timetable_documents_list = list(timetable_documents_cursor)
+    #     return timetable_documents_list
 
     def get_traffic_density_documents(self, bus_stops=None, bus_stop_names=None):
         """
@@ -1759,7 +2083,7 @@ class MongodbDatabaseConnection(object):
                     {'edge_object_id': edge_document.get('_id'),
                      'traffic_density': edge_document.get('traffic_density')}
                     for edge_document in list_of_edge_documents
-                ]
+                    ]
                 traffic_density_values.append(traffic_density_values_entry)
 
             traffic_density_document = {
@@ -1771,24 +2095,24 @@ class MongodbDatabaseConnection(object):
 
         return traffic_density_documents
 
-    def get_travel_request_documents_cursor(self):
-        """
-        Retrieve a cursor of all travel_request_documents.
-
-        :return: travel_request_documents_cursor
-        """
-        travel_request_documents_cursor = self.travel_request_documents_collection.find({})
-        return travel_request_documents_cursor
-
-    def get_travel_request_documents_list(self):
-        """
-        Retrieve a list containing all the travel_request_documents.
-
-        :return: travel_request_documents_list: [travel_request_document]
-        """
-        travel_request_documents_cursor = self.get_travel_request_documents_cursor()
-        travel_request_documents_list = list(travel_request_documents_cursor)
-        return travel_request_documents_list
+    # def get_travel_request_documents_cursor(self):
+    #     """
+    #     Retrieve a cursor of all travel_request_documents.
+    #
+    #     :return: travel_request_documents_cursor
+    #     """
+    #     travel_request_documents_cursor = self.travel_request_documents_collection.find({})
+    #     return travel_request_documents_cursor
+    #
+    # def get_travel_request_documents_list(self):
+    #     """
+    #     Retrieve a list containing all the travel_request_documents.
+    #
+    #     :return: travel_request_documents_list: [travel_request_document]
+    #     """
+    #     travel_request_documents_cursor = self.get_travel_request_documents_cursor()
+    #     travel_request_documents_list = list(travel_request_documents_cursor)
+    #     return travel_request_documents_list
 
     def has_edges(self, node_osm_id):
         """
@@ -1823,7 +2147,10 @@ class MongodbDatabaseConnection(object):
             address_document = {
                 'name': name,
                 'node_id': node_id,
-                'point': {'longitude': point.longitude, 'latitude': point.latitude}
+                'point': {
+                    'longitude': point.longitude,
+                    'latitude': point.latitude
+                }
             }
 
         result = self.address_documents_collection.insert_one(address_document)
@@ -1845,16 +2172,16 @@ class MongodbDatabaseConnection(object):
 
         return new_object_ids
 
-    def insert_bus_line_document(self, bus_line_document=None, line_id=None, bus_stops=None):
+    def insert_bus_line_document(self, bus_line_document=None, bus_line_id=None, bus_stops=None):
         """
         Insert a new bus_line_document or update, if it already exists in the database.
 
         :param bus_line_document
-        :param line_id: int
+        :param bus_line_id: int
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         :return: new_object_id: ObjectId
         """
-        if bus_line_document is None and (line_id is None or bus_stops is None):
+        if bus_line_document is None and (bus_line_id is None or bus_stops is None):
             return None
 
         elif bus_line_document is not None:
@@ -1866,13 +2193,13 @@ class MongodbDatabaseConnection(object):
                 }
                 data = {
                     '$set': {
-                        'line_id': bus_line_document.get('line_id'),
+                        'bus_line_id': bus_line_document.get('bus_line_id'),
                         'bus_stops': bus_line_document.get('bus_stops')
                     }
                 }
             else:
                 key = {
-                    'line_id': bus_line_document.get('line_id')
+                    'bus_line_id': bus_line_document.get('bus_line_id')
                 }
                 data = {
                     '$set': {
@@ -1881,7 +2208,7 @@ class MongodbDatabaseConnection(object):
                 }
         else:
             key = {
-                'line_id': line_id
+                'bus_line_id': bus_line_id
             }
             data = {
                 '$set': {
@@ -1922,7 +2249,10 @@ class MongodbDatabaseConnection(object):
             bus_stop_document = {
                 'osm_id': osm_id,
                 'name': name,
-                'point': {'longitude': point.longitude, 'latitude': point.latitude}
+                'point': {
+                    'longitude': point.longitude,
+                    'latitude': point.latitude
+                }
             }
 
         result = self.bus_stop_documents_collection.insert_one(bus_stop_document)
@@ -1957,7 +2287,9 @@ class MongodbDatabaseConnection(object):
         :return: new_object_id: ObjectId
         """
         if bus_stop_waypoints_document is not None:
-            key = {'_id': ObjectId(bus_stop_waypoints_document.get('_id'))}
+            key = {
+                '_id': ObjectId(bus_stop_waypoints_document.get('_id'))
+            }
             data = {
                 '$set': {
                     'starting_bus_stop': bus_stop_waypoints_document.get('starting_bus_stop'),
@@ -2050,8 +2382,12 @@ class MongodbDatabaseConnection(object):
         """
         if edge_document is None:
             edge_document = {
-                'starting_node': starting_node, 'ending_node': ending_node, 'max_speed': max_speed,
-                'road_type': road_type, 'way_id': way_id, 'traffic_density': traffic_density
+                'starting_node': starting_node,
+                'ending_node': ending_node,
+                'max_speed': max_speed,
+                'road_type': road_type,
+                'way_id': way_id,
+                'traffic_density': traffic_density
             }
 
         result = self.edge_documents_collection.insert_one(edge_document)
@@ -2085,8 +2421,12 @@ class MongodbDatabaseConnection(object):
         """
         if node_document is None:
             node_document = {
-                'osm_id': osm_id, 'tags': tags,
-                'point': {'longitude': point.longitude, 'latitude': point.latitude}
+                'osm_id': osm_id,
+                'tags': tags,
+                'point': {
+                    'longitude': point.longitude,
+                    'latitude': point.latitude
+                }
             }
 
         result = self.node_documents_collection.insert_one(node_document)
@@ -2120,7 +2460,10 @@ class MongodbDatabaseConnection(object):
         if point_document is None:
             point_document = {
                 'osm_id': osm_id,
-                'point': {'longitude': point.longitude, 'latitude': point.latitude}
+                'point': {
+                    'longitude': point.longitude,
+                    'latitude': point.latitude
+                }
             }
 
         result = self.point_documents_collection.insert_one(point_document)
@@ -2149,12 +2492,16 @@ class MongodbDatabaseConnection(object):
         :param timetable: timetable_document
         :return: new_object_id: ObjectId
         """
-        key = {'_id': ObjectId(timetable.get('_id'))}
-        data = {'$set': {
-            'line_id': timetable.get('line_id'),
-            'timetable_entries': timetable.get('timetable_entries'),
-            'travel_requests': timetable.get('travel_requests')
-        }}
+        key = {
+            '_id': ObjectId(timetable.get('_id'))
+        }
+        data = {
+            '$set': {
+                'bus_line_id': timetable.get('bus_line_id'),
+                'timetable_entries': timetable.get('timetable_entries'),
+                'travel_requests': timetable.get('travel_requests')
+            }
+        }
         result = self.timetable_documents_collection.update_one(key, data, upsert=True)
         new_object_id = result.upserted_id
         return new_object_id
@@ -2181,7 +2528,9 @@ class MongodbDatabaseConnection(object):
         :param traffic_event_document
         :return: new_object_id: ObjectId
         """
-        key = {'event_id': traffic_event_document.get('event_id')}
+        key = {
+            'event_id': traffic_event_document.get('event_id')
+        }
         data = {
             '$set': {
                 'event_type': traffic_event_document.get('event_type'),
@@ -2211,7 +2560,7 @@ class MongodbDatabaseConnection(object):
 
         return new_object_ids
 
-    def insert_travel_request_document(self, travel_request_document=None, client_id=None, line_id=None,
+    def insert_travel_request_document(self, travel_request_document=None, client_id=None, bus_line_id=None,
                                        starting_bus_stop=None, ending_bus_stop=None,
                                        departure_datetime=None, arrival_datetime=None,
                                        starting_timetable_entry_index=None, ending_timetable_entry_index=None):
@@ -2220,7 +2569,7 @@ class MongodbDatabaseConnection(object):
 
         :param travel_request_document
         :param client_id: int
-        :param line_id: int
+        :param bus_line_id: int
         :param starting_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
         :param ending_bus_stop: {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}
         :param departure_datetime: datetime
@@ -2232,7 +2581,7 @@ class MongodbDatabaseConnection(object):
         if travel_request_document is None:
             travel_request_document = {
                 'client_id': client_id,
-                'line_id': line_id,
+                'bus_line_id': bus_line_id,
                 'starting_bus_stop': starting_bus_stop,
                 'ending_bus_stop': ending_bus_stop,
                 'departure_datetime': departure_datetime,
@@ -2271,7 +2620,11 @@ class MongodbDatabaseConnection(object):
         :return: new_object_id: ObjectId
         """
         if way_document is None:
-            way_document = {'osm_id': osm_id, 'tags': tags, 'references': references}
+            way_document = {
+                'osm_id': osm_id,
+                'tags': tags,
+                'references': references
+            }
 
         result = self.way_documents_collection.insert_one(way_document)
         new_object_id = result.inserted_id
@@ -2304,7 +2657,11 @@ class MongodbDatabaseConnection(object):
         :return: None
         """
         address_document = self.find_address_document(
-            object_id=object_id, name=name, node_id=node_id, longitude=longitude, latitude=latitude
+            object_id=object_id,
+            name=name,
+            node_id=node_id,
+            longitude=longitude,
+            latitude=latitude
         )
         print address_document
 
@@ -2339,29 +2696,32 @@ class MongodbDatabaseConnection(object):
 
         print 'number_of_address_documents:', number_of_address_documents
 
-    def print_bus_line_document(self, object_id=None, line_id=None):
+    def print_bus_line_document(self, object_id=None, bus_line_id=None):
         """
         Print a bus_line_document.
 
         :param object_id: ObjectId
-        :param line_id: int
+        :param bus_line_id: int
         :return: bus_line_document
         """
-        bus_line_document = self.find_bus_line_document(object_id=object_id, line_id=line_id)
+        bus_line_document = self.find_bus_line_document(
+            object_id=object_id,
+            bus_line_id=bus_line_id
+        )
         print bus_line_document
 
-    def print_bus_line_documents(self, object_ids=None, line_ids=None, counter=None):
+    def print_bus_line_documents(self, object_ids=None, bus_line_ids=None, counter=None):
         """
         Print multiple bus_line_documents.
 
         :param object_ids: [ObjectId]
-        :param line_ids: [int]
+        :param bus_line_ids: [int]
         :param counter: int
         :return: None
         """
         bus_line_documents_list = self.find_bus_line_documents(
             object_ids=object_ids,
-            line_ids=line_ids
+            bus_line_ids=bus_line_ids
         )
         number_of_bus_line_documents = len(bus_line_documents_list)
 
@@ -2391,7 +2751,10 @@ class MongodbDatabaseConnection(object):
         :return: None
         """
         bus_stop_document = self.find_bus_stop_document(
-            object_id=object_id, osm_id=osm_id, name=name, longitude=longitude, latitude=latitude
+            object_id=object_id,
+            osm_id=osm_id, name=name,
+            longitude=longitude,
+            latitude=latitude
         )
         print bus_stop_document
 
@@ -2475,7 +2838,9 @@ class MongodbDatabaseConnection(object):
         :return: None
         """
         edge_document = self.find_edge_document(
-            object_id=object_id, starting_node_osm_id=starting_node_osm_id, ending_node_osm_id=ending_node_osm_id
+            object_id=object_id,
+            starting_node_osm_id=starting_node_osm_id,
+            ending_node_osm_id=ending_node_osm_id
         )
         print edge_document
 
@@ -2521,7 +2886,10 @@ class MongodbDatabaseConnection(object):
         :return: None
         """
         node_document = self.find_node_document(
-            object_id=object_id, osm_id=osm_id, longitude=longitude, latitude=latitude
+            object_id=object_id,
+            osm_id=osm_id,
+            longitude=longitude,
+            latitude=latitude
         )
         print node_document
 
@@ -2565,7 +2933,10 @@ class MongodbDatabaseConnection(object):
         :return: None
         """
         point_document = self.find_point_document(
-            object_id=object_id, osm_id=osm_id, longitude=longitude, latitude=latitude
+            object_id=object_id,
+            osm_id=osm_id,
+            longitude=longitude,
+            latitude=latitude
         )
         print point_document
 
@@ -2605,10 +2976,12 @@ class MongodbDatabaseConnection(object):
         :param object_id: ObjectId
         :return: None
         """
-        travel_request_document = self.find_travel_request_document(object_id=object_id)
+        travel_request_document = self.find_travel_request_document(
+            object_id=object_id
+        )
         print travel_request_document
 
-    def print_travel_request_documents(self, object_ids=None, client_ids=None, line_ids=None,
+    def print_travel_request_documents(self, object_ids=None, client_ids=None, bus_line_ids=None,
                                        min_departure_datetime=None, max_departure_datetime=None,
                                        counter=None):
         """
@@ -2616,7 +2989,7 @@ class MongodbDatabaseConnection(object):
 
         :param object_ids: [ObjectId]
         :param client_ids: [int]
-        :param line_ids: [int]
+        :param bus_line_ids: [int]
         :param min_departure_datetime: datetime
         :param max_departure_datetime: datetime
         :param counter: int
@@ -2625,7 +2998,7 @@ class MongodbDatabaseConnection(object):
         travel_request_documents_list = self.find_travel_request_documents(
             object_ids=object_ids,
             client_ids=client_ids,
-            line_ids=line_ids,
+            bus_line_ids=bus_line_ids,
             min_departure_datetime=min_departure_datetime,
             max_departure_datetime=max_departure_datetime
         )
@@ -2653,7 +3026,10 @@ class MongodbDatabaseConnection(object):
         :param osm_id: int
         :return: None
         """
-        way_document = self.find_way_document(object_id=object_id, osm_id=osm_id)
+        way_document = self.find_way_document(
+            object_id=object_id,
+            osm_id=osm_id
+        )
         print way_document
 
     def print_way_documents(self, object_ids=None, osm_ids=None, counter=None):
@@ -2720,21 +3096,22 @@ class MongodbDatabaseConnection(object):
             for alternative_waypoints in waypoints:
                 print 'alternative_waypoints:', alternative_waypoints
 
-    def print_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None, bus_stop_names=None, line_id=None):
+    def print_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None,
+                                           bus_stop_names=None, bus_line_id=None):
         """
         Print multiple bus_stop_waypoints_documents.
 
         :param object_ids: [ObjectId]
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         :param bus_stop_names: [string]
-        :param line_id: int
+        :param bus_line_id: int
         :return: None
         """
         bus_stop_waypoints_documents = self.find_bus_stop_waypoints_documents(
             object_ids=object_ids,
             bus_stops=bus_stops,
             bus_stop_names=bus_stop_names,
-            line_id=line_id
+            bus_line_id=bus_line_id
         )
         for bus_stop_waypoints_document in bus_stop_waypoints_documents:
             if bus_stop_waypoints_document is not None:
@@ -2776,21 +3153,21 @@ class MongodbDatabaseConnection(object):
                 print 'alternative_waypoints:', alternative_waypoints
 
     def print_detailed_bus_stop_waypoints_documents(self, object_ids=None, bus_stops=None,
-                                                    bus_stop_names=None, line_id=None):
+                                                    bus_stop_names=None, bus_line_id=None):
         """
         Print multiple detailed_bus_stop_waypoints_documents.
 
         :param object_ids: [ObjectId]
         :param bus_stops: [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
         :param bus_stop_names: [string]
-        :param line_id: int
+        :param bus_line_id: int
         :return: None
         """
         detailed_bus_stop_waypoints_documents = self.find_detailed_bus_stop_waypoints_documents(
             object_ids=object_ids,
             bus_stops=bus_stops,
             bus_stop_names=bus_stop_names,
-            line_id=line_id
+            bus_line_id=bus_line_id
         )
         for detailed_bus_stop_waypoints_document in detailed_bus_stop_waypoints_documents:
             if detailed_bus_stop_waypoints_document is not None:
@@ -2798,14 +3175,15 @@ class MongodbDatabaseConnection(object):
                     detailed_bus_stop_waypoints_document=detailed_bus_stop_waypoints_document
                 )
 
-    def print_timetable_documents(self, object_ids=None, line_ids=None, timetables_control=True,
+    def print_timetable_documents(self, object_ids=None, timetable_ids=None, bus_line_ids=None, timetables_control=True,
                                   timetable_entries_control=False, travel_requests_control=False,
                                   counter=None):
         """
         Print multiple timetable_documents.
 
         :param object_ids: [ObjectId]
-        :param line_ids: [int]
+        :param timetable_ids: [int]
+        :param bus_line_ids: [int]
         :param timetables_control: bool
         :param timetable_entries_control: bool
         :param travel_requests_control: bool
@@ -2814,7 +3192,8 @@ class MongodbDatabaseConnection(object):
         """
         timetable_documents = self.find_timetable_documents(
             object_ids=object_ids,
-            line_ids=line_ids,
+            timetable_ids=timetable_ids,
+            bus_line_ids=bus_line_ids
         )
         print_timetables(
             timetables=timetable_documents,
@@ -2852,7 +3231,9 @@ class MongodbDatabaseConnection(object):
             bus_stop_names=bus_stop_names
         )
         for traffic_density_document in traffic_density_documents:
-            self.print_traffic_density_document(traffic_density_document=traffic_density_document)
+            self.print_traffic_density_document(
+                traffic_density_document=traffic_density_document
+            )
 
     def print_traffic_event_document(self, traffic_event_document=None, object_id=None, event_id=None):
         """
@@ -2912,7 +3293,13 @@ class MongodbDatabaseConnection(object):
         :param new_traffic_density_value: float [0, 1]
         :return: True if an edge_document was updated, otherwise False.
         """
-        key = {'_id': ObjectId(edge_object_id)}
-        data = {'$set': {'traffic_density': new_traffic_density_value}}
+        key = {
+            '_id': ObjectId(edge_object_id)
+        }
+        data = {
+            '$set': {
+                'traffic_density': new_traffic_density_value
+            }
+        }
         result = self.edge_documents_collection.update_one(key, data, upsert=False)
         return result.modified_count == 1

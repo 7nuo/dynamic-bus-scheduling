@@ -34,7 +34,7 @@ address_document: {
     '_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}
 }
 bus_line_document: {
-    '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+    '_id', 'bus_line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
 }
 bus_stop_document: {
     '_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}
@@ -65,7 +65,7 @@ point_document: {
     '_id', 'osm_id', 'point': {'longitude', 'latitude'}
 }
 timetable_document: {
-    '_id', 'timetable_id', 'line_id', 'bus_vehicle_id',
+    '_id', 'timetable_id', 'bus_line_id', 'bus_vehicle_id',
     'timetable_entries': [{
         'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -78,7 +78,7 @@ timetable_document: {
         }
     }],
     'travel_requests': [{
-        '_id', 'client_id', 'line_id',
+        '_id', 'client_id', 'bus_line_id',
         'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'departure_datetime', 'arrival_datetime',
@@ -89,7 +89,7 @@ traffic_event_document: {
     '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
 }
 travel_request_document: {
-    '_id', 'client_id', 'line_id',
+    '_id', 'client_id', 'bus_line_id',
     'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
     'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
     'departure_datetime', 'arrival_datetime',
@@ -257,12 +257,12 @@ class TrafficDataSimulatorTester(object):
                            + str(self.elapsed_time) + ' sec'
         log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
-    def test_generate_traffic_data_for_bus_line(self, bus_line=None, line_id=None):
+    def test_generate_traffic_data_for_bus_line(self, bus_line=None, bus_line_id=None):
         """
         Generate random traffic density values for the edge_documents which are included in a bus_line_document.
 
         :param bus_line: bus_line_document
-        :param line_id: int
+        :param bus_line_id: int
         :return: None
         """
         self.log_message = 'test_generate_traffic_data_for_bus_line: starting'
@@ -271,7 +271,7 @@ class TrafficDataSimulatorTester(object):
         self.start_time = time.time()
         self.traffic_data_simulator.generate_traffic_data_for_bus_line(
             bus_line=bus_line,
-            line_id=line_id
+            bus_line_id=bus_line_id
         )
         self.elapsed_time = time.time() - self.start_time
 

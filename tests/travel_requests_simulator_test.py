@@ -34,7 +34,7 @@ address_document: {
     '_id', 'name', 'node_id', 'point': {'longitude', 'latitude'}
 }
 bus_line_document: {
-    '_id', 'line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
+    '_id', 'bus_line_id', 'bus_stops': [{'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}}]
 }
 bus_stop_document: {
     '_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}
@@ -65,7 +65,7 @@ point_document: {
     '_id', 'osm_id', 'point': {'longitude', 'latitude'}
 }
 timetable_document: {
-    '_id', 'timetable_id', 'line_id', 'bus_vehicle_id',
+    '_id', 'timetable_id', 'bus_line_id', 'bus_vehicle_id',
     'timetable_entries': [{
         'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
@@ -78,7 +78,7 @@ timetable_document: {
         }
     }],
     'travel_requests': [{
-        '_id', 'client_id', 'line_id',
+        '_id', 'client_id', 'bus_line_id',
         'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
         'departure_datetime', 'arrival_datetime',
@@ -89,7 +89,7 @@ traffic_event_document: {
     '_id', 'event_id', 'event_type', 'event_level', 'point': {'longitude', 'latitude'}, 'datetime'
 }
 travel_request_document: {
-    '_id', 'client_id', 'line_id',
+    '_id', 'client_id', 'bus_line_id',
     'starting_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
     'ending_bus_stop': {'_id', 'osm_id', 'name', 'point': {'longitude', 'latitude'}},
     'departure_datetime', 'arrival_datetime',
@@ -216,14 +216,14 @@ class TravelRequestsSimulatorTester(object):
                            + str(self.elapsed_time) + ' sec'
         log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
-    def test_delete_travel_request_documents(self, object_ids=None, client_ids=None, line_ids=None,
+    def test_delete_travel_request_documents(self, object_ids=None, client_ids=None, bus_line_ids=None,
                                              min_departure_datetime=None, max_departure_datetime=None):
         """
         Delete multiple travel_request_documents.
 
         :param object_ids: [ObjectId]
         :param client_ids: [int]
-        :param line_ids: [int]
+        :param bus_line_ids: [int]
         :param min_departure_datetime: datetime
         :param max_departure_datetime
         :return: None
@@ -235,7 +235,7 @@ class TravelRequestsSimulatorTester(object):
         self.travel_requests_simulator.delete_travel_request_documents(
             object_ids=object_ids,
             client_ids=client_ids,
-            line_ids=line_ids,
+            bus_line_ids=bus_line_ids,
             min_departure_datetime=min_departure_datetime,
             max_departure_datetime=max_departure_datetime
         )
@@ -273,7 +273,7 @@ class TravelRequestsSimulatorTester(object):
         log(module_name=self.module_name, log_type=self.log_type, log_message=self.log_message)
 
     def test_generate_travel_request_documents(self, initial_datetime, number_of_travel_request_documents,
-                                               bus_line=None, line_id=None):
+                                               bus_line=None, bus_line_id=None):
         """
         Generate a specific number of travel_request_documents, for the selected bus_line,
         for a 24hour period starting from a selected datetime, and store them at the
@@ -282,7 +282,7 @@ class TravelRequestsSimulatorTester(object):
         :param initial_datetime: datetime
         :param number_of_travel_request_documents: int
         :param bus_line: bus_line_document
-        :param line_id: int
+        :param bus_line_id: int
         :return: None
         """
         self.log_message = 'test_generate_travel_request_documents: starting'
@@ -293,7 +293,7 @@ class TravelRequestsSimulatorTester(object):
             initial_datetime=initial_datetime,
             number_of_travel_request_documents=number_of_travel_request_documents,
             bus_line=bus_line,
-            line_id=line_id
+            bus_line_id=bus_line_id
         )
         self.elapsed_time = time.time() - self.start_time
 
@@ -343,7 +343,7 @@ if __name__ == '__main__':
         # 1. test_generate_travel_request_documents
         elif selection == '1':
             travel_requests_simulator_tester.test_generate_travel_request_documents(
-                line_id=testing_bus_line_id,
+                bus_line_id=testing_bus_line_id,
                 initial_datetime=testing_travel_requests_min_departure_datetime,
                 number_of_travel_request_documents=number_of_travel_requests_documents
             )
