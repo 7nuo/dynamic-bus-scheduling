@@ -1,27 +1,25 @@
 # Bus Scheduling including Dynamic Events
 
-This project provides a realistic simulation of a transportation system, including connections among the road network of operation areas, bus lines connecting multiple bus stops, routes and timetables for bus vehicles, travel requests registered by potential passengers, and factors which usually affect the normal schedule such as the levels of traffic density.
+Modern transportation systems should be designed according to the requirements of their passengers, while considering operational costs for the managing organizations, as well as being environmentally friendly. The main objective of this research project is to provide a realistic simulation of a transportation system, capable of identifying connections among the road network of operation areas, creating bus lines composed of multiple connected bus stops, simulating travel requests registered by potential passengers, as well as generating routes and timetables for bus vehicles, while taking into consideration factors which could affect the predefined schedule, including unpredictable events (e.g., traffic accidents) or dynamic levels of traffic density.
 
-In addition, a reasoning mechanism is introduced, capable of evaluating travel requests and generating timetables for bus vehicles, while limiting the average waiting time of passengers as well as the number of passengers per vehicle.
+The implemented bus management system is able to generate timetables dynamically, introducing a reasoning mechanism capable of evaluating travel requests based on dynamic clustering techniques, while offering the opportunity to its administrator to make decisions regarding the number of generated timetables, operating bus vehicles, passengers per timetable, waiting time of passengers, and processing time. In addition, the routes of bus lines are generated or updated dynamically, while taking into consideration real-time traffic data and evaluating parameters, such as covered distance or travelling time, in order to identify the most effective connections between the bus stops of each bus line and make adjustments to the corresponding timetables. Finally, the number of operating bus vehicles that are required in order to transport the passengers of each bus line is estimated, leading to a more efficient distribution of available resources.
 
-Finally, traffic flow detection is utilized, in order to make adjustments to the regular path of each bus and limit the waiting time of passengers which could be increased due to traffic congestion.
+More precisely, the implemented system is able to:
 
-The provided system is able to:
-
-* Process OpenStreetMap files and extract geospatial data related to the road network of operation areas.
-* Generate bus lines connecting multiple bus stops.
-* Receive real-time traffic data from the CityPulse Data Bus.
-* Simulate traffic events.
-* Identify all the possible routes connecting multiple bus stops, implementing a variation of the Breadth-first Search Algorithm.
-* Identify the less time-consuming routes connecting multiple bus stops, implementing a variation of the A* Search Algorithm, while taking into consideration current levels of traffic density.
+* Process [OpenStreetMap](https://www.openstreetmap.org/) files and extract geospatial data related to the road network of operation areas (e.g., bus stops and paramenters of intermediate road connections).
+* Identify multiple possible route connections between the bus stops of operation areas, implementing a variation of the *Breadth-first* search algorithm.
+* Generate bus lines connecting the bus stops of operation areas.
+* Receive real-time traffic data.
+* Simulate traffic events capable of affecting the predefined schedule.
 * Simulate travel requests registered by potential passengers.
-* Apply a timetable generation algorithm capable of evaluating travel requests, utilizing dynamic clustering procedures, and generating timetables for bus vehicles while limiting the average waiting time of passengers as well as the number of passengers per vehicle.
-* Monitor the levels of traffic density and make adjustments to the regular path of each bus, in order to limit the level of affection of the average waiting time of passengers due to traffic incidents.
+* Identify the less time-consuming routes connecting the bus stops of operation areas, implementing a variation of the *A-star* search algorithm, while taking into consideration current levels of traffic density.
+* Apply a timetable generation algorithm capable of evaluating travel requests utilizing dynamic clustering procedures and generating timetables for bus vehicles while offering the option to its administrator to make decisions regarding the number of generated timetables, operating bus vehicles, number of passengers per vehicle, average waiting time of passengers, and processing time.
+* Monitor the levels of traffic density and make adjustments to the regular path of each bus, in order to limit the level of affection on the average waiting time of passengers due to traffic incidents.
 
 # Contributors
 
-The project is supervised by [Ericsson] (https://www.ericsson.com/) and is considered as a use case of [CityPulse] (http://www.ict-citypulse.eu/), a European project focused on the development of a distributed framework for semantic discovery and processing of large-scale real-time Internet of Things and relevant social data streams, which could be used for knowledge extraction in urban environments.
+The project is supervised by the Research and Development Department of [Ericsson](https://www.ericsson.com/) and is considered as a use case of [CityPulse](http://www.ict-citypulse.eu/).
 
-# Related Work
+# Project Report
 
-The development of the project was inspired by [Mobile Network Assisted Driving (MoNAD)] (https://github.com/EricssonResearch/monad), an [Ericsson Research project] (https://www.ericsson.com/research-blog/smart-cities/personalized-bus-transportation/) developed by [Uppsala University] (http://www.uu.se/en/) in the scope of the [Project Computer Science 2015] (http://www.it.uu.se/edu/course/homepage/projektDV/ht15) course.
+Details regarding the implemented system, experimental evaluation, deployment guidance, and technical instructions are included in the [report](https://github.com/pinac0099/dynamic-bus-scheduling/blob/master/documents/project_report.pdf) of the project.
