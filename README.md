@@ -18,8 +18,8 @@ More precisely, the implemented system is able to:
 
 # Contributors
 
-The project is supervised by the Research and Development Department of [Ericsson](https://www.ericsson.com/) and is considered as a use case of [CityPulse](http://www.ict-citypulse.eu/).
+The project is supervised by [Ericsson](https://www.ericsson.com/) (Department of Research and Development, Stockholm, Sweden) and is considered as a use case of [CityPulse](http://www.ict-citypulse.eu/).
 
-# Project Report
+# Guidance
 
-Details regarding the implemented system, experimental evaluation, deployment guidance, and technical instructions are included in the [report](https://github.com/pinac0099/dynamic-bus-scheduling/blob/master/documents/project_report.pdf) of the project.
+Detailed information regarding the implemented system, experimental evaluation, deployment guidance, and technical instructions are included in the [project report](https://github.com/pinac0099/dynamic-bus-scheduling/blob/master/documents/project_report.pdf).
